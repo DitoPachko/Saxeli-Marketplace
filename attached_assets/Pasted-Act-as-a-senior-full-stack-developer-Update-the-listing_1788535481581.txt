@@ -1,0 +1,38 @@
+Act as a senior full-stack developer. Update the listing creation flow on the `/sell` page for "Nivti" (ნივთი) to enforce a Photo-First listing sequence with an AI choices modal/step.
+
+### 1. RESTRUCTURED LISTING FLOW (PHOTO FIRST)
+
+Step 1: Photo Upload First ("ფოტოს ატვირთვა")
+- The listing process MUST start with photo upload as the primary action. Hide or disable all other form fields until at least one image is selected/dropped.
+- Display a clean drag-and-drop zone labeled: "ატვირთე ნივთის ფოტო".
+
+Step 2: AI vs. Manual Choice (Pops up immediately after image upload)
+- As soon as the user uploads a photo, show a clear choice step or modal with TWO prominent options:
+  1. "დაიხმარე ხელოვნური ინტელექტი" (Help with AI - Primary highlight button)
+  2. "ჩაწერე მონაცემები" (Fill Manually - Secondary outline button)
+
+### 2. CHOICE BEHAVIOR
+
+Option A: "დაიხმარე ხელოვნური ინტელექტი" selected:
+- Trigger visual analysis of the uploaded image.
+- Show a brief loading state: "სურათი ანალიზდება..."
+- Automatically pre-fill the form fields:
+  * სათაური (Title)
+  * კატეგორია (Category)
+  * მდგომარეობა (Condition)
+  * სავარაუდო ფასი GEL-ში (Suggested Price in ₾)
+  * აღწერა (Short Georgian Description)
+- Reveal the pre-filled fields to the user, keeping every single field fully editable so they can correct any inaccuracies before publishing.
+
+Option B: "ჩაწერე მონაცემები" selected:
+- Instantly reveal the clean, empty form fields for manual entry (Title, Category, Condition, Price in ₾, Description).
+
+### 3. DELIVERY & FINAL STEP ("მიტანა")
+- At the bottom of the form, include the delivery preferences section labeled "მიტანა":
+  * Checkboxes/Radios: ადგილზე გატანა (Pickup), საკურიერო მომსახურება (Courier), პირისპირ შეხვედრა (In-Person Meetup).
+- Final Submit button: "გამოქვეყნება" (Publish).
+
+### 4. UI & DESIGN RULES
+- Site Branding: Nivti (ნივთი)
+- Language: 100% Georgian interface and labels.
+- Style: Modern dark slate/neutral palette, smooth step transitions, and clear input fields.
