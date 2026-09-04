@@ -70,6 +70,19 @@ export interface MessageThread {
   initials: string;
 }
 
+export interface ItemAnalysisInput {
+  /** Base64-encoded image data URL */
+  image: string;
+}
+
+export interface ItemAnalysis {
+  title: string;
+  category: string;
+  condition: string;
+  price: number;
+  description: string;
+}
+
 export type ListItemsParams = {
 search?: string;
 category?: string;

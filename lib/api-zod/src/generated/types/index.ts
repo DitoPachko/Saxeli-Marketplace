@@ -8,6 +8,8 @@
 
 export * from './favoriteState';
 export * from './healthStatus';
+export * from './itemAnalysis';
+export * from './itemAnalysisInput';
 export * from './itemInput';
 export * from './listItemsParams';
 export * from './marketplaceItem';

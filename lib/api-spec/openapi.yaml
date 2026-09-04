@@ -14,6 +14,8 @@ tags:
     description: Saxeli marketplace operations
   - name: profile
     description: Seller profile and inbox operations
+  - name: ai
+    description: AI-assisted listing tools
 paths:
   /healthz:
     get:
@@ -146,6 +148,26 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MessageThread"
+  /openai/analyze-item:
+    post:
+      operationId: analyzeItemImage
+      tags: [ai]
+      summary: Analyze an item photo for listing autofill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemAnalysisInput"
+      responses:
+        "200":
+          description: Suggested listing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemAnalysis"
+        "503":
+          description: AI analysis is unavailable
 components:
   schemas:
     HealthStatus:
@@ -236,4 +258,20 @@ components:
         time: { type: string }
         unread: { type: number }
         initials: { type: string }
+    ItemAnalysisInput:
+      type: object
+      required: [image]
+      properties:
+        image:
+          type: string
+          description: Base64-encoded image data URL
+    ItemAnalysis:
+      type: object
+      required: [title, category, condition, price, description]
+      properties:
+        title: { type: string }
+        category: { type: string }
+        condition: { type: string }
+        price: { type: number }
+        description: { type: string }
 

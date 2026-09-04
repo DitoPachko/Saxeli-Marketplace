@@ -170,3 +170,19 @@ export const ListMessagesResponseItem = zod.object({
 export const ListMessagesResponse = zod.array(ListMessagesResponseItem)
 
 
+/**
+ * @summary Analyze an item photo for listing autofill
+ */
+export const AnalyzeItemImageBody = zod.object({
+  "image": zod.string().describe('Base64-encoded image data URL')
+})
+
+export const AnalyzeItemImageResponse = zod.object({
+  "title": zod.string(),
+  "category": zod.string(),
+  "condition": zod.string(),
+  "price": zod.number(),
+  "description": zod.string()
+})
+
+

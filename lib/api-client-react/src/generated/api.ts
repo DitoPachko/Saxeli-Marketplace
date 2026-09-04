@@ -22,6 +22,8 @@ import type {
 import type {
   FavoriteState,
   HealthStatus,
+  ItemAnalysis,
+  ItemAnalysisInput,
   ItemInput,
   ListItemsParams,
   MarketplaceItem,
@@ -590,4 +592,75 @@ export function useListMessages<TData = Awaited<ReturnType<typeof listMessages>>
 
 
 
+
+export const getAnalyzeItemImageUrl = () => {
+
+
+
+
+  return `/api/openai/analyze-item`
+}
+
+/**
+ * @summary Analyze an item photo for listing autofill
+ */
+export const analyzeItemImage = async (itemAnalysisInput: ItemAnalysisInput, options?: Parameters<typeof customFetch>[1]): Promise<ItemAnalysis> => {
+
+  return customFetch<ItemAnalysis>(getAnalyzeItemImageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(itemAnalysisInput)
+  }
+);}
+
+
+
+
+
+export const getAnalyzeItemImageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeItemImage>>, TError,{data: BodyType<ItemAnalysisInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analyzeItemImage>>, TError,{data: BodyType<ItemAnalysisInput>}, TContext> => {
+
+const mutationKey = ['analyzeItemImage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analyzeItemImage>>, {data: BodyType<ItemAnalysisInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  analyzeItemImage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalyzeItemImageMutationResult = NonNullable<Awaited<ReturnType<typeof analyzeItemImage>>>
+    export type AnalyzeItemImageMutationBody = BodyType<ItemAnalysisInput>
+    export type AnalyzeItemImageMutationError = ErrorType<void>
+
+    /**
+ * @summary Analyze an item photo for listing autofill
+ */
+export const useAnalyzeItemImage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeItemImage>>, TError,{data: BodyType<ItemAnalysisInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof analyzeItemImage>>,
+        TError,
+        {data: BodyType<ItemAnalysisInput>},
+        TContext
+      > => {
+      return useMutation(getAnalyzeItemImageMutationOptions(options));
+    }
 
