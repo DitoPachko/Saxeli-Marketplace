@@ -1,0 +1,57 @@
+import { useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, ImagePlus, Package, Plus, ShieldCheck, Truck, X } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { useCreateItem } from '@workspace/api-client-react';
+import type { ItemInput } from '@workspace/api-client-react';
+import { Notice, PageHeader } from '@/components/MarketplaceChrome';
+
+const steps = ['ნივთი', 'ფოტო და ფასი', 'მიტანა'];
+const emptyForm: ItemInput = { title: '', price: 0, category: 'ტექნიკა', condition: 'კარგი', city: 'თბილისი', image: '', description: '', delivery: [] };
+
+export default function Sell() {
+  const [, setLocation] = useLocation();
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<ItemInput>(emptyForm);
+  const [preview, setPreview] = useState('');
+  const [error, setError] = useState('');
+  const createItem = useCreateItem();
+
+  const update = <K extends keyof ItemInput>(key: K, value: ItemInput[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const nextStep = () => {
+    setError('');
+    if (step === 0 && (!form.title.trim() || !form.description.trim())) return setError('დაგვიტოვე ნივთის სახელი და მოკლე აღწერა.');
+    if (step === 1 && (!form.image.trim() || form.price <= 0)) return setError('დაამატე ფოტოს მისამართი და ფასი.');
+    setStep((current) => Math.min(2, current + 1));
+  };
+  const submit = () => {
+    setError('');
+    createItem.mutate({ data: { ...form, title: form.title.trim(), description: form.description.trim(), image: form.image.trim(), price: Number(form.price) } }, {
+      onSuccess: (item) => setLocation(`/item/${item.id}`),
+      onError: () => setError('განცხადების დამატება ვერ მოხერხდა. გთხოვ, თავიდან სცადო.'),
+    });
+  };
+  const toggleDelivery = (value: string) => update('delivery', form.delivery?.includes(value) ? form.delivery.filter((item) => item !== value) : [...(form.delivery ?? []), value]);
+
+  return (
+    <div>
+      <PageHeader title="გაყიდე შენი ნივთი" eyebrow="Saxeli / ახალი განცხადება">
+        <Link href="/" className="hidden items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:flex" data-testid="link-cancel-sell"><X size={16} /> გაუქმება</Link>
+      </PageHeader>
+      <div className="mx-auto max-w-[920px] px-5 py-8 md:px-10 md:py-12">
+        <div className="mb-9 flex items-center justify-between">
+          {steps.map((label, index) => <div key={label} className="flex items-center gap-2"><span className={`flex h-8 w-8 items-center justify-center rounded-full font-mono-ui text-xs ${index <= step ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'}`}>{index < step ? <Check size={15} /> : index + 1}</span><span className={`hidden text-xs font-semibold sm:block ${index === step ? '' : 'text-[hsl(var(--muted-foreground))]'}`}>{label}</span>{index < steps.length - 1 ? <span className="mx-1 h-px w-10 bg-[hsl(var(--border))] sm:mx-4 sm:w-20" /> : null}</div>)}
+        </div>
+        <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+          <section className="rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 md:p-8">
+            {error ? <Notice tone="error">{error}</Notice> : null}
+            {step === 0 ? <div className="enter space-y-6"><div><p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">01 / ნივთის ამბავი</p><h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">რას აძლევ მეორე შანსს?</h2></div><label className="block text-sm font-semibold">სათაური<input value={form.title} onChange={(event) => update('title', event.target.value)} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm outline-none transition focus:border-[hsl(var(--primary))]" placeholder="მაგ. ვინტაჟური კამერა" data-testid="input-sell-title" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">კატეგორია<select value={form.category} onChange={(event) => update('category', event.target.value)} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-sell-category"><option>ტექნიკა</option><option>ტანსაცმელი</option><option>სახლი</option><option>ჰობი</option><option>ბავშვები</option></select></label><label className="block text-sm font-semibold">მდგომარეობა<select value={form.condition} onChange={(event) => update('condition', event.target.value)} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-sell-condition"><option>ახალი</option><option>როგორც ახალი</option><option>კარგი</option><option>საჭიროებს ყურადღებას</option></select></label></div><label className="block text-sm font-semibold">ქალაქი<select value={form.city} onChange={(event) => update('city', event.target.value)} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-sell-city"><option>თბილისი</option><option>ბათუმი</option><option>ქუთაისი</option><option>რუსთავი</option></select></label><label className="block text-sm font-semibold">აღწერა<textarea value={form.description} onChange={(event) => update('description', event.target.value)} rows={5} className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm leading-relaxed outline-none focus:border-[hsl(var(--primary))]" placeholder="რა უნდა იცოდეს მომავალმა მფლობელმა?" data-testid="textarea-sell-description" /></label></div> : null}
+            {step === 1 ? <div className="enter space-y-6"><div><p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">02 / სახე და ფასი</p><h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">აჩვენე, რასაც ყიდი.</h2></div><div className="rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted)/.5)] p-4"><div className="relative aspect-[1.7] overflow-hidden rounded-xl bg-[hsl(var(--muted))]">{preview ? <img src={preview} alt="ფოტოს გადახედვა" className="h-full w-full object-cover" onError={() => setPreview('')} /> : <div className="flex h-full flex-col items-center justify-center text-center text-[hsl(var(--muted-foreground))]"><ImagePlus size={28} /><p className="mt-2 text-sm">ფოტოს გადახედვა</p><p className="mt-1 text-xs">ჩასვი ფოტოს მისამართი ქვემოთ</p></div>}</div><label className="mt-3 block text-xs font-semibold">ფოტოს მისამართი<input value={form.image} onChange={(event) => { update('image', event.target.value); setPreview(event.target.value); }} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-[hsl(var(--card))] px-3 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]" placeholder="https://..." data-testid="input-sell-image" /></label></div><label className="block text-sm font-semibold">ფასი (₾)<input required type="number" min="0" value={form.price || ''} onChange={(event) => update('price', Number(event.target.value))} className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 font-mono-ui text-lg outline-none focus:border-[hsl(var(--primary))]" placeholder="0" data-testid="input-sell-price" /></label></div> : null}
+            {step === 2 ? <div className="enter space-y-6"><div><p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">03 / მიტანის არჩევანი</p><h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">როგორ მივიდეს ნივთი?</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">მონიშნე ერთი ან რამდენიმე ვარიანტი. საბოლოოდ დეტალებს მყიდველთან შეათანხმებ.</p></div><div className="space-y-3">{[{ value: 'შეხვედრა ადგილზე', icon: Package, detail: 'თბილისში, შენთვის მოსახერხებელ ადგილას' }, { value: 'კურიერი', icon: Truck, detail: 'მყიდველი ირჩევს და ფარავს კურიერის ღირებულებას' }, { value: 'ფოსტა', icon: ShieldCheck, detail: 'გაგზავნა საქართველოს ნებისმიერ ქალაქში' }].map(({ value, icon: Icon, detail }) => { const selected = form.delivery?.includes(value); return <button type="button" key={value} onClick={() => toggleDelivery(value)} className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${selected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.1)]' : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary)/.6)]'}`} data-testid={`button-delivery-${value}`}><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${selected ? 'bg-[hsl(var(--primary))]' : 'bg-[hsl(var(--muted))]'}`}><Icon size={19} /></span><span className="flex-1"><span className="block text-sm font-semibold">{value}</span><span className="mt-1 block text-xs text-[hsl(var(--muted-foreground))]">{detail}</span></span><span className={`flex h-5 w-5 items-center justify-center rounded-full border ${selected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]' : 'border-[hsl(var(--border))]'}`}>{selected ? <Check size={13} /> : null}</span></button>; })}</div><div className="rounded-2xl bg-[hsl(var(--secondary))] p-5 text-[hsl(var(--secondary-foreground))]"><p className="font-display text-lg">ერთი ბოლო შემოწმება</p><div className="mt-4 grid grid-cols-2 gap-3 text-xs text-[hsl(var(--secondary-foreground)/.7)]"><span>სათაური<br /><b className="text-[hsl(var(--secondary-foreground))]">{form.title || '—'}</b></span><span>ფასი<br /><b className="text-[hsl(var(--primary))]">{form.price ? `${form.price} ₾` : '—'}</b></span></div></div></div> : null}
+            <div className="mt-8 flex justify-between gap-3 border-t border-[hsl(var(--border))] pt-6">{step > 0 ? <button type="button" onClick={() => setStep((current) => current - 1)} className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[hsl(var(--muted))]" data-testid="button-sell-back"><ArrowLeft size={16} /> უკან</button> : <span />}{step < 2 ? <button type="button" onClick={nextStep} className="btn-primary flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold" data-testid="button-sell-next">შემდეგი <ArrowRight size={16} /></button> : <button type="button" onClick={submit} disabled={createItem.isPending} className="btn-primary flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-60" data-testid="button-publish-item">{createItem.isPending ? 'იტვირთება...' : 'გამოქვეყნება'} <Check size={16} /></button>}</div>
+          </section>
+          <aside className="hidden space-y-4 lg:block"><div className="rounded-2xl bg-[hsl(var(--primary)/.16)] p-5"><Plus size={18} /><h3 className="font-display mt-4 text-lg font-semibold">პატარა რჩევა</h3><p className="mt-2 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">კარგი ფოტო და ზუსტი აღწერა ნივთს უფრო სწრაფად იპოვის ახალ მფლობელს.</p></div><p className="px-2 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">Saxeli-ზე გულწრფელი აღწერა ნდობის პირველი ნაბიჯია.</p></aside>
+        </div>
+      </div>
+    </div>
+  );
+}

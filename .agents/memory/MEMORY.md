@@ -1,0 +1,1 @@
+- [API codegen compatibility](api-codegen-compatibility.md) — use number for integer-like OpenAPI fields with this Zod 3 workspace

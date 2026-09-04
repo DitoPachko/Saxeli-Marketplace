@@ -1,6 +1,6 @@
-# [Project name]
+# Saxeli Marketplace
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Saxeli is a Georgian-first peer-to-peer marketplace for buying and selling personal items.
 
 ## Run & Operate
 
@@ -22,23 +22,29 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/saxeli-marketplace/src/` — React marketplace shell, pages, and visual theme
+- `artifacts/api-server/src/routes/marketplace.ts` — listing, detail, search, and favorite endpoints
+- `artifacts/api-server/src/routes/profile.ts` — profile summary and message inbox endpoints
+- `lib/api-spec/openapi.yaml` — source of truth for generated API hooks and schemas
+- `lib/api-client-react/src/generated/` — generated React Query client
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first build keeps seeded listings in the API process so the marketplace is immediately usable without blocking on an external account connection.
+- The UI is Georgian-first and deliberately excludes cars, real estate, and heavy household appliances from the category model.
+- Unsplash image URLs provide resilient seeded listing photography while the upload flow previews user-selected images client-side.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can browse, search, and filter personal-item listings; open item details; save favorites; publish a listing through a guided form; view their profile dashboard and inbox; and access Georgian login and registration screens.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+The user requested a Georgian interface, GEL pricing, and a clean neutral marketplace focused strictly on personal items.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Regenerate API clients after changing `lib/api-spec/openapi.yaml` with `pnpm --filter @workspace/api-spec run codegen`.
 
 ## Pointers
 

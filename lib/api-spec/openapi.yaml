@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: marketplace
+    description: Saxeli marketplace operations
+  - name: profile
+    description: Seller profile and inbox operations
 paths:
   /healthz:
     get:
@@ -24,6 +28,124 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /items:
+    get:
+      operationId: listItems
+      tags: [marketplace]
+      summary: List marketplace items
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 12
+            minimum: 1
+            maximum: 50
+      responses:
+        "200":
+          description: Marketplace items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketplaceItem"
+    post:
+      operationId: createItem
+      tags: [marketplace]
+      summary: Create a marketplace listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemInput"
+      responses:
+        "201":
+          description: Created marketplace item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceItem"
+  /items/{id}:
+    get:
+      operationId: getItem
+      tags: [marketplace]
+      summary: Get a marketplace item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Marketplace item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceItem"
+        "404":
+          description: Item not found
+    post:
+      operationId: toggleItemFavorite
+      tags: [marketplace]
+      summary: Toggle an item favorite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated favorite state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteState"
+  /profile/summary:
+    get:
+      operationId: getProfileSummary
+      tags: [profile]
+      summary: Get the current profile summary
+      responses:
+        "200":
+          description: Profile summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+  /messages:
+    get:
+      operationId: listMessages
+      tags: [profile]
+      summary: List message threads
+      responses:
+        "200":
+          description: Message threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MessageThread"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +155,85 @@ components:
           type: string
       required:
         - status
+    Seller:
+      type: object
+      required: [name, initials, rating, listings]
+      properties:
+        name: { type: string }
+        initials: { type: string }
+        rating: { type: number }
+        listings: { type: number }
+        responseTime: { type: string }
+    MarketplaceItem:
+      type: object
+      required:
+        - id
+        - title
+        - price
+        - category
+        - condition
+        - city
+        - postedAt
+        - image
+        - seller
+      properties:
+        id: { type: string }
+        title: { type: string }
+        price: { type: number }
+        category: { type: string }
+        condition: { type: string }
+        city: { type: string }
+        postedAt: { type: string }
+        image: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        description: { type: string }
+        seller:
+          $ref: "#/components/schemas/Seller"
+        isFavorite: { type: boolean }
+        delivery:
+          type: array
+          items: { type: string }
+    ItemInput:
+      type: object
+      required: [title, price, category, condition, city, image, description]
+      properties:
+        title: { type: string, minLength: 2 }
+        price: { type: number, minimum: 0 }
+        category: { type: string }
+        condition: { type: string }
+        city: { type: string }
+        image: { type: string }
+        description: { type: string }
+        delivery:
+          type: array
+          items: { type: string }
+    FavoriteState:
+      type: object
+      required: [id, isFavorite]
+      properties:
+        id: { type: string }
+        isFavorite: { type: boolean }
+    ProfileSummary:
+      type: object
+      required: [name, initials, rating, activeListings, savedItems, unreadMessages]
+      properties:
+        name: { type: string }
+        initials: { type: string }
+        rating: { type: number }
+        activeListings: { type: number }
+        savedItems: { type: number }
+        unreadMessages: { type: number }
+    MessageThread:
+      type: object
+      required: [id, name, itemTitle, preview, time, unread, initials]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        itemTitle: { type: string }
+        preview: { type: string }
+        time: { type: string }
+        unread: { type: number }
+        initials: { type: string }
 

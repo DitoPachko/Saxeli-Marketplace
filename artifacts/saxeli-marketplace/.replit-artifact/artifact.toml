@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Saxeli Marketplace"
+description = "A Georgian-first peer-to-peer marketplace for buying and selling personal items such as electronics, fashion, hobbies, personal care, kids goods, and home decor."
+version = "1.0.0"
+id = "artifacts/saxeli-marketplace"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18156
+
+[services.development]
+run = "pnpm --filter @workspace/saxeli-marketplace run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/saxeli-marketplace", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/saxeli-marketplace/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18156"
+BASE_PATH = "/"
