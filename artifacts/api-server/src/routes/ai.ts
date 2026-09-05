@@ -1,5 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { AnalyzeItemImageBody, AnalyzeItemImageResponse } from "@workspace/api-zod";
+import { categoryTree } from "@workspace/db";
 
 type Analysis = {
   title: string;
@@ -8,14 +9,7 @@ type Analysis = {
   description: string;
 };
 
-const allowedCategories = [
-  "ტექნიკა და ელექტრონიკა",
-  "ტანსაცმელი და ფეხსაცმელი",
-  "ავტო / მოტო",
-  "ჰობი, სპორტი და დასვენება",
-  "სახლი და ინტერიერი",
-  "სხვა",
-];
+const allowedCategories = categoryTree.map((category) => category.name);
 
 function normalizeAnalysis(value: unknown): Analysis {
   const candidate = value as Partial<Analysis>;
@@ -137,7 +131,7 @@ const analyzeItem = async (req: Request, res: Response) => {
             parts: [
               {
                 text:
-                  "You are an expert AI product recognition and valuation engine for a Georgian P2P marketplace. Analyze the uploaded photo and execute these steps in order:\n\n1. IDENTIFY BRAND & MODEL: Examine text, logos, silhouettes, tags, stitching, serial numbers, or distinct design languages. If a brand/model exists (e.g. BMW, Nike, Apple, Sony, Bosch, Zara), you MUST explicitly state it.\n2. TITLE FORMATION: The title MUST start with '[Brand] [Model/Item Name]' in Georgian or Latin script (e.g., 'BMW E39 M Sport-ის ბამპერი', 'iPhone 13 Pro', 'Maison Margiela Replica'). NEVER output purely descriptive sentences like 'შავი ნივთი' or 'ფოტოზე ნაჩვენები ნივთი'.\n3. CATEGORY CLASSIFICATION: Map strictly to one of: 'ტექნიკა და ელექტრონიკა', 'ტანსაცმელი და ფეხსაცმელი', 'ავტო / მოტო', 'ჰობი, სპორტი და დასვენება', 'სახლი და ინტერიერი', 'სხვა'.\n4. ACCURATE LOCAL VALUATION: Estimate the realistic second-hand market value in Georgian Lari (GEL ₾) based on the recognized brand tier, rarity, and visible condition. Avoid generic 100-120 ₾ placeholders.\n5. DESCRIPTION: Provide a concise Georgian breakdown detailing brand, specifications, materials, and condition.\n\nReturn ONLY valid raw JSON matching this schema:\n{\n  \"title\": \"string\",\n  \"category\": \"string\",\n  \"estimatedPrice\": number,\n  \"description\": \"string\"\n}",
+                  `You are an expert AI product recognition and valuation engine for a Georgian P2P marketplace. Analyze the uploaded photo and execute these steps in order:\n\n1. IDENTIFY BRAND & MODEL: Examine text, logos, silhouettes, tags, stitching, serial numbers, or distinct design languages. If a brand/model exists (e.g. BMW, Nike, Apple, Sony, Bosch, Zara), you MUST explicitly state it.\n2. TITLE FORMATION: The title MUST start with '[Brand] [Model/Item Name]' in Georgian or Latin script (e.g., 'BMW E39 M Sport-ის ბამპერი', 'iPhone 13 Pro', 'Maison Margiela Replica'). NEVER output purely descriptive sentences like 'შავი ნივთი' or 'ფოტოზე ნაჩვენები ნივთი'.\n3. CATEGORY CLASSIFICATION: Map strictly to one of these Georgian top-level categories: ${allowedCategories.map((name) => `'${name}'`).join(", ")}.\n4. ACCURATE LOCAL VALUATION: Estimate the realistic second-hand market value in Georgian Lari (GEL ₾) based on the recognized brand tier, rarity, and visible condition. Avoid generic 100-120 ₾ placeholders.\n5. DESCRIPTION: Provide a concise Georgian breakdown detailing brand, specifications, materials, and condition.\n\nReturn ONLY valid raw JSON matching this schema:\n{\n  "title": "string",\n  "category": "string",\n  "estimatedPrice": number,\n  "description": "string"\n}`,
               },
             ],
           },

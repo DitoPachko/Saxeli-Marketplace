@@ -22,6 +22,7 @@ export interface MarketplaceItem {
   title: string;
   price: number;
   category: string;
+  categorySlug: string;
   condition: string;
   city: string;
   postedAt: string;
@@ -58,6 +59,18 @@ export interface ItemUpdate {
   images?: string[];
   description?: string;
   delivery?: string[];
+}
+
+export interface Category {
+  id: string;
+  /** @nullable */
+  parentId?: string | null;
+  name: string;
+  /** @nullable */
+  icon?: string | null;
+  slug: string;
+  depth: number;
+  sortOrder: number;
 }
 
 export interface UserProfile {

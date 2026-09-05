@@ -12,6 +12,7 @@ export interface MarketplaceItem {
   title: string;
   price: number;
   category: string;
+  categorySlug: string;
   condition: string;
   city: string;
   postedAt: string;

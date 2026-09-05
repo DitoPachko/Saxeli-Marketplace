@@ -1,23 +1,21 @@
 import type { ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/react';
-import { AlignLeft, Facebook, Heart, Instagram, LogOut, Plus, Search, UserRound } from 'lucide-react';
+import { Facebook, Heart, Instagram, LogOut, Plus, Search, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
-import { useFilters, categories } from '@/hooks/use-filters';
+import { useFilters } from '@/hooks/use-filters';
+import { CategoryMenuDesktop, CategoryMenuMobile } from '@/components/CategoryMenu';
 
 type MarketplaceChromeProps = { children: ReactNode };
 
 function Navbar() {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const { signOut } = useClerk();
   const { isSignedIn, user } = useUser();
-  const { search, setSearch, setSubmittedSearch, category, setCategory } = useFilters();
+  const { search, setSearch, setSubmittedSearch } = useFilters();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittedSearch(search.trim());
-    if (location !== '/') {
-      setLocation('/');
-    }
   };
 
   const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
@@ -25,30 +23,27 @@ function Navbar() {
   const savedReturnTo = encodeURIComponent('/profile#saved');
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.82)] backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.85)] backdrop-blur-lg">
       <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-5 py-3 md:px-10">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="saxeli-wordmark text-[1.75rem] leading-none text-[hsl(var(--foreground))]">saxeli</span>
-        </Link>
         
-        <div className="hidden flex-1 max-w-2xl items-center md:flex">
-          <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
-            <select 
-              value={category} 
-              onChange={(e) => { setCategory(e.target.value); if(location !== '/') setLocation('/'); }} 
-              className="h-full cursor-pointer appearance-none bg-transparent px-4 py-2 text-sm font-medium outline-none border-r border-[hsl(var(--border))]"
-            >
-              {categories.map(c => <option key={c}>{c}</option>)}
-            </select>
+        <div className="flex items-center gap-5 lg:gap-8">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <span className="saxeli-wordmark text-[1.85rem] leading-none text-[hsl(var(--foreground))]">saxeli</span>
+          </Link>
+          <CategoryMenuDesktop />
+        </div>
+        
+        <div className="hidden flex-1 max-w-2xl items-center md:flex px-4">
+          <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.4)] transition-all focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))] focus-within:shadow-[var(--shadow-sm)]">
             <input 
               type="search"
               placeholder="რას ეძებ?" 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+              className="min-w-0 flex-1 bg-transparent px-5 py-2.5 text-[15px] font-medium outline-none placeholder:text-[hsl(var(--muted-foreground))] placeholder:font-normal"
             />
-            <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
-              <Search size={18} />
+            <button type="submit" className="flex h-full items-center justify-center px-5 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
+              <Search size={20} />
             </button>
           </form>
         </div>
@@ -80,62 +75,37 @@ function Navbar() {
             </>
           )}
 
-          <Link href="/sell" className="btn-primary flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold shadow-sm">
-            <Plus size={16} />
+          <Link href="/sell" className="btn-primary flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold shadow-sm">
+            <Plus size={18} />
             <span className="hidden md:inline">გაყიდე</span>
           </Link>
         </div>
       </div>
 
-      {/* Mobile Search Row */}
-      <div className="border-t border-[hsl(var(--border))] px-5 py-3 md:hidden">
-        <div className="flex flex-col gap-2">
-           <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
-             <input 
-               type="search"
-               placeholder="რას ეძებ?" 
-               value={search}
-               onChange={(e) => setSearch(e.target.value)}
-               className="min-w-0 flex-1 bg-transparent px-4 py-2 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
-             />
-             <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
-               <Search size={18} />
-             </button>
-           </form>
-        </div>
-      </div>
-      
-      {/* Quick category links for Desktop and Mobile */}
-      <div className="border-t border-[hsl(var(--border))]">
-        <div className="mx-auto flex max-w-[1320px] items-center gap-6 overflow-x-auto px-5 py-2.5 text-sm md:px-10 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <span className="flex shrink-0 items-center gap-2 text-[hsl(var(--muted-foreground))]"><AlignLeft size={16} /> კატეგორიები:</span>
-          <button 
-              onClick={() => { setCategory(categories[0]); setLocation('/'); }} 
-              className={`whitespace-nowrap shrink-0 font-medium transition-colors hover:text-[hsl(var(--primary))] ${category === categories[0] ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'}`}
-            >
-              {categories[0]}
+      {/* Mobile Search & Categories Row */}
+      <div className="border-t border-[hsl(var(--border))] px-5 py-3 md:hidden flex flex-col gap-3">
+        <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
+          <input 
+            type="search"
+            placeholder="რას ეძებ?" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+          />
+          <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
+            <Search size={18} />
           </button>
-          {categories.slice(1).map(c => (
-            <button 
-              key={c} 
-              onClick={() => { setCategory(c); setLocation('/'); }} 
-              className={`whitespace-nowrap shrink-0 font-medium transition-colors hover:text-[hsl(var(--primary))] ${category === c ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'}`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
+        </form>
+        <CategoryMenuMobile />
       </div>
     </nav>
   );
 }
 
 function Footer() {
-  const [, setLocation] = useLocation();
-  const { setCategory } = useFilters();
-  const openCategory = (value: string) => {
-    setCategory(value);
-    setLocation('/');
+  const { setCategorySlug } = useFilters();
+  const openCategory = (slug: string) => {
+    setCategorySlug(slug);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   return (
@@ -151,9 +121,9 @@ function Footer() {
           <div>
             <h3 className="font-semibold mb-4">კატეგორიები</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <li><button onClick={() => openCategory('ავტო / მოტო')} className="hover:text-[hsl(var(--foreground))]">მანქანები (Vehicles)</button></li>
-              <li><button onClick={() => openCategory('უძრავი ქონება')} className="hover:text-[hsl(var(--foreground))]">უძრავი ქონება (Real Estate)</button></li>
-              <li><button onClick={() => openCategory('ტექნიკა')} className="hover:text-[hsl(var(--foreground))]">ელექტრონიკა (Electronics)</button></li>
+              <li><button onClick={() => openCategory('vehicle-rentals')} className="hover:text-[hsl(var(--foreground))]">მანქანები (Vehicles)</button></li>
+              <li><button onClick={() => openCategory('property-rentals')} className="hover:text-[hsl(var(--foreground))]">უძრავი ქონება (Real Estate)</button></li>
+              <li><button onClick={() => openCategory('electronics')} className="hover:text-[hsl(var(--foreground))]">ელექტრონიკა (Electronics)</button></li>
             </ul>
           </div>
           <div>

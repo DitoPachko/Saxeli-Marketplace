@@ -53,6 +53,7 @@ app.use(
     const publicRequest =
       req.path === "/" ||
       req.path === "/healthz" ||
+      req.path === "/categories" ||
       (req.method === "GET" &&
          (req.path === "/items" ||
            req.path.startsWith("/items/") ||

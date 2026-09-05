@@ -7,6 +7,8 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+export * from "./categories";
+import { categories } from "./categories";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -29,6 +31,7 @@ export const listings = pgTable("listings", {
   title: text("title").notNull(),
   price: integer("price").notNull(),
   category: text("category").notNull(),
+  categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
   condition: text("condition").notNull(),
   city: text("city").notNull(),
   image: text("image").notNull(),
@@ -47,6 +50,10 @@ export const listingsRelations = relations(listings, ({ one }) => ({
   user: one(users, {
     fields: [listings.userId],
     references: [users.id],
+  }),
+  categoryRecord: one(categories, {
+    fields: [listings.categoryId],
+    references: [categories.id],
   }),
 }));
 

@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, Heart, MapPin, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Check, ChevronDown, Heart, MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { getListItemsQueryKey, useListItems, useToggleItemFavorite } from '@workspace/api-client-react';
 import type { ListItemsParams, MarketplaceItem } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, ItemVisual, Notice } from '@/components/MarketplaceChrome';
 import { useFilters, cities } from '@/hooks/use-filters';
+import { useCategoryTree } from '@/hooks/use-categories';
 import { useUser } from '@clerk/react';
 
 function formatPrice(price: number) {
@@ -58,22 +59,24 @@ function ItemSkeleton() {
 }
 
 export default function Home() {
-  const { search, setSearch, submittedSearch, setSubmittedSearch, category, setCategory, city, setCity } = useFilters();
+  const { search, setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
   const { isSignedIn } = useUser();
   const [location, setLocation] = useLocation();
+  const { flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
 
   const params = useMemo<ListItemsParams>(() => ({
     search: submittedSearch || undefined,
-    category: category === 'ყველა კატეგორია' ? undefined : category,
-    city: city === 'ყველა ქალაქი' ? undefined : city,
+    category: categorySlug || undefined,
+    city: city === cities[0] ? undefined : city,
     limit: 50,
-  }), [submittedSearch, category, city]);
+  }), [submittedSearch, categorySlug, city]);
   
-  const { data: items, isLoading, isError, refetch } = useListItems(params, { query: { queryKey: getListItemsQueryKey(params) } });
+  const { data: items, isLoading: isItemsLoading, isError, refetch } = useListItems(params, { query: { queryKey: getListItemsQueryKey(params) } });
   const toggleFavorite = useToggleItemFavorite();
   const listingItems = items ?? [];
+  const isLoading = isItemsLoading || isCategoriesLoading;
 
   const handleFavorite = (item: MarketplaceItem) => {
     if (!isSignedIn) {
@@ -93,6 +96,11 @@ export default function Home() {
       onError: () => setFavoriteOverrides((current) => ({ ...current, [item.id]: !next })),
     });
   };
+
+  const categoryName = categorySlug ? flatMap.get(categorySlug)?.name || categorySlug : '';
+  const displayTitle = submittedSearch || categoryName 
+    ? `შედეგები: ${submittedSearch ? `"${submittedSearch}" ` : ''}${categoryName}` 
+    : 'ახლახან დამატებული';
 
   return (
     <div>
@@ -124,7 +132,7 @@ export default function Home() {
         <div className="mt-10 flex items-end justify-between border-b border-[hsl(var(--border))] pb-4">
           <div>
             <h2 className="font-display mt-1 text-2xl font-semibold tracking-[-.04em] md:text-3xl">
-              {submittedSearch || (category !== 'ყველა კატეგორია') ? `შედეგები: ${submittedSearch || category}` : 'ახლახან დამატებული'}
+              {displayTitle}
             </h2>
           </div>
           <span className="hidden text-xs text-[hsl(var(--muted-foreground))] sm:block" data-testid="text-results-count">{listingItems.length} განცხადება</span>
@@ -139,7 +147,7 @@ export default function Home() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.22)]"><Search size={22} /></div>
             <h3 className="font-display mt-4 text-xl font-semibold">ამ ძიებამ არაფერი იპოვა</h3>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">სცადე სხვა სიტყვა ან გააფართოვე ფილტრი.</p>
-            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { setSearch(''); setSubmittedSearch(''); setCategory('ყველა კატეგორია'); setCity('ყველა ქალაქი'); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
+            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { setSearch(''); setSubmittedSearch(''); setCategorySlug(''); setCity(cities[0]); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
           </div>
         ) : null}
         

@@ -85,6 +85,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MarketplaceItem"
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [marketplace]
+      summary: List the marketplace category hierarchy
+      responses:
+        "200":
+          description: Flat category records ordered for tree construction
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
   /items/{id}:
     get:
       operationId: getItem
@@ -291,6 +305,7 @@ components:
         - title
         - price
         - category
+        - categorySlug
         - condition
         - city
         - postedAt
@@ -301,6 +316,7 @@ components:
         title: { type: string }
         price: { type: number }
         category: { type: string }
+        categorySlug: { type: string }
         condition: { type: string }
         city: { type: string }
         postedAt: { type: string }
@@ -346,6 +362,17 @@ components:
         delivery:
           type: array
           items: { type: string }
+    Category:
+      type: object
+      required: [id, name, slug, depth, sortOrder]
+      properties:
+        id: { type: string }
+        parentId: { type: [string, "null"] }
+        name: { type: string }
+        icon: { type: [string, "null"] }
+        slug: { type: string }
+        depth: { type: number }
+        sortOrder: { type: number }
     UserProfile:
       type: object
       required: [id, fullName, email, phoneNumber, city, avatarUrl]

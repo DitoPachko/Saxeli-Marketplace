@@ -17,15 +17,7 @@ import {
   type ItemInput,
 } from "@workspace/api-client-react";
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
-
-const categories = [
-  "ტექნიკა და ელექტრონიკა",
-  "ტანსაცმელი და ფეხსაცმელი",
-  "ავტო / მოტო",
-  "ჰობი, სპორტი და დასვენება",
-  "სახლი და ინტერიერი",
-  "სხვა",
-];
+import { CategoryPicker } from "@/components/CategoryPicker";
 
 const conditions = ["ახალი", "მეორადი (იდეალური)", "მეორადი", "დაზიანებული"];
 const cities = ["თბილისი", "ბათუმი", "ქუთაისი", "რუსთავი", "სხვა"];
@@ -66,7 +58,7 @@ export default function EditItem() {
       setForm({
         title: itemData.title,
         price: itemData.price,
-        category: itemData.category,
+        category: itemData.categorySlug, // Hydrate with slug
         condition: itemData.condition,
         city: itemData.city,
         image: itemData.image,
@@ -308,17 +300,7 @@ export default function EditItem() {
                       <label className="mb-2 block text-sm font-semibold">
                         კატეგორია <span className="text-[hsl(var(--destructive))]">*</span>
                       </label>
-                      <select
-                        required
-                        value={form.category}
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        className="w-full appearance-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 outline-none transition focus:border-[hsl(var(--primary))]"
-                      >
-                        <option value="" disabled>აირჩიე</option>
-                        {categories.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
+                      <CategoryPicker value={form.category} onChange={(slug) => setForm({ ...form, category: slug })} />
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-semibold">

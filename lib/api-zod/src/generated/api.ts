@@ -37,6 +37,7 @@ export const ListItemsResponseItem = zod.object({
   "title": zod.string(),
   "price": zod.number(),
   "category": zod.string(),
+  "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
   "postedAt": zod.string(),
@@ -81,6 +82,7 @@ export const CreateItemResponse = zod.object({
   "title": zod.string(),
   "price": zod.number(),
   "category": zod.string(),
+  "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
   "postedAt": zod.string(),
@@ -100,6 +102,21 @@ export const CreateItemResponse = zod.object({
 
 
 /**
+ * @summary List the marketplace category hierarchy
+ */
+export const ListCategoriesResponseItem = zod.object({
+  "id": zod.string(),
+  "parentId": zod.string().nullish(),
+  "name": zod.string(),
+  "icon": zod.string().nullish(),
+  "slug": zod.string(),
+  "depth": zod.number(),
+  "sortOrder": zod.number()
+})
+export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
+
+
+/**
  * @summary Get a marketplace item
  */
 export const GetItemParams = zod.object({
@@ -111,6 +128,7 @@ export const GetItemResponse = zod.object({
   "title": zod.string(),
   "price": zod.number(),
   "category": zod.string(),
+  "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
   "postedAt": zod.string(),
@@ -172,6 +190,7 @@ export const UpdateItemResponse = zod.object({
   "title": zod.string(),
   "price": zod.number(),
   "category": zod.string(),
+  "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
   "postedAt": zod.string(),
@@ -244,6 +263,7 @@ export const ListMyItemsResponseItem = zod.object({
   "title": zod.string(),
   "price": zod.number(),
   "category": zod.string(),
+  "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
   "postedAt": zod.string(),

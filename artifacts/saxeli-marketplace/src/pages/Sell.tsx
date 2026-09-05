@@ -21,15 +21,8 @@ import {
   type ItemInput,
 } from "@workspace/api-client-react";
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
-
-const categories = [
-  "ტექნიკა და ელექტრონიკა",
-  "ტანსაცმელი და ფეხსაცმელი",
-  "ავტო / მოტო",
-  "ჰობი, სპორტი და დასვენება",
-  "სახლი და ინტერიერი",
-  "სხვა",
-];
+import { CategoryPicker } from "@/components/CategoryPicker";
+import { useCategoryTree } from "@/hooks/use-categories";
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
 const deliveryOptions = [
@@ -53,7 +46,7 @@ const deliveryOptions = [
 const emptyForm: ItemInput = {
   title: "",
   price: 0,
-  category: categories[0],
+  category: "",
   condition: conditions[1],
   city: "თბილისი",
   image: "",
@@ -66,6 +59,7 @@ type Stage = "photo" | "choice" | "details";
 export default function Sell() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const { categories } = useCategoryTree();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("photo");
   const [form, setForm] = useState<ItemInput>(emptyForm);
@@ -109,10 +103,14 @@ export default function Sell() {
       const analysis = await analyzeItem.mutateAsync({
         data: { image: form.image },
       });
+      
+      const match = categories.find(c => c.name.toLowerCase() === analysis.category.toLowerCase() || c.slug.toLowerCase() === analysis.category.toLowerCase());
+      const catSlug = match?.slug ?? 'electronics';
+
       setForm((current) => ({
         ...current,
         title: analysis.title,
-        category: analysis.category,
+        category: catSlug,
         price: analysis.estimatedPrice,
         description: analysis.description,
       }));
@@ -147,11 +145,12 @@ export default function Sell() {
     if (
       !form.image ||
       !form.title.trim() ||
+      !form.category ||
       !form.description.trim() ||
       !form.price ||
       form.price <= 0
     ) {
-      setError("შეავსე სათაური, ფასი და აღწერა, რომ განცხადება გამოაქვეყნო.");
+      setError("შეავსე სათაური, კატეგორია, ფასი და აღწერა, რომ განცხადება გამოაქვეყნო.");
       return;
     }
 
@@ -424,17 +423,10 @@ export default function Sell() {
                     </label>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block text-sm font-semibold">
-                        კატეგორია
-                        <select
-                          value={form.category}
-                          onChange={(event) => update("category", event.target.value)}
-                          className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
-                          data-testid="select-sell-category"
-                        >
-                          {categories.map((category) => (
-                            <option key={category}>{category}</option>
-                          ))}
-                        </select>
+                        კატეგორია <span className="text-[hsl(var(--destructive))]">*</span>
+                        <div className="mt-2">
+                          <CategoryPicker value={form.category} onChange={(slug) => update("category", slug)} />
+                        </div>
                       </label>
                       <label className="block text-sm font-semibold">
                         მდგომარეობა

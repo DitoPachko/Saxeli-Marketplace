@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import {
   CreateItemBody,
   CreateItemResponse,
@@ -8,6 +8,7 @@ import {
   GetItemResponse,
   ListItemsQueryParams,
   ListItemsResponse,
+  ListCategoriesResponse,
   ListMyItemsResponse,
   ToggleItemFavoriteParams,
   ToggleItemFavoriteResponse,
@@ -17,6 +18,7 @@ import {
 } from "@workspace/api-zod";
 import { db, listings, users, type Listing, type User } from "@workspace/db";
 import { getCurrentUser } from "../lib/currentUser";
+import { categoryAndDescendantIds, getCategoryCatalog, resolveCategory } from "../lib/categoryCatalog";
 
 const router: IRouter = Router();
 
@@ -43,6 +45,7 @@ function item(listing: Listing, user: User, listingCount: number) {
     title: listing.title,
     price: listing.price,
     category: listing.category,
+    categorySlug: listing.categoryId ?? "other",
     condition: listing.condition,
     city: listing.city,
     postedAt: postedAt(listing.createdAt),
@@ -82,8 +85,13 @@ router.get("/items", async (req, res) => {
   if (!parsed.success) return void res.status(400).json({ error: "ფილტრის მონაცემები არასწორია" });
 
   const { search, category, city, limit } = parsed.data;
+  const categoryIds = category ? await categoryAndDescendantIds(category) : [];
   const filters = [
-    category && category !== "ყველა ნივთი" ? eq(listings.category, category) : undefined,
+    category
+      ? categoryIds.length
+        ? inArray(listings.categoryId, categoryIds)
+        : eq(listings.categoryId, "__unknown_category__")
+      : undefined,
     city ? eq(listings.city, city) : undefined,
     search
       ? or(
@@ -104,13 +112,20 @@ router.get("/items", async (req, res) => {
   res.json(ListItemsResponse.parse(rows.map((row, index) => item(row.listing, row.user, counts[index]))));
 });
 
+router.get("/categories", async (_req, res) => {
+  const catalog = await getCategoryCatalog();
+  res.json(ListCategoriesResponse.parse(catalog));
+});
+
 router.post("/items", async (req, res) => {
   const parsed = CreateItemBody.safeParse(req.body);
   if (!parsed.success) return void res.status(400).json({ error: "განცხადების მონაცემები არასწორია" });
   const user = await getCurrentUser(req);
+  const category = await resolveCategory(parsed.data.category);
+  if (!category) return void res.status(400).json({ error: "აირჩიეთ სწორი კატეგორია" });
   const [listing] = await db
     .insert(listings)
-    .values({ ...parsed.data, userId: user.id, images: [parsed.data.image], delivery: parsed.data.delivery ?? [] })
+    .values({ ...parsed.data, category: category.name, categoryId: category.id, userId: user.id, images: [parsed.data.image], delivery: parsed.data.delivery ?? [] })
     .returning();
   res.status(201).json(CreateItemResponse.parse(item(listing, user, await listingCount(user.id))));
 });
@@ -138,7 +153,14 @@ router.patch("/items/:id", async (req, res) => {
   const row = await findItem(params.data.id);
   if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
   if (row.listing.userId !== user.id) return void res.status(403).json({ error: "არ გაქვთ ამ განცხადების შეცვლის უფლება" });
-  const [listing] = await db.update(listings).set({ ...body.data, updatedAt: new Date() }).where(eq(listings.id, row.listing.id)).returning();
+  const category = body.data.category ? await resolveCategory(body.data.category) : null;
+  if (body.data.category && !category) return void res.status(400).json({ error: "აირჩიეთ სწორი კატეგორია" });
+  const update = {
+    ...body.data,
+    ...(category ? { category: category.name, categoryId: category.id } : {}),
+    updatedAt: new Date(),
+  };
+  const [listing] = await db.update(listings).set(update).where(eq(listings.id, row.listing.id)).returning();
   res.json(UpdateItemResponse.parse(item(listing, user, await listingCount(user.id))));
 });
 
