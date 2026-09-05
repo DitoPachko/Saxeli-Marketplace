@@ -53,56 +53,77 @@ function normalizeAnalysis(value: unknown): Analysis {
   };
 }
 
-function dynamicFallback(filename?: string): Analysis {
+function normalizeImageForVision(image: string) {
+  const trimmed = image.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const dataUrlMatch = trimmed.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/is);
+  if (dataUrlMatch) {
+    return `data:${dataUrlMatch[1]};base64,${dataUrlMatch[2].replace(/\s/g, "")}`;
+  }
+
+  return `data:image/jpeg;base64,${trimmed.replace(/\s/g, "")}`;
+}
+
+function filenameFallback(filename?: string): Analysis | null {
   const source = (filename ?? "")
     .replace(/\.[a-z0-9]+$/i, "")
     .replace(/[_-]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  if (!source) return null;
+
   const normalized = source.toLocaleLowerCase("en-US");
-  const hasApparelSignal = /(adidas|nike|puma|reebok|shirt|tshirt|t-shirt|shoe|sneaker|dress|jacket|hoodie|მაისური|ფეხსაცმელი|კაბა|ქურთუკი)/i.test(normalized);
-  const hasTechSignal = /(iphone|ipad|macbook|laptop|computer|phone|samsung|sony|canon|nikon|camera|headphone|airpods|ტელეფონი|ლეპტოპი|კამერა|ყურსასმენი)/i.test(normalized);
+  const hasApparelSignal = /(shirt|tshirt|t-shirt|shoe|sneaker|dress|jacket|hoodie|მაისური|ფეხსაცმელი|კაბა|ქურთუკი)/i.test(normalized);
+  const hasTechSignal = /(iphone|ipad|laptop|computer|phone|samsung|sony|canon|nikon|camera|headphone|airpods|ტელეფონი|ლეპტოპი|კამერა|ყურსასმენი)/i.test(normalized);
+  const title = source.replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   if (hasApparelSignal) {
-    const brand = /(adidas|nike|puma|reebok)/i.exec(source)?.[1];
-    const brandLabel = brand ? brand[0].toUpperCase() + brand.slice(1).toLowerCase() : "Adidas";
     const isFootwear = /(shoe|sneaker|ფეხსაცმელი)/i.test(normalized);
-    const itemLabel = isFootwear ? "ფეხსაცმელი" : "თეთრი მაისური";
     return {
-      title: brand ? `${brandLabel} ${itemLabel}` : "Adidas Originals თეთრი მაისური",
+      title,
       category: "ტანსაცმელი და ფეხსაცმელი",
       condition: "მეორადი",
       suggested_price_gel: isFootwear ? 120 : 60,
       city: "თბილისი",
-      description: brand
-        ? `იყიდება ${brandLabel}-ის ${itemLabel.toLowerCase()}. ფოტოზე ჩანს ბრენდის დიზაინი და ნივთის ძირითადი ვიზუალური დეტალები.\n\n• ბრენდი: ${brandLabel}\n• კატეგორია: ${itemLabel}\n\nმდგომარეობა: კარგ მდგომარეობაში.`
-        : "იყიდება ორიგინალი Adidas-ის თეთრი მაისური. კარგ მდგომარეობაში.",
+      description: `იყიდება ${title}. ფოტოს მიხედვით ჩანს ტანსაცმლის ან ფეხსაცმლის ნივთი.\n\n• წყარო: ატვირთული ფაილის სახელი\n• ზუსტი ბრენდი და მოდელი: ხელით გადაამოწმე\n\nმდგომარეობა: ფოტოზე სრულად ვერ დადასტურდა.`,
     };
   }
 
   if (hasTechSignal) {
-    const label = source || "ტექნიკის ნივთი";
     return {
-      title: label,
+      title,
       category: "ტექნიკა",
       condition: "მეორადი",
       suggested_price_gel: 250,
       city: "თბილისი",
-      description: `იყიდება ${label}. ფოტოზე ჩანს ტექნიკის ნივთი, რომლის ზუსტი მოდელი და მახასიათებლები ხელით გადაამოწმე გამოქვეყნებამდე.\n\n• კატეგორია: ტექნიკა\n• მოდელი: ფოტოდან დაზუსტება საჭიროა\n\nმდგომარეობა: ვიზუალურად გამოყენებული.`,
+      description: `იყიდება ${title}. ფოტოს მიხედვით ჩანს ტექნიკის ნივთი, რომლის ზუსტი მოდელი და მახასიათებლები ხელით გადაამოწმე.\n\n• კატეგორია: ტექნიკა\n• იდენტიფიკაცია: ფაილის სახელიდან მიღებული მინიშნება\n\nმდგომარეობა: ვიზუალურად შესამოწმებელი.`,
     };
   }
 
-  const readableTitle = source
-    ? source.replace(/\b\w/g, (letter) => letter.toUpperCase())
-    : "ფოტოზე ნაჩვენები ნივთი";
   return {
-    title: readableTitle,
+    title,
     category: "სახლი და დეკორი",
     condition: "მეორადი",
     suggested_price_gel: 100,
     city: "თბილისი",
-    description: `იყიდება ${readableTitle.toLowerCase()}. ფოტო ვერ დამუშავდა, ამიტომ გთხოვ, გადაამოწმო ნივთის ზუსტი დასახელება, მახასიათებლები და მდგომარეობა.\n\n• დეტალები: ხელით დასაზუსტებელია\n\nმდგომარეობა: ხელით შესამოწმებელი.`,
+    description: `იყიდება ${title}. ფოტო ვერ დამუშავდა, ამიტომ გთხოვ, გადაამოწმო ნივთის ზუსტი დასახელება, მახასიათებლები და მდგომარეობა.\n\n• დეტალები: ფაილის სახელიდან მიღებული მინიშნება\n\nმდგომარეობა: ხელით შესამოწმებელი.`,
   };
+}
+
+function respondWithFilenameFallback(
+  req: Request,
+  res: Response,
+  filename?: string,
+) {
+  const fallback = filenameFallback(filename);
+  if (fallback) {
+    res.json(fallback);
+    return;
+  }
+
+  req.log.warn("AI analysis unavailable and no filename fallback is possible");
+  res.status(503).json({ error: "AI ანალიზი დროებით მიუწვდომელია" });
 }
 
 const router: IRouter = Router();
@@ -116,12 +137,13 @@ const analyzeItem = async (req: Request, res: Response) => {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    req.log.info("OpenAI key missing; returning dynamic filename-aware fallback");
-    res.json(dynamicFallback(parsed.data.filename));
+    req.log.info("OpenAI key missing; using filename-only fallback when available");
+    respondWithFilenameFallback(req, res, parsed.data.filename);
     return;
   }
 
   try {
+    const imageUrl = normalizeImageForVision(parsed.data.image);
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -135,16 +157,16 @@ const analyzeItem = async (req: Request, res: Response) => {
           {
             role: "system",
             content:
-              "Analyze the provided product photo for a peer-to-peer marketplace listing. Identify EXACTLY what the item is. Return only a JSON object with title, category, condition, suggested_price_gel, description, and city. The title must use the exact visible brand, model, type, or style whenever legible, for example Adidas Originals Trefoil White T-Shirt, Nike Air Max 270 Black, or Sony WH-1000XM5 Headphones. Never return a generic title such as Laptop, Shoes, Phone, or Item when the photo shows more identifying detail, and never invent an exact model that is not supported by the image. Pick category exactly from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Pick condition exactly from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic market value in GEL for Georgia. Set city to თბილისი. The description must be Georgian text with three formatted sections: 1) a brief overview of the detected item, 2) key visual specifications including brand, color, visible design details, and size if visible, and 3) condition details. Use the uploaded image itself as the source of truth and never assume a fixed product type.",
+              "Analyze the provided product photo for a peer-to-peer marketplace listing. Identify EXACTLY what the item is. Return only a JSON object with title, category, condition, suggested_price_gel, description, and city. The title must use the exact visible brand, model, type, or style whenever legible, including the brand's own product naming. Never return a generic title such as Laptop, Shoes, Phone, or Item when the photo shows more identifying detail, and never invent an exact model that is not supported by the image. Pick category exactly from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Pick condition exactly from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic market value in GEL for Georgia. Set city to თბილისი. The description must be Georgian text with three formatted sections: 1) a brief overview of the detected item, 2) key visual specifications including brand, color, visible design details, and size if visible, and 3) condition details. Use the uploaded image itself as the source of truth and never assume a fixed product type.",
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "გააანალიზე ეს ნივთის ფოტო და მოამზადე განცხადების საწყისი მონაცემები.",
+                text: "Identify this exact item, brand, model, category, realistic GEL market price, and write a structured Georgian sales description.",
               },
-              { type: "image_url", image_url: { url: parsed.data.image } },
+              { type: "image_url", image_url: { url: imageUrl } },
             ],
           },
         ],
@@ -153,7 +175,7 @@ const analyzeItem = async (req: Request, res: Response) => {
 
     if (!response.ok) {
       req.log.warn({ status: response.status }, "OpenAI item analysis failed");
-      res.json(dynamicFallback(parsed.data.filename));
+      respondWithFilenameFallback(req, res, parsed.data.filename);
       return;
     }
 
@@ -162,8 +184,8 @@ const analyzeItem = async (req: Request, res: Response) => {
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) {
-      req.log.warn("OpenAI returned an empty item analysis; using dynamic fallback");
-      res.json(dynamicFallback(parsed.data.filename));
+      req.log.warn("OpenAI returned an empty item analysis; using filename fallback");
+      respondWithFilenameFallback(req, res, parsed.data.filename);
       return;
     }
 
@@ -171,7 +193,7 @@ const analyzeItem = async (req: Request, res: Response) => {
     res.json(analysis);
   } catch (error) {
     req.log.warn({ err: error }, "OpenAI item analysis request failed");
-    res.json(dynamicFallback(parsed.data.filename));
+    respondWithFilenameFallback(req, res, parsed.data.filename);
   }
 };
 
