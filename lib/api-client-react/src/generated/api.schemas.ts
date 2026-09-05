@@ -80,7 +80,14 @@ export interface ItemAnalysis {
   category: string;
   condition: string;
   price: number;
+  city: string;
   description: string;
+  model: string;
+  year: string;
+  brand: string;
+  color: string;
+  keySpecs: string[];
+  accessories: string[];
 }
 
 export type ListItemsParams = {

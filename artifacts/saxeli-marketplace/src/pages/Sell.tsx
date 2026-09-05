@@ -19,12 +19,12 @@ import {
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
 
 const categories = [
-  "ტექნიკა და ელექტრონიკა",
+  "ტექნიკა",
   "ტანსაცმელი და ფეხსაცმელი",
-  "ჰობი, სპორტი და დასვენება",
-  "თავის მოვლა და სილამაზე",
-  "საბავშვო სამყარო",
-  "სახლი და ინტერიერი",
+  "ჰობი და სპორტი",
+  "თავის მოვლა",
+  "საბავშვო",
+  "სახლი და დეკორი",
 ];
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
@@ -66,6 +66,7 @@ export default function Sell() {
   const [form, setForm] = useState<ItemInput>(emptyForm);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiFilled, setAiFilled] = useState(false);
   const [error, setError] = useState("");
   const createItem = useCreateItem();
   const analyzeItem = useAnalyzeItemImage();
@@ -87,6 +88,7 @@ export default function Sell() {
         return;
       }
       update("image", image);
+      setAiFilled(false);
       setError("");
       setStage("choice");
     };
@@ -106,11 +108,14 @@ export default function Sell() {
         category: analysis.category,
         condition: analysis.condition,
         price: analysis.price,
+        city: analysis.city,
         description: analysis.description,
       }));
+      setAiFilled(true);
       setStage("details");
     } catch {
       setError("AI ანალიზი ვერ შესრულდა. მონაცემები შეგიძლია ხელით შეავსო.");
+      setAiFilled(false);
       setStage("details");
     } finally {
       setIsAnalyzing(false);
@@ -119,6 +124,7 @@ export default function Sell() {
 
   const chooseManual = () => {
     setError("");
+    setAiFilled(false);
     setStage("details");
   };
 
@@ -351,13 +357,20 @@ export default function Sell() {
             {stage === "details" ? (
               <div className="enter space-y-7">
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                   <div>
                     <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
                       03 / ნივთის მონაცემები
                     </p>
-                    <h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">
-                      შეამოწმე და გამოაქვეყნე.
-                    </h2>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <h2 className="font-display text-3xl font-semibold tracking-[-.05em]">
+                        შეამოწმე და გამოაქვეყნე.
+                      </h2>
+                      {aiFilled ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary)/.14)] px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--primary))]">
+                          <Sparkles size={12} /> AI-ით შევსებული
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
                       ყველა ველი სრულად რედაქტირებადია — შენ უკეთ იცი შენი ნივთი.
                     </p>

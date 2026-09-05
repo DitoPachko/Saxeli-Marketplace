@@ -1,0 +1,31 @@
+Act as a senior full-stack AI/UX engineer building "Nivti" (ნივთი) on Base44. Upgrade the AI vision handler on Step 3 of the `/sell` route so clicking "დაიხმარე ხელოვნური ინტელექტი" automatically extracts and populates ALL form fields instantly.
+
+### 1. AI VISION & EXTRACTION ENGINE
+When an image is passed to the AI handler:
+- Analyze the uploaded photo using vision capabilities.
+- Extract precise item details (Model, Year, Brand, Color, Key Specs, and Visible Accessories).
+- DO NOT return placeholder text or generic terms like "Laptop" or "Shoes". Identify exact models (e.g., "Apple MacBook Air 13\" M2 (Rose Gold)" or "Nike Air Jordan 1 Retro Low").
+
+### 2. FORM STATE AUTO-FILL MAPPING
+Automatically map and populate the following form fields in Georgian (ქართული):
+
+1. სათაური (Title): Exact make, model, and key visual specs.
+2. კატეგორია (Category): Select best fit from ["ტექნიკა", "ტანსაცმელი და ფეხსაცმელი", "ჰობი და სპორტი", "თავის მოვლა", "საბავშვო", "სახლი და დეკორი"].
+3. მდგომარეობა (Condition): Select best fit from ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებისთვის"].
+4. სავარაუდო ფასი (Price in GEL ₾): Calculate a realistic local resale value in GEL based on item condition.
+5. ქალაქი (City): Default to "თბილისი" (or active user location).
+6. აღწერა (Description): Generate a structured, professional Georgian sales description formatted as:
+
+   [მოკლე მიმოხილვა - Brief sentence about the item]
+
+   • [ძირითადი მახასიათებლები - Bulleted specs like RAM, Processor, Size, Material, Color]
+   • [მდგომარეობა - Visual condition breakdown]
+
+   კომპლექტაცია: [Original box, charger, or accessories if detected in the image]
+
+### 3. USER EDITABILITY & UX
+- Once auto-filled, set all input fields to populated state.
+- Display an "AI-ით შევსებული" (Filled by AI) badge next to the form header.
+- Keep EVERY single input fully editable so the seller can manually adjust or override any field before clicking "გამოქვეყნება" (Publish).
+
+Implement this handler in Base44 and tie it directly to the "დაიხმარე ხელოვნური ინტელექტი" action button.

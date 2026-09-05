@@ -6,16 +6,74 @@ type Analysis = {
   category: string;
   condition: string;
   price: number;
+  city: string;
   description: string;
+  model: string;
+  year: string;
+  brand: string;
+  color: string;
+  keySpecs: string[];
+  accessories: string[];
 };
 
-const fallbackAnalysis: Analysis = {
-  title: "მეორადი ნივთი",
-  category: "ტექნიკა და ელექტრონიკა",
-  condition: "კარგი",
-  price: 150,
-  description: "კარგ მდგომარეობაშია. დამატებითი დეტალები შეგიძლიათ თავად დააზუსტოთ.",
-};
+const allowedCategories = [
+  "ტექნიკა",
+  "ტანსაცმელი და ფეხსაცმელი",
+  "ჰობი და სპორტი",
+  "თავის მოვლა",
+  "საბავშვო",
+  "სახლი და დეკორი",
+];
+const allowedConditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებისთვის"];
+const allowedCities = ["თბილისი", "ბათუმი", "ქუთაისი", "ზუგდიდი", "რუსთავი", "ფოთი"];
+
+function normalizeAnalysis(value: unknown): Analysis {
+  const candidate = value as Partial<Analysis>;
+  const category = allowedCategories.includes(candidate.category ?? "")
+    ? candidate.category!
+    : "სახლი და დეკორი";
+  const condition = allowedConditions.includes(candidate.condition ?? "")
+    ? candidate.condition!
+    : "მეორადი";
+  const city = allowedCities.includes(candidate.city ?? "") ? candidate.city! : "თბილისი";
+  const price = Number.isFinite(candidate.price) && Number(candidate.price) > 0
+    ? Math.round(Number(candidate.price))
+    : 0;
+  const keySpecs = Array.isArray(candidate.keySpecs)
+    ? candidate.keySpecs.filter((item): item is string => typeof item === "string").slice(0, 8)
+    : [];
+  const accessories = Array.isArray(candidate.accessories)
+    ? candidate.accessories.filter((item): item is string => typeof item === "string").slice(0, 8)
+    : [];
+
+  if (
+    typeof candidate.title !== "string" ||
+    candidate.title.trim().length < 5 ||
+    !price ||
+    typeof candidate.description !== "string" ||
+    typeof candidate.model !== "string" ||
+    typeof candidate.year !== "string" ||
+    typeof candidate.brand !== "string" ||
+    typeof candidate.color !== "string"
+  ) {
+    throw new Error("AI response is missing listing fields");
+  }
+
+  return {
+    title: candidate.title.trim(),
+    category,
+    condition,
+    price,
+    city,
+    description: candidate.description.trim(),
+    model: candidate.model.trim(),
+    year: candidate.year.trim(),
+    brand: candidate.brand.trim(),
+    color: candidate.color.trim(),
+    keySpecs,
+    accessories,
+  };
+}
 
 const router: IRouter = Router();
 
@@ -46,7 +104,7 @@ router.post("/openai/analyze-item", async (req, res) => {
           {
             role: "system",
             content:
-              "You help a Georgian marketplace seller create an honest listing from one item photo. Return only JSON with title, category, condition, price, description. Use Georgian language. Allowed categories: ტექნიკა და ელექტრონიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი, სპორტი და დასვენება, თავის მოვლა და სილამაზე, საბავშვო სამყარო, სახლი და ინტერიერი. Allowed conditions: ახალი, თითქმის ახალი, მეორადი, ნაწილებად. Price is a reasonable integer estimate in Georgian Lari. If uncertain, be conservative and use a generic title.",
+              "You are a vision assistant for a Georgian peer-to-peer marketplace. Analyze the single uploaded item photo carefully and return only valid JSON with exactly these fields: title, category, condition, price, city, description, model, year, brand, color, keySpecs, accessories. Use Georgian for title, category, condition, city, description, model, year, brand, color, keySpecs, and accessories. Allowed categories are exactly: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Allowed conditions are exactly: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. City must be თბილისი unless the user location is explicitly known; never infer a different city from the photo. Price must be a realistic integer local resale value in Georgian Lari based on the visible item and condition. Identify the exact brand, model, year, color, visible key specs, and visible accessories whenever legible. Do not use generic titles such as Laptop, Shoes, Phone, or Item, and do not invent an exact model when the photo cannot support it; instead use the most specific visible product identity and clearly state that the model is not visible. keySpecs and accessories must be arrays of short Georgian strings. The description must be professional Georgian and formatted as: one brief overview sentence, then bullet lines beginning with • for key specs and visual condition, then a final line beginning with კომპლექტაცია: listing the original box, charger, or accessories visible in the photo (or stating რომ აქსესუარი ფოტოზე არ ჩანს).",
           },
           {
             role: "user",
@@ -77,7 +135,7 @@ router.post("/openai/analyze-item", async (req, res) => {
       return;
     }
 
-    const analysis = AnalyzeItemImageResponse.parse(JSON.parse(content));
+    const analysis = normalizeAnalysis(AnalyzeItemImageResponse.parse(JSON.parse(content)));
     res.json(analysis);
   } catch (error) {
     req.log.warn({ err: error }, "OpenAI item analysis request failed");
