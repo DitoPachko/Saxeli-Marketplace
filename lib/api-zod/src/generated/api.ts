@@ -181,7 +181,7 @@ export const AnalyzeItemImageResponse = zod.object({
   "title": zod.string(),
   "category": zod.string(),
   "condition": zod.string(),
-  "price": zod.number(),
+  "suggested_price_gel": zod.number(),
   "city": zod.string(),
   "description": zod.string(),
   "model": zod.string(),

@@ -79,7 +79,7 @@ export interface ItemAnalysis {
   title: string;
   category: string;
   condition: string;
-  price: number;
+  suggested_price_gel: number;
   city: string;
   description: string;
   model: string;

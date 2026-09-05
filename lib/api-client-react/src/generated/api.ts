@@ -598,7 +598,7 @@ export const getAnalyzeItemImageUrl = () => {
 
 
 
-  return `/api/openai/analyze-item`
+  return `/api/ai-analyze`
 }
 
 /**

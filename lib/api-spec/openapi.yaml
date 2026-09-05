@@ -148,7 +148,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/MessageThread"
-  /openai/analyze-item:
+  /ai-analyze:
     post:
       operationId: analyzeItemImage
       tags: [ai]
@@ -267,12 +267,12 @@ components:
           description: Base64-encoded image data URL
     ItemAnalysis:
       type: object
-      required: [title, category, condition, price, city, description, model, year, brand, color, keySpecs, accessories]
+      required: [title, category, condition, suggested_price_gel, city, description, model, year, brand, color, keySpecs, accessories]
       properties:
         title: { type: string }
         category: { type: string }
         condition: { type: string }
-        price: { type: number }
+        suggested_price_gel: { type: number }
         city: { type: string }
         description: { type: string }
         model: { type: string }

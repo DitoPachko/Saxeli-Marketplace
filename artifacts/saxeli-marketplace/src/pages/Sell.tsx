@@ -107,7 +107,7 @@ export default function Sell() {
         title: analysis.title,
         category: analysis.category,
         condition: analysis.condition,
-        price: analysis.price,
+        price: analysis.suggested_price_gel,
         city: analysis.city,
         description: analysis.description,
       }));
