@@ -265,9 +265,6 @@ components:
         image:
           type: string
           description: Base64-encoded image data URL
-        filename:
-          type: string
-          description: Original uploaded image filename used only for fallback hints
     ItemAnalysis:
       type: object
       required: [title, category, condition, suggested_price_gel, city, description]

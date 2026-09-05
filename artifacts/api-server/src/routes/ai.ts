@@ -23,13 +23,18 @@ const allowedCities = ["თბილისი", "ბათუმი", "ქუთ
 
 function normalizeAnalysis(value: unknown): Analysis {
   const candidate = value as Partial<Analysis>;
-  const category = allowedCategories.includes(candidate.category ?? "")
-    ? candidate.category!
-    : "სახლი და დეკორი";
-  const condition = allowedConditions.includes(candidate.condition ?? "")
-    ? candidate.condition!
-    : "მეორადი";
-  const city = allowedCities.includes(candidate.city ?? "") ? candidate.city! : "თბილისი";
+  if (!allowedCategories.includes(candidate.category ?? "")) {
+    throw new Error("AI response has an invalid marketplace category");
+  }
+  if (!allowedConditions.includes(candidate.condition ?? "")) {
+    throw new Error("AI response has an invalid item condition");
+  }
+  if (!allowedCities.includes(candidate.city ?? "")) {
+    throw new Error("AI response has an invalid city");
+  }
+  const category = candidate.category!;
+  const condition = candidate.condition!;
+  const city = candidate.city!;
   const suggestedPrice = Number.isFinite(candidate.suggested_price_gel)
     && Number(candidate.suggested_price_gel) > 0
     ? Math.round(Number(candidate.suggested_price_gel))
@@ -65,64 +70,8 @@ function normalizeImageForVision(image: string) {
   return `data:image/jpeg;base64,${trimmed.replace(/\s/g, "")}`;
 }
 
-function filenameFallback(filename?: string): Analysis | null {
-  const source = (filename ?? "")
-    .replace(/\.[a-z0-9]+$/i, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!source) return null;
-
-  const normalized = source.toLocaleLowerCase("en-US");
-  const hasApparelSignal = /(shirt|tshirt|t-shirt|shoe|sneaker|dress|jacket|hoodie|მაისური|ფეხსაცმელი|კაბა|ქურთუკი)/i.test(normalized);
-  const hasTechSignal = /(iphone|ipad|laptop|computer|phone|samsung|sony|canon|nikon|camera|headphone|airpods|ტელეფონი|ლეპტოპი|კამერა|ყურსასმენი)/i.test(normalized);
-  const title = source.replace(/\b\w/g, (letter) => letter.toUpperCase());
-
-  if (hasApparelSignal) {
-    const isFootwear = /(shoe|sneaker|ფეხსაცმელი)/i.test(normalized);
-    return {
-      title,
-      category: "ტანსაცმელი და ფეხსაცმელი",
-      condition: "მეორადი",
-      suggested_price_gel: isFootwear ? 120 : 60,
-      city: "თბილისი",
-      description: `იყიდება ${title}. ფოტოს მიხედვით ჩანს ტანსაცმლის ან ფეხსაცმლის ნივთი.\n\n• წყარო: ატვირთული ფაილის სახელი\n• ზუსტი ბრენდი და მოდელი: ხელით გადაამოწმე\n\nმდგომარეობა: ფოტოზე სრულად ვერ დადასტურდა.`,
-    };
-  }
-
-  if (hasTechSignal) {
-    return {
-      title,
-      category: "ტექნიკა",
-      condition: "მეორადი",
-      suggested_price_gel: 250,
-      city: "თბილისი",
-      description: `იყიდება ${title}. ფოტოს მიხედვით ჩანს ტექნიკის ნივთი, რომლის ზუსტი მოდელი და მახასიათებლები ხელით გადაამოწმე.\n\n• კატეგორია: ტექნიკა\n• იდენტიფიკაცია: ფაილის სახელიდან მიღებული მინიშნება\n\nმდგომარეობა: ვიზუალურად შესამოწმებელი.`,
-    };
-  }
-
-  return {
-    title,
-    category: "სახლი და დეკორი",
-    condition: "მეორადი",
-    suggested_price_gel: 100,
-    city: "თბილისი",
-    description: `იყიდება ${title}. ფოტო ვერ დამუშავდა, ამიტომ გთხოვ, გადაამოწმო ნივთის ზუსტი დასახელება, მახასიათებლები და მდგომარეობა.\n\n• დეტალები: ფაილის სახელიდან მიღებული მინიშნება\n\nმდგომარეობა: ხელით შესამოწმებელი.`,
-  };
-}
-
-function respondWithFilenameFallback(
-  req: Request,
-  res: Response,
-  filename?: string,
-) {
-  const fallback = filenameFallback(filename);
-  if (fallback) {
-    res.json(fallback);
-    return;
-  }
-
-  req.log.warn("AI analysis unavailable and no filename fallback is possible");
+function respondWithVisionError(req: Request, res: Response, reason: string) {
+  req.log.warn(reason);
   res.status(503).json({ error: "AI ანალიზი დროებით მიუწვდომელია" });
 }
 
@@ -137,8 +86,7 @@ const analyzeItem = async (req: Request, res: Response) => {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    req.log.info("OpenAI key missing; using filename-only fallback when available");
-    respondWithFilenameFallback(req, res, parsed.data.filename);
+    respondWithVisionError(req, res, "OpenAI key missing; refusing non-visual fallback");
     return;
   }
 
@@ -175,7 +123,7 @@ const analyzeItem = async (req: Request, res: Response) => {
 
     if (!response.ok) {
       req.log.warn({ status: response.status }, "OpenAI item analysis failed");
-      respondWithFilenameFallback(req, res, parsed.data.filename);
+      respondWithVisionError(req, res, "OpenAI vision request failed");
       return;
     }
 
@@ -184,8 +132,7 @@ const analyzeItem = async (req: Request, res: Response) => {
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) {
-      req.log.warn("OpenAI returned an empty item analysis; using filename fallback");
-      respondWithFilenameFallback(req, res, parsed.data.filename);
+      respondWithVisionError(req, res, "OpenAI returned an empty vision analysis");
       return;
     }
 
@@ -193,7 +140,7 @@ const analyzeItem = async (req: Request, res: Response) => {
     res.json(analysis);
   } catch (error) {
     req.log.warn({ err: error }, "OpenAI item analysis request failed");
-    respondWithFilenameFallback(req, res, parsed.data.filename);
+    respondWithVisionError(req, res, "OpenAI vision analysis could not be completed");
   }
 };
 

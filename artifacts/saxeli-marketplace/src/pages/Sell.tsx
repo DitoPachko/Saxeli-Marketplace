@@ -64,7 +64,6 @@ export default function Sell() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("photo");
   const [form, setForm] = useState<ItemInput>(emptyForm);
-  const [photoFilename, setPhotoFilename] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
@@ -89,7 +88,6 @@ export default function Sell() {
         return;
       }
       update("image", image);
-      setPhotoFilename(file.name);
       setAiFilled(false);
       setError("");
       setStage("choice");
@@ -104,7 +102,7 @@ export default function Sell() {
     setIsAnalyzing(true);
     try {
       const analysis = await analyzeItem.mutateAsync({
-        data: { image: form.image, filename: photoFilename },
+        data: { image: form.image },
       });
       setForm((current) => ({
         ...current,
