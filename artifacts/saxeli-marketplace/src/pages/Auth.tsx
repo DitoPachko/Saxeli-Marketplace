@@ -10,11 +10,18 @@ export default function Auth({
   basePath: string;
 }) {
   const isLogin = mode === "login";
+  
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const returnTo = searchParams.get('returnTo') || `${basePath}/`;
+  
+  // We attach the returnTo param so the other auth page can pick it up if they switch between sign-in and sign-up
+  const signUpUrl = `${basePath}/sign-up${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+  const signInUrl = `${basePath}/sign-in${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-[.88fr_1.12fr]">
       <aside className="relative hidden overflow-hidden bg-[hsl(var(--secondary))] p-10 text-[hsl(var(--secondary-foreground))] lg:flex lg:flex-col lg:justify-between">
-        <Link href="/" className="saxeli-wordmark text-4xl">
+        <Link href="/" className="saxeli-wordmark text-4xl hover:opacity-90 transition-opacity">
           saxeli
         </Link>
         <div className="relative z-10 max-w-md">
@@ -40,20 +47,28 @@ export default function Auth({
         />
       </aside>
 
-      <main className="flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--background))] px-5 py-10">
+      <main className="flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--background))] px-5 py-10 relative">
+        <div className="absolute top-6 left-6 lg:hidden">
+           <Link href="/" className="saxeli-wordmark text-2xl hover:opacity-90 transition-opacity text-[hsl(var(--foreground))]">
+            saxeli
+          </Link>
+        </div>
+        
         {isLogin ? (
           <SignIn
             routing="path"
             path={`${basePath}/sign-in`}
-            signUpUrl={`${basePath}/sign-up`}
-            fallbackRedirectUrl={`${basePath}/marketplace`}
+            signUpUrl={signUpUrl}
+            fallbackRedirectUrl={returnTo}
+            forceRedirectUrl={returnTo}
           />
         ) : (
           <SignUp
             routing="path"
             path={`${basePath}/sign-up`}
-            signInUrl={`${basePath}/sign-in`}
-            fallbackRedirectUrl={`${basePath}/marketplace`}
+            signInUrl={signInUrl}
+            fallbackRedirectUrl={returnTo}
+            forceRedirectUrl={returnTo}
           />
         )}
       </main>

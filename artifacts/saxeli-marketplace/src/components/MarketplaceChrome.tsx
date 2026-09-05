@@ -1,19 +1,189 @@
 import type { ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/react';
-import { Bookmark, Compass, Inbox, LogIn, LogOut, Plus, UserRound } from 'lucide-react';
+import { AlignLeft, Facebook, Heart, Instagram, LogOut, Plus, Search, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { useFilters, categories } from '@/hooks/use-filters';
 
 type MarketplaceChromeProps = { children: ReactNode };
 
-const navigation = [
-  { href: '/', label: 'მოძებნა', icon: Compass },
-  { href: '/profile', label: 'ჩემი Saxeli', icon: UserRound },
-];
+function Navbar() {
+  const [location, setLocation] = useLocation();
+  const { signOut } = useClerk();
+  const { isSignedIn, user } = useUser();
+  const { search, setSearch, setSubmittedSearch, category, setCategory } = useFilters();
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittedSearch(search.trim());
+    if (location !== '/') {
+      setLocation('/');
+    }
+  };
+
+  const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+  const returnTo = encodeURIComponent(location + currentSearch);
+  const savedReturnTo = encodeURIComponent('/profile#saved');
+
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.82)] backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-5 py-3 md:px-10">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <span className="saxeli-wordmark text-[1.75rem] leading-none text-[hsl(var(--foreground))]">saxeli</span>
+        </Link>
+        
+        <div className="hidden flex-1 max-w-2xl items-center md:flex">
+          <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
+            <select 
+              value={category} 
+              onChange={(e) => { setCategory(e.target.value); if(location !== '/') setLocation('/'); }} 
+              className="h-full cursor-pointer appearance-none bg-transparent px-4 py-2 text-sm font-medium outline-none border-r border-[hsl(var(--border))]"
+            >
+              {categories.map(c => <option key={c}>{c}</option>)}
+            </select>
+            <input 
+              type="search"
+              placeholder="რას ეძებ?" 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+            />
+            <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
+              <Search size={18} />
+            </button>
+          </form>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3 md:gap-4">
+          <Link href={isSignedIn ? "/profile#saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
+            <Heart size={20} />
+          </Link>
+          
+          {isSignedIn ? (
+            <details className="group relative">
+              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full p-1 pr-2 hover:bg-[hsl(var(--accent)/.1)]">
+                {user?.imageUrl ? <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" /> : <UserRound size={20} />}
+                <span className="hidden max-w-28 truncate text-sm font-semibold lg:block">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</span>
+              </summary>
+              <div className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-lg)]">
+                <Link href="/profile" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">ჩემი პროფილი</Link>
+                <Link href="/profile#saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შენახული ნივთები</Link>
+                <button type="button" onClick={() => signOut({ redirectUrl: '/' })} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[hsl(var(--muted))]"><LogOut size={15} /> გასვლა</button>
+              </div>
+            </details>
+          ) : (
+            <>
+            <Link href={`/login?returnTo=${returnTo}`} aria-label="შესვლა ან რეგისტრაცია" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] md:hidden"><UserRound size={20} /></Link>
+            <div className="hidden items-center gap-3 md:flex">
+              <Link href={`/login?returnTo=${returnTo}`} className="text-sm font-semibold hover:text-[hsl(var(--primary))]">შესვლა</Link>
+              <Link href={`/register?returnTo=${returnTo}`} className="text-sm font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">რეგისტრაცია</Link>
+            </div>
+            </>
+          )}
+
+          <Link href="/sell" className="btn-primary flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold shadow-sm">
+            <Plus size={16} />
+            <span className="hidden md:inline">გაყიდე</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile Search Row */}
+      <div className="border-t border-[hsl(var(--border))] px-5 py-3 md:hidden">
+        <div className="flex flex-col gap-2">
+           <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
+             <input 
+               type="search"
+               placeholder="რას ეძებ?" 
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="min-w-0 flex-1 bg-transparent px-4 py-2 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+             />
+             <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
+               <Search size={18} />
+             </button>
+           </form>
+        </div>
+      </div>
+      
+      {/* Quick category links for Desktop and Mobile */}
+      <div className="border-t border-[hsl(var(--border))]">
+        <div className="mx-auto flex max-w-[1320px] items-center gap-6 overflow-x-auto px-5 py-2.5 text-sm md:px-10 hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <span className="flex shrink-0 items-center gap-2 text-[hsl(var(--muted-foreground))]"><AlignLeft size={16} /> კატეგორიები:</span>
+          <button 
+              onClick={() => { setCategory(categories[0]); setLocation('/'); }} 
+              className={`whitespace-nowrap shrink-0 font-medium transition-colors hover:text-[hsl(var(--primary))] ${category === categories[0] ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'}`}
+            >
+              {categories[0]}
+          </button>
+          {categories.slice(1).map(c => (
+            <button 
+              key={c} 
+              onClick={() => { setCategory(c); setLocation('/'); }} 
+              className={`whitespace-nowrap shrink-0 font-medium transition-colors hover:text-[hsl(var(--primary))] ${category === c ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'}`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function Footer() {
+  const [, setLocation] = useLocation();
+  const { setCategory } = useFilters();
+  const openCategory = (value: string) => {
+    setCategory(value);
+    setLocation('/');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  return (
+    <footer className="mt-auto border-t border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+      <div className="mx-auto max-w-[1320px] px-5 py-12 md:px-10">
+        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+          <div>
+            <span className="saxeli-wordmark text-3xl leading-none text-[hsl(var(--foreground))]">saxeli</span>
+            <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))] max-w-[200px]">
+              შენი ნივთების ადგილი. იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">კატეგორიები</h3>
+            <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
+              <li><button onClick={() => openCategory('ავტო / მოტო')} className="hover:text-[hsl(var(--foreground))]">მანქანები (Vehicles)</button></li>
+              <li><button onClick={() => openCategory('უძრავი ქონება')} className="hover:text-[hsl(var(--foreground))]">უძრავი ქონება (Real Estate)</button></li>
+              <li><button onClick={() => openCategory('ტექნიკა')} className="hover:text-[hsl(var(--foreground))]">ელექტრონიკა (Electronics)</button></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">ინფორმაცია</h3>
+            <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
+              <li><Link href="/about" className="hover:text-[hsl(var(--foreground))]">ჩვენ შესახებ</Link></li>
+              <li><Link href="/terms" className="hover:text-[hsl(var(--foreground))]">წესები და პირობები</Link></li>
+              <li><Link href="/privacy" className="hover:text-[hsl(var(--foreground))]">კონფიდენციალურობა</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">დახმარება</h3>
+            <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
+              <li><a href="mailto:support@saxeli.ge" className="hover:text-[hsl(var(--foreground))]">support@saxeli.ge</a></li>
+              <li><a href="tel:+995555123456" className="hover:text-[hsl(var(--foreground))]">+995 555 12 34 56</a></li>
+              <li><Link href="/help" className="hover:text-[hsl(var(--foreground))]">დახმარების ცენტრი</Link></li>
+              <li className="flex gap-3 pt-2"><a href="https://instagram.com" aria-label="Instagram" className="hover:text-[hsl(var(--foreground))]"><Instagram size={18} /></a><a href="https://facebook.com" aria-label="Facebook" className="hover:text-[hsl(var(--foreground))]"><Facebook size={18} /></a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-12 pt-8 border-t border-[hsl(var(--border))] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[hsl(var(--muted-foreground))]">
+          <p>© 2026 Saxeli Marketplace. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
 
 export function MarketplaceChrome({ children }: MarketplaceChromeProps) {
   const [location] = useLocation();
-  const { signOut } = useClerk();
-  const { isSignedIn } = useUser();
   const isAuth =
     location.startsWith('/sign-in') ||
     location.startsWith('/sign-up') ||
@@ -23,73 +193,10 @@ export function MarketplaceChrome({ children }: MarketplaceChromeProps) {
   if (isAuth) return <div className="page-shell noise">{children}</div>;
 
   return (
-    <div className="page-shell noise md:flex">
-      <aside className="desktop-sidebar saxeli-nav sticky top-0 z-20 h-dvh w-[248px] shrink-0 flex-col justify-between px-5 py-7">
-        <div>
-          <Link href="/" className="mb-14 block px-3" data-testid="link-brand">
-            <span className="saxeli-wordmark text-[2.25rem] leading-none text-[hsl(var(--sidebar-foreground))]">saxeli</span>
-            <span className="mt-2 block font-mono-ui text-[9px] uppercase tracking-[.24em] text-[hsl(var(--sidebar-foreground)/.46)]">შენი ნივთების ადგილი</span>
-          </Link>
-          <nav className="space-y-2" aria-label="ძირითადი ნავიგაცია">
-            {navigation.map(({ href, label, icon: Icon }) => (
-              <Link key={href} href={href} className={`nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium ${location === href ? 'active' : ''}`} data-testid={`link-nav-${href === '/' ? 'browse' : 'profile'}`}>
-                <Icon size={18} strokeWidth={1.8} />
-                <span>{label}</span>
-              </Link>
-            ))}
-            <Link href="/profile#saved" className="nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium" data-testid="link-nav-saved">
-              <Bookmark size={18} strokeWidth={1.8} />
-              <span>შენახული ნივთები</span>
-            </Link>
-            <Link href="/profile#messages" className="nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium" data-testid="link-nav-messages">
-              <Inbox size={18} strokeWidth={1.8} />
-              <span>შეტყობინებები</span>
-              <span className="ml-auto rounded-full bg-[hsl(var(--primary))] px-1.5 py-0.5 font-mono-ui text-[10px] text-[hsl(var(--primary-foreground))]">3</span>
-            </Link>
-          </nav>
-          <div className="mt-12 rounded-2xl bg-[hsl(var(--sidebar-accent))] p-4">
-            <p className="font-display text-base leading-snug text-[hsl(var(--sidebar-foreground))]">ნივთს მეორე სიცოცხლე აქვს.</p>
-            <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--sidebar-foreground)/.55)]">იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.</p>
-            <Link href="/sell" className="btn-primary mt-4 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-bold" data-testid="link-sidebar-sell">
-              <Plus size={15} />
-              გაყიდე ნივთი
-            </Link>
-          </div>
-        </div>
-        <div className="border-t border-[hsl(var(--sidebar-border))] pt-5">
-          {isSignedIn ? (
-            <button
-              type="button"
-              onClick={() => signOut({ redirectUrl: '/' })}
-              className="nav-link flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium"
-              data-testid="button-sign-out"
-            >
-              <LogOut size={18} strokeWidth={1.8} />
-              <span>გასვლა</span>
-            </button>
-          ) : (
-            <Link href="/sign-in" className="nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium" data-testid="link-login">
-              <LogIn size={18} strokeWidth={1.8} />
-              <span>შესვლა</span>
-            </Link>
-          )}
-          <p className="mt-6 px-3 font-mono-ui text-[9px] uppercase tracking-[.16em] text-[hsl(var(--sidebar-foreground)/.28)]">თბილისი · საქართველო</p>
-        </div>
-      </aside>
-      <main className="min-w-0 flex-1 pb-20 md:pb-0">{children}</main>
-      <nav className="mobile-nav fixed bottom-0 left-0 right-0 z-30 items-center justify-around border-t border-[hsl(var(--border))] bg-[hsl(var(--card)/.96)] px-2 py-2 backdrop-blur-md" aria-label="მობილური ნავიგაცია">
-        <Link href="/" className={`flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-[10px] ${location === '/' ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`} data-testid="link-mobile-browse">
-          <Compass size={19} />
-          მოძებნა
-        </Link>
-        <Link href="/sell" className="btn-primary -mt-7 flex h-14 w-14 items-center justify-center rounded-2xl shadow-[var(--shadow-md)]" data-testid="link-mobile-sell">
-          <Plus size={25} />
-        </Link>
-        <Link href="/profile" className={`flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-[10px] ${location === '/profile' ? 'text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))]'}`} data-testid="link-mobile-profile">
-          <UserRound size={19} />
-          პროფილი
-        </Link>
-      </nav>
+    <div className="page-shell noise flex flex-col min-h-[100dvh]">
+      <Navbar />
+      <main className="flex-1 w-full">{children}</main>
+      <Footer />
     </div>
   );
 }

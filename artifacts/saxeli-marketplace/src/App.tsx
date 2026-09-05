@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MarketplaceChrome } from "@/components/MarketplaceChrome";
+import { FilterProvider } from "@/hooks/use-filters";
 import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
 import ItemDetail from "@/pages/ItemDetail";
@@ -23,6 +24,7 @@ import Profile from "@/pages/Profile";
 import SellerProfile from "@/pages/SellerProfile";
 import Sell from "@/pages/Sell";
 import NotFound from "@/pages/not-found";
+import InfoPage from "@/pages/InfoPage";
 import {
   Redirect,
   Route,
@@ -111,24 +113,15 @@ function ClerkQueryClientCacheInvalidator() {
 }
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  const returnTo = encodeURIComponent(location + search);
+
   return (
     <>
       <Show when="signed-in">{children}</Show>
       <Show when="signed-out">
-        <Redirect to="/sign-in" />
-      </Show>
-    </>
-  );
-}
-
-function HomeRoute() {
-  return (
-    <>
-      <Show when="signed-in">
-        <Redirect to="/marketplace" />
-      </Show>
-      <Show when="signed-out">
-        <Home />
+        <Redirect to={`/login?returnTo=${returnTo}`} />
       </Show>
     </>
   );
@@ -138,47 +131,60 @@ function Router() {
   return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={HomeRoute} />
+        <Route path="/" component={Home} />
+        
         <Route path="/login">
-          <Redirect to="/sign-in" />
+          {() => {
+            const search = typeof window !== 'undefined' ? window.location.search : '';
+            return <Redirect to={`/sign-in${search}`} />;
+          }}
         </Route>
+        
         <Route path="/register">
-          <Redirect to="/sign-up" />
+          {() => {
+            const search = typeof window !== 'undefined' ? window.location.search : '';
+            return <Redirect to={`/sign-up${search}`} />;
+          }}
         </Route>
+        
         <Route path="/sign-in/*?">
           <Auth mode="login" basePath={basePath} />
         </Route>
+        
         <Route path="/sign-up/*?">
           <Auth mode="register" basePath={basePath} />
         </Route>
-        <Route path="/marketplace">
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        </Route>
+        
         <Route path="/item/:id">
-          <ProtectedRoute>
-            <ItemDetail />
-          </ProtectedRoute>
+          <ItemDetail />
         </Route>
+        
         <Route path="/sell">
           <ProtectedRoute>
             <Sell />
           </ProtectedRoute>
         </Route>
+        
         <Route path="/seller/:id">
           <SellerProfile />
         </Route>
+        <Route path="/about"><InfoPage page="about" /></Route>
+        <Route path="/terms"><InfoPage page="terms" /></Route>
+        <Route path="/privacy"><InfoPage page="privacy" /></Route>
+        <Route path="/help"><InfoPage page="help" /></Route>
+        
         <Route path="/edit/:id">
           <ProtectedRoute>
             <EditItem />
           </ProtectedRoute>
         </Route>
+        
         <Route path="/profile">
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
         </Route>
+        
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
@@ -220,9 +226,11 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
-          <MarketplaceChrome>
-            <Router />
-          </MarketplaceChrome>
+          <FilterProvider>
+            <MarketplaceChrome>
+              <Router />
+            </MarketplaceChrome>
+          </FilterProvider>
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

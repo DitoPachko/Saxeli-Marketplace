@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, ChevronDown, Heart, MapPin, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { getListItemsQueryKey, useListItems, useToggleItemFavorite } from '@workspace/api-client-react';
 import type { ListItemsParams, MarketplaceItem } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Avatar, ItemVisual, Notice, PageHeader } from '@/components/MarketplaceChrome';
-
-const categories = ['ყველა კატეგორია', 'ტექნიკა', 'ტანსაცმელი', 'სახლი', 'ჰობი', 'ბავშვები'];
-const cities = ['ყველა ქალაქი', 'თბილისი', 'ბათუმი', 'ქუთაისი', 'რუსთავი'];
+import { Avatar, ItemVisual, Notice } from '@/components/MarketplaceChrome';
+import { useFilters, cities } from '@/hooks/use-filters';
+import { useUser } from '@clerk/react';
 
 function formatPrice(price: number) {
   return `${price.toLocaleString('ka-GE')} ₾`;
@@ -59,24 +58,31 @@ function ItemSkeleton() {
 }
 
 export default function Home() {
-  const [searchText, setSearchText] = useState('');
-  const [submittedSearch, setSubmittedSearch] = useState('');
-  const [category, setCategory] = useState(categories[0]);
-  const [city, setCity] = useState(cities[0]);
+  const { search, setSearch, submittedSearch, setSubmittedSearch, category, setCategory, city, setCity } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
+  const { isSignedIn } = useUser();
+  const [location, setLocation] = useLocation();
+
   const params = useMemo<ListItemsParams>(() => ({
     search: submittedSearch || undefined,
-    category: category === categories[0] ? undefined : category,
-    city: city === cities[0] ? undefined : city,
+    category: category === 'ყველა კატეგორია' ? undefined : category,
+    city: city === 'ყველა ქალაქი' ? undefined : city,
     limit: 50,
   }), [submittedSearch, category, city]);
+  
   const { data: items, isLoading, isError, refetch } = useListItems(params, { query: { queryKey: getListItemsQueryKey(params) } });
   const toggleFavorite = useToggleItemFavorite();
   const listingItems = items ?? [];
-  const featured = listingItems.slice(0, 4);
 
   const handleFavorite = (item: MarketplaceItem) => {
+    if (!isSignedIn) {
+      const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+      const returnTo = encodeURIComponent(location + currentSearch);
+      setLocation(`/login?returnTo=${returnTo}`);
+      return;
+    }
+
     const next = !(favoriteOverrides[item.id] ?? item.isFavorite ?? false);
     setFavoriteOverrides((current) => ({ ...current, [item.id]: next }));
     toggleFavorite.mutate({ id: item.id }, {
@@ -90,60 +96,71 @@ export default function Home() {
 
   return (
     <div>
-      <PageHeader title="იპოვე შენი შემდეგი ნივთი" eyebrow="Saxeli / marketplace">
-        <Link href="/sell" className="btn-primary hidden items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold sm:flex" data-testid="link-header-sell">
-          <Sparkles size={16} /> გაყიდე ნივთი
-        </Link>
-      </PageHeader>
       <div className="mx-auto max-w-[1320px] px-5 py-7 md:px-10 md:py-10">
         <section className="enter relative overflow-hidden rounded-[2rem] bg-[hsl(var(--secondary))] px-6 py-8 text-[hsl(var(--secondary-foreground))] md:px-12 md:py-12">
           <div className="relative z-10 max-w-xl">
             <p className="font-mono-ui text-[10px] uppercase tracking-[.25em] text-[hsl(var(--primary))]">დღის აღმოჩენა</p>
             <h2 className="font-display mt-4 max-w-lg text-4xl font-semibold leading-[1.08] tracking-[-.06em] md:text-6xl">კარგი ნივთები<br /><span className="text-[hsl(var(--primary))]">ახლოსაა.</span></h2>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-[hsl(var(--secondary-foreground)/.7)] md:text-base">იპოვე ის, რაც უკვე უყვარდა სხვას და ახლა შენს ცხოვრებაში ეძებს ადგილს.</p>
-            <form className="mt-8 flex max-w-xl overflow-hidden rounded-xl bg-[hsl(var(--card))] p-1.5 text-[hsl(var(--foreground))] shadow-[var(--shadow-sm)]" onSubmit={(event) => { event.preventDefault(); setSubmittedSearch(searchText.trim()); }} data-testid="form-search">
-              <Search className="my-auto ml-3 shrink-0 text-[hsl(var(--muted-foreground))]" size={19} />
-              <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="რას ეძებ?" className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]" aria-label="ძებნა" data-testid="input-search" />
-              <button type="submit" className="btn-primary rounded-lg px-4 py-2 text-sm font-bold" data-testid="button-search">ძებნა</button>
-            </form>
           </div>
           <div className="absolute -right-16 -top-28 h-80 w-80 rounded-full border-[34px] border-[hsl(var(--primary)/.95)] md:h-[30rem] md:w-[30rem]" aria-hidden="true" />
           <div className="absolute -bottom-32 right-20 h-72 w-72 rounded-full border border-[hsl(var(--accent)/.45)] md:h-96 md:w-96" aria-hidden="true" />
           <span className="absolute bottom-6 right-8 hidden font-display text-7xl text-[hsl(var(--secondary-foreground)/.08)] md:block">ს.</span>
         </section>
 
-        <section className="enter enter-delay-1 mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between" aria-label="ფილტრები">
-          <div className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> გაფილტრე</div>
-          <div className="grid w-full gap-2 sm:grid-cols-2 md:flex md:w-auto">
-            <label className="relative">
-              <span className="sr-only">კატეგორია</span>
-              <select value={category} onChange={(event) => setCategory(event.target.value)} className="w-full appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-3 pl-3 pr-9 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-category">
-                {categories.map((option) => <option key={option}>{option}</option>)}
-              </select>
-              <ChevronDown size={15} className="pointer-events-none absolute right-3 top-3.5 text-[hsl(var(--muted-foreground))]" />
-            </label>
-            <label className="relative">
+        <section className="enter enter-delay-1 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
+          <div className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> ლოკაცია</div>
+          <div className="grid w-full gap-2 sm:flex sm:w-auto">
+            <label className="relative block w-full sm:w-64">
               <span className="sr-only">ქალაქი</span>
-              <select value={city} onChange={(event) => setCity(event.target.value)} className="w-full appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-3 pl-3 pr-9 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-city">
+              <select value={city} onChange={(event) => setCity(event.target.value)} className="w-full cursor-pointer appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-2.5 pl-4 pr-10 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-city">
                 {cities.map((option) => <option key={option}>{option}</option>)}
               </select>
-              <ChevronDown size={15} className="pointer-events-none absolute right-3 top-3.5 text-[hsl(var(--muted-foreground))]" />
+              <ChevronDown size={15} className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" />
             </label>
           </div>
         </section>
 
-        <div className="mt-10 flex items-end justify-between">
-          <div><p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">შერჩეული შენთვის</p><h2 className="font-display mt-1 text-2xl font-semibold tracking-[-.04em] md:text-3xl">{submittedSearch ? `ძიება: ${submittedSearch}` : 'ახლახან დამატებული'}</h2></div>
+        <div className="mt-10 flex items-end justify-between border-b border-[hsl(var(--border))] pb-4">
+          <div>
+            <h2 className="font-display mt-1 text-2xl font-semibold tracking-[-.04em] md:text-3xl">
+              {submittedSearch || (category !== 'ყველა კატეგორია') ? `შედეგები: ${submittedSearch || category}` : 'ახლახან დამატებული'}
+            </h2>
+          </div>
           <span className="hidden text-xs text-[hsl(var(--muted-foreground))] sm:block" data-testid="text-results-count">{listingItems.length} განცხადება</span>
         </div>
+        
         {isError ? <div className="mt-6"><Notice tone="error">ნივთების ჩატვირთვა ვერ მოხერხდა. <button type="button" className="ml-1 font-semibold underline" onClick={() => refetch()} data-testid="button-retry-items">თავიდან ცდა</button></Notice></div> : null}
+        
         {isLoading ? <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((id) => <ItemSkeleton key={id} />)}</div> : null}
-        {!isLoading && !isError && featured.length === 0 ? <div className="mt-6 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card)/.5)] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.22)]"><Search size={22} /></div><h3 className="font-display mt-4 text-xl font-semibold">ამ ძიებამ არაფერი იპოვა</h3><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">სცადე სხვა სიტყვა ან გააფართოვე ქალაქის ფილტრი.</p><button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm" onClick={() => { setSearchText(''); setSubmittedSearch(''); setCategory(categories[0]); setCity(cities[0]); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button></div> : null}
-        {!isLoading && !isError && featured.length > 0 ? <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{featured.map((item, index) => <div key={item.id} className={`enter enter-delay-${Math.min(index + 1, 3)}`}><ItemCard item={item} favorite={favoriteOverrides[item.id] ?? item.isFavorite ?? false} onFavorite={handleFavorite} /></div>)}</div> : null}
-        {listingItems.length > 4 ? <div className="mt-12 border-t border-[hsl(var(--border))] pt-8"><div className="flex items-center justify-between"><h2 className="font-display text-2xl font-semibold">კიდევ ცოტა</h2><Link href="/profile#saved" className="flex items-center gap-2 text-sm font-semibold hover:text-[hsl(var(--accent))]" data-testid="link-see-saved">შენახული ნივთები <ArrowRight size={15} /></Link></div></div> : null}
+        
+        {!isLoading && !isError && listingItems.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card)/.5)] px-6 py-16 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.22)]"><Search size={22} /></div>
+            <h3 className="font-display mt-4 text-xl font-semibold">ამ ძიებამ არაფერი იპოვა</h3>
+            <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">სცადე სხვა სიტყვა ან გააფართოვე ფილტრი.</p>
+            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { setSearch(''); setSubmittedSearch(''); setCategory('ყველა კატეგორია'); setCity('ყველა ქალაქი'); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
+          </div>
+        ) : null}
+        
+        {!isLoading && !isError && listingItems.length > 0 ? (
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {listingItems.map((item, index) => (
+              <div key={item.id} className={`enter enter-delay-${Math.min(index + 1, 3)}`}>
+                <ItemCard item={item} favorite={favoriteOverrides[item.id] ?? item.isFavorite ?? false} onFavorite={handleFavorite} />
+              </div>
+            ))}
+          </div>
+        ) : null}
+        
         <section className="mt-14 grid gap-5 border-t border-[hsl(var(--border))] pt-10 md:grid-cols-[1fr_auto] md:items-end">
-          <div><p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">Saxeli-ს პრინციპი</p><h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-[-.05em] md:text-4xl">ყიდვა-გაყიდვა, როგორც საუბარი მეზობელთან.</h2></div>
-          <div className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(var(--accent)/.2)]"><Check size={17} /></span> ადამიანებისგან, ადამიანებისთვის</div>
+          <div>
+            <p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">Saxeli-ს პრინციპი</p>
+            <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-[-.05em] md:text-4xl">ყიდვა-გაყიდვა, როგორც საუბარი მეზობელთან.</h2>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(var(--accent)/.2)]"><Check size={17} /></span> ადამიანებისგან, ადამიანებისთვის
+          </div>
         </section>
       </div>
     </div>
