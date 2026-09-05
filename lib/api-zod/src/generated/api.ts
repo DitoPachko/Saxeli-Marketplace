@@ -143,6 +143,143 @@ export const ToggleItemFavoriteResponse = zod.object({
 
 
 /**
+ * @summary Update an owned marketplace listing
+ */
+export const UpdateItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updateItemBodyTitleMin = 2;
+
+export const updateItemBodyPriceMin = 0;
+
+
+
+export const UpdateItemBody = zod.object({
+  "title": zod.string().min(updateItemBodyTitleMin).optional(),
+  "price": zod.number().min(updateItemBodyPriceMin).optional(),
+  "category": zod.string().optional(),
+  "condition": zod.string().optional(),
+  "city": zod.string().optional(),
+  "image": zod.string().optional(),
+  "images": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "delivery": zod.array(zod.string()).optional()
+})
+
+export const UpdateItemResponse = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "price": zod.number(),
+  "category": zod.string(),
+  "condition": zod.string(),
+  "city": zod.string(),
+  "postedAt": zod.string(),
+  "image": zod.string(),
+  "images": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "seller": zod.object({
+  "name": zod.string(),
+  "initials": zod.string(),
+  "rating": zod.number(),
+  "listings": zod.number(),
+  "responseTime": zod.string().optional()
+}),
+  "isFavorite": zod.boolean().optional(),
+  "delivery": zod.array(zod.string()).optional()
+})
+
+
+/**
+ * @summary Delete an owned marketplace listing
+ */
+export const DeleteItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteItemResponse = zod.void()
+
+
+/**
+ * @summary Get the current user profile
+ */
+export const GetCurrentProfileResponse = zod.object({
+  "id": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phoneNumber": zod.string().nullable(),
+  "city": zod.string().nullable(),
+  "avatarUrl": zod.string().nullable()
+})
+
+
+/**
+ * @summary Update editable current user profile fields
+ */
+
+
+
+export const UpdateCurrentProfileBody = zod.object({
+  "fullName": zod.string().min(1).optional(),
+  "phoneNumber": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish()
+})
+
+export const UpdateCurrentProfileResponse = zod.object({
+  "id": zod.string(),
+  "fullName": zod.string(),
+  "email": zod.string(),
+  "phoneNumber": zod.string().nullable(),
+  "city": zod.string().nullable(),
+  "avatarUrl": zod.string().nullable()
+})
+
+
+/**
+ * @summary List listings owned by the current user
+ */
+export const ListMyItemsResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "price": zod.number(),
+  "category": zod.string(),
+  "condition": zod.string(),
+  "city": zod.string(),
+  "postedAt": zod.string(),
+  "image": zod.string(),
+  "images": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "seller": zod.object({
+  "name": zod.string(),
+  "initials": zod.string(),
+  "rating": zod.number(),
+  "listings": zod.number(),
+  "responseTime": zod.string().optional()
+}),
+  "isFavorite": zod.boolean().optional(),
+  "delivery": zod.array(zod.string()).optional()
+})
+export const ListMyItemsResponse = zod.array(ListMyItemsResponseItem)
+
+
+/**
+ * @summary Get a seller's public profile
+ */
+export const GetSellerProfileParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetSellerProfileResponse = zod.object({
+  "id": zod.string(),
+  "fullName": zod.string(),
+  "city": zod.string().nullable(),
+  "avatarUrl": zod.string().nullable(),
+  "listings": zod.number()
+})
+
+
+/**
  * @summary Get the current profile summary
  */
 export const GetProfileSummaryResponse = zod.object({

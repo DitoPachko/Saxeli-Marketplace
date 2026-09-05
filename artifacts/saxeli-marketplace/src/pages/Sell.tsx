@@ -11,9 +11,13 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useAnalyzeItemImage,
   useCreateItem,
+  getListItemsQueryKey,
+  getListMyItemsQueryKey,
+  getGetProfileSummaryQueryKey,
   type ItemInput,
 } from "@workspace/api-client-react";
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
@@ -61,6 +65,7 @@ type Stage = "photo" | "choice" | "details";
 
 export default function Sell() {
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("photo");
   const [form, setForm] = useState<ItemInput>(emptyForm);
@@ -161,7 +166,12 @@ export default function Sell() {
         },
       },
       {
-        onSuccess: (item) => setLocation(`/item/${item.id}`),
+        onSuccess: (item) => {
+          queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListMyItemsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetProfileSummaryQueryKey() });
+          setLocation(`/item/${item.id}`);
+        },
         onError: () =>
           setError("განცხადების დამატება ვერ მოხერხდა. გთხოვ, თავიდან სცადო."),
       },

@@ -1,252 +1,165 @@
 import { Router, type IRouter } from "express";
+import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import {
   CreateItemBody,
   CreateItemResponse,
+  DeleteItemParams,
   GetItemParams,
   GetItemResponse,
   ListItemsQueryParams,
   ListItemsResponse,
+  ListMyItemsResponse,
   ToggleItemFavoriteParams,
   ToggleItemFavoriteResponse,
+  UpdateItemBody,
+  UpdateItemParams,
+  UpdateItemResponse,
 } from "@workspace/api-zod";
-
-type MarketplaceItem = {
-  id: string;
-  title: string;
-  price: number;
-  category: string;
-  condition: string;
-  city: string;
-  postedAt: string;
-  image: string;
-  images: string[];
-  description: string;
-  seller: {
-    name: string;
-    initials: string;
-    rating: number;
-    listings: number;
-    responseTime: string;
-  };
-  isFavorite: boolean;
-  delivery: string[];
-};
-
-const seller = {
-  name: "ნინო ბერიძე",
-  initials: "ნბ",
-  rating: 4.9,
-  listings: 18,
-  responseTime: "პასუხობს დაახლოებით 10 წუთში",
-};
-
-let items: MarketplaceItem[] = [
-  {
-    id: "iphone-14-pro",
-    title: "iPhone 14 Pro 256GB",
-    price: 1890,
-    category: "ტექნიკა და ელექტრონიკა",
-    condition: "თითქმის ახალი",
-    city: "თბილისი",
-    postedAt: "დღეს",
-    image:
-      "https://images.unsplash.com/photo-1678652197831-2d180705cd2c?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1678652197831-2d180705cd2c?auto=format&fit=crop&w=1400&q=90",
-      "https://images.unsplash.com/photo-1592286927505-2fd0c0c0b6e9?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description:
-      "იდეალურ მდგომარეობაშია, ეკრანზე დამცავი ფირი აკრია. მოყვება ორიგინალი ყუთი და კაბელი.",
-    seller,
-    isFavorite: false,
-    delivery: ["შეხვედრა", "კურიერი"],
-  },
-  {
-    id: "leather-bag",
-    title: "ტყავის ჩანთა — იტალიური",
-    price: 240,
-    category: "ტანსაცმელი და ფეხსაცმელი",
-    condition: "ახალი",
-    city: "ბათუმი",
-    postedAt: "2 საათის წინ",
-    image:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description:
-      "რბილი ნატურალური ტყავი, უნივერსალური ზომა და მოსახერხებელი შიდა ჯიბეები.",
-    seller: { ...seller, name: "მარიამ კ.", initials: "მკ", listings: 7 },
-    isFavorite: true,
-    delivery: ["კურიერი"],
-  },
-  {
-    id: "film-camera",
-    title: "Canon AE-1 ფოტოაპარატი",
-    price: 520,
-    category: "ჰობი, სპორტი და დასვენება",
-    condition: "მეორადი",
-    city: "ქუთაისი",
-    postedAt: "გუშინ",
-    image:
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description:
-      "სრულად შემოწმებული კლასიკური კამერა. მოყვება 50mm ობიექტივი და ჩანთა.",
-    seller: { ...seller, name: "ლაშა მ.", initials: "ლმ", rating: 4.8 },
-    isFavorite: false,
-    delivery: ["შეხვედრა"],
-  },
-  {
-    id: "desk-lamp",
-    title: "მინიმალისტური მაგიდის სანათი",
-    price: 95,
-    category: "სახლი და ინტერიერი",
-    condition: "თითქმის ახალი",
-    city: "რუსთავი",
-    postedAt: "3 დღის წინ",
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description:
-      "თბილი განათება, მეტალის კორპუსი და ძალიან კარგ მდგომარეობაშია.",
-    seller: { ...seller, name: "გიორგი ჩ.", initials: "გჩ", listings: 3 },
-    isFavorite: false,
-    delivery: ["შეხვედრა", "კურიერი"],
-  },
-  {
-    id: "running-shoes",
-    title: "Nike Air Zoom Pegasus",
-    price: 180,
-    category: "ჰობი, სპორტი და დასვენება",
-    condition: "თითქმის ახალი",
-    city: "თბილისი",
-    postedAt: "4 დღის წინ",
-    image:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description: "ზომა 41. ორჯერ არის ჩაცმული, პრაქტიკულად ახალია.",
-    seller: { ...seller, name: "ანა ს.", initials: "ას", rating: 5 },
-    isFavorite: false,
-    delivery: ["კურიერი", "შეხვედრა"],
-  },
-  {
-    id: "skincare-set",
-    title: "Kiehl's მოვლის ნაკრები",
-    price: 130,
-    category: "თავის მოვლა და სილამაზე",
-    condition: "ახალი",
-    city: "ზუგდიდი",
-    postedAt: "5 დღის წინ",
-    image:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description: "ორიგინალი პროდუქცია, შეფუთვა გახსნილი არ არის.",
-    seller: { ...seller, name: "თაკო ბ.", initials: "თბ", listings: 12 },
-    isFavorite: false,
-    delivery: ["კურიერი"],
-  },
-  {
-    id: "kids-bike",
-    title: "ბავშვის ველოსიპედი 16”",
-    price: 290,
-    category: "საბავშვო სამყარო",
-    condition: "მეორადი",
-    city: "ფოთი",
-    postedAt: "1 კვირის წინ",
-    image:
-      "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?auto=format&fit=crop&w=900&q=85",
-    images: [
-      "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?auto=format&fit=crop&w=1400&q=90",
-    ],
-    description: "მსუბუქი ალუმინის ჩარჩო, დამხმარე ბორბლები მოყვება.",
-    seller: { ...seller, name: "სალომე კ.", initials: "სკ", listings: 5 },
-    isFavorite: false,
-    delivery: ["შეხვედრა"],
-  },
-];
+import { db, listings, users, type Listing, type User } from "@workspace/db";
+import { getCurrentUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
 
-router.get("/items", (req, res) => {
+function initials(fullName: string) {
+  return fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function postedAt(createdAt: Date) {
+  const elapsed = Date.now() - createdAt.getTime();
+  if (elapsed < 60 * 60 * 1000) return "ახლახან";
+  if (elapsed < 24 * 60 * 60 * 1000) return "დღეს";
+  return createdAt.toLocaleDateString("ka-GE");
+}
+
+function item(listing: Listing, user: User, listingCount: number) {
+  return {
+    id: listing.id,
+    title: listing.title,
+    price: listing.price,
+    category: listing.category,
+    condition: listing.condition,
+    city: listing.city,
+    postedAt: postedAt(listing.createdAt),
+    image: listing.image,
+    images: listing.images,
+    description: listing.description,
+    seller: {
+      name: user.fullName,
+      initials: initials(user.fullName),
+      rating: 0,
+      listings: listingCount,
+    },
+    isFavorite: false,
+    delivery: listing.delivery,
+  };
+}
+
+async function listingCount(userId: string) {
+  const [result] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(listings)
+    .where(eq(listings.userId, userId));
+  return result?.count ?? 0;
+}
+
+async function findItem(id: string) {
+  const [row] = await db
+    .select({ listing: listings, user: users })
+    .from(listings)
+    .innerJoin(users, eq(listings.userId, users.id))
+    .where(eq(listings.id, id));
+  return row;
+}
+
+router.get("/items", async (req, res) => {
   const parsed = ListItemsQueryParams.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: "ფილტრის მონაცემები არასწორია" });
-    return;
-  }
+  if (!parsed.success) return void res.status(400).json({ error: "ფილტრის მონაცემები არასწორია" });
 
   const { search, category, city, limit } = parsed.data;
-  const normalizedSearch = search?.trim().toLocaleLowerCase("ka-GE");
-  const filtered = items
-    .filter((item) => !category || category === "ყველა ნივთი" || item.category === category)
-    .filter((item) => !city || item.city === city)
-    .filter(
-      (item) =>
-        !normalizedSearch ||
-        `${item.title} ${item.category} ${item.city}`
-          .toLocaleLowerCase("ka-GE")
-          .includes(normalizedSearch),
-    )
-    .slice(0, limit);
-
-  res.json(ListItemsResponse.parse(filtered));
+  const filters = [
+    category && category !== "ყველა ნივთი" ? eq(listings.category, category) : undefined,
+    city ? eq(listings.city, city) : undefined,
+    search
+      ? or(
+          ilike(listings.title, `%${search.trim()}%`),
+          ilike(listings.category, `%${search.trim()}%`),
+          ilike(listings.city, `%${search.trim()}%`),
+        )
+      : undefined,
+  ].filter(Boolean);
+  const rows = await db
+    .select({ listing: listings, user: users })
+    .from(listings)
+    .innerJoin(users, eq(listings.userId, users.id))
+    .where(filters.length ? and(...filters) : undefined)
+    .orderBy(desc(listings.createdAt))
+    .limit(limit);
+  const counts = await Promise.all(rows.map((row) => listingCount(row.user.id)));
+  res.json(ListItemsResponse.parse(rows.map((row, index) => item(row.listing, row.user, counts[index]))));
 });
 
-router.post("/items", (req, res) => {
+router.post("/items", async (req, res) => {
   const parsed = CreateItemBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "განცხადების მონაცემები არასწორია" });
-    return;
-  }
-
-  const newItem: MarketplaceItem = {
-    id: `item-${Date.now()}`,
-    ...parsed.data,
-    postedAt: "ახლახან",
-    images: [parsed.data.image],
-    seller: { ...seller, name: "თქვენი პროფილი", initials: "თპ" },
-    isFavorite: false,
-    delivery: parsed.data.delivery ?? [],
-  };
-  items = [newItem, ...items];
-  res.status(201).json(CreateItemResponse.parse(newItem));
+  if (!parsed.success) return void res.status(400).json({ error: "განცხადების მონაცემები არასწორია" });
+  const user = await getCurrentUser(req);
+  const [listing] = await db
+    .insert(listings)
+    .values({ ...parsed.data, userId: user.id, images: [parsed.data.image], delivery: parsed.data.delivery ?? [] })
+    .returning();
+  res.status(201).json(CreateItemResponse.parse(item(listing, user, await listingCount(user.id))));
 });
 
-router.get("/items/:id", (req, res) => {
+router.get("/items/:id", async (req, res) => {
   const parsed = GetItemParams.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
-    return;
-  }
-  const item = items.find((candidate) => candidate.id === parsed.data.id);
-  if (!item) {
-    res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
-    return;
-  }
-  res.json(GetItemResponse.parse(item));
+  if (!parsed.success) return void res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
+  const row = await findItem(parsed.data.id);
+  if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
+  res.json(GetItemResponse.parse(item(row.listing, row.user, await listingCount(row.user.id))));
 });
 
-router.post("/items/:id", (req, res) => {
+router.get("/profile/listings", async (req, res) => {
+  const user = await getCurrentUser(req);
+  const ownListings = await db.select().from(listings).where(eq(listings.userId, user.id)).orderBy(desc(listings.createdAt));
+  const count = ownListings.length;
+  res.json(ListMyItemsResponse.parse(ownListings.map((listing) => item(listing, user, count))));
+});
+
+router.patch("/items/:id", async (req, res) => {
+  const params = UpdateItemParams.safeParse(req.params);
+  const body = UpdateItemBody.safeParse(req.body);
+  if (!params.success || !body.success) return void res.status(400).json({ error: "განცხადების მონაცემები არასწორია" });
+  const user = await getCurrentUser(req);
+  const row = await findItem(params.data.id);
+  if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
+  if (row.listing.userId !== user.id) return void res.status(403).json({ error: "არ გაქვთ ამ განცხადების შეცვლის უფლება" });
+  const [listing] = await db.update(listings).set({ ...body.data, updatedAt: new Date() }).where(eq(listings.id, row.listing.id)).returning();
+  res.json(UpdateItemResponse.parse(item(listing, user, await listingCount(user.id))));
+});
+
+router.delete("/items/:id", async (req, res) => {
+  const params = DeleteItemParams.safeParse(req.params);
+  if (!params.success) return void res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
+  const user = await getCurrentUser(req);
+  const row = await findItem(params.data.id);
+  if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
+  if (row.listing.userId !== user.id) return void res.status(403).json({ error: "არ გაქვთ ამ განცხადების წაშლის უფლება" });
+  await db.delete(listings).where(eq(listings.id, row.listing.id));
+  res.status(204).end();
+});
+
+router.post("/items/:id", async (req, res) => {
   const parsed = ToggleItemFavoriteParams.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
-    return;
-  }
-  const item = items.find((candidate) => candidate.id === parsed.data.id);
-  if (!item) {
-    res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
-    return;
-  }
-  item.isFavorite = !item.isFavorite;
-  res.json(ToggleItemFavoriteResponse.parse({ id: item.id, isFavorite: item.isFavorite }));
+  if (!parsed.success) return void res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
+  const row = await findItem(parsed.data.id);
+  if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
+  // Favorites are not persisted until a favorites model is introduced.
+  res.json(ToggleItemFavoriteResponse.parse({ id: row.listing.id, isFavorite: false }));
 });
 
 export default router;

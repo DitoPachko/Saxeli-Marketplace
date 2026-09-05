@@ -1,3 +1,4 @@
 - [API codegen compatibility](api-codegen-compatibility.md) — use number for integer-like OpenAPI fields with this Zod 3 workspace
 - [AI provider policy](ai-integration-fallback.md) — keep provider keys server-side and never replace failed visual recognition with mock listing data
 - [Gemini model availability](gemini-model-availability.md) — this direct API account requires Gemini 3.6 Flash; 2.5 Flash is retired for new users
+- [Clerk password ownership](clerk-password-ownership.md) — app user rows mirror Clerk identities, but password hashes must remain null because Clerk owns credentials

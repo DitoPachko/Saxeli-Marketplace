@@ -54,7 +54,9 @@ app.use(
       req.path === "/" ||
       req.path === "/healthz" ||
       (req.method === "GET" &&
-        (req.path === "/items" || req.path.startsWith("/items/")));
+         (req.path === "/items" ||
+           req.path.startsWith("/items/") ||
+           req.path.startsWith("/sellers/")));
     if (publicRequest) {
       next();
       return;

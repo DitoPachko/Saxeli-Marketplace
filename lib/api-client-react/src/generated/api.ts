@@ -25,10 +25,14 @@ import type {
   ItemAnalysis,
   ItemAnalysisInput,
   ItemInput,
+  ItemUpdate,
   ListItemsParams,
   MarketplaceItem,
   MessageThread,
-  ProfileSummary
+  ProfileSummary,
+  ProfileUpdate,
+  SellerProfile,
+  UserProfile
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -438,6 +442,451 @@ export const useToggleItemFavorite = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getToggleItemFavoriteMutationOptions(options));
     }
+
+export const getUpdateItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/items/${id}`
+}
+
+/**
+ * @summary Update an owned marketplace listing
+ */
+export const updateItem = async (id: string,
+    itemUpdate: ItemUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceItem> => {
+
+  return customFetch<MarketplaceItem>(getUpdateItemUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(itemUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateItemMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItem>>, TError,{id: string;data: BodyType<ItemUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateItem>>, TError,{id: string;data: BodyType<ItemUpdate>}, TContext> => {
+
+const mutationKey = ['updateItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateItem>>, {id: string;data: BodyType<ItemUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateItem>>>
+    export type UpdateItemMutationBody = BodyType<ItemUpdate>
+    export type UpdateItemMutationError = ErrorType<void>
+
+    /**
+ * @summary Update an owned marketplace listing
+ */
+export const useUpdateItem = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateItem>>, TError,{id: string;data: BodyType<ItemUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateItem>>,
+        TError,
+        {id: string;data: BodyType<ItemUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateItemMutationOptions(options));
+    }
+
+export const getDeleteItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/items/${id}`
+}
+
+/**
+ * @summary Delete an owned marketplace listing
+ */
+export const deleteItem = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteItemUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteItemMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteItem>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteItem>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteItem(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteItemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteItem>>>
+
+    export type DeleteItemMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an owned marketplace listing
+ */
+export const useDeleteItem = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItem>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteItem>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteItemMutationOptions(options));
+    }
+
+export const getGetCurrentProfileUrl = () => {
+
+
+
+
+  return `/api/profile`
+}
+
+/**
+ * @summary Get the current user profile
+ */
+export const getCurrentProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<UserProfile> => {
+
+  return customFetch<UserProfile>(getGetCurrentProfileUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentProfileQueryKey = () => {
+    return [
+    `/api/profile`
+    ] as const;
+    }
+
+
+export const getGetCurrentProfileQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentProfile>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentProfileQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentProfile>>> = ({ signal }) => getCurrentProfile({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentProfile>>>
+export type GetCurrentProfileQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current user profile
+ */
+
+export function useGetCurrentProfile<TData = Awaited<ReturnType<typeof getCurrentProfile>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateCurrentProfileUrl = () => {
+
+
+
+
+  return `/api/profile`
+}
+
+/**
+ * @summary Update editable current user profile fields
+ */
+export const updateCurrentProfile = async (profileUpdate: ProfileUpdate, options?: Parameters<typeof customFetch>[1]): Promise<UserProfile> => {
+
+  return customFetch<UserProfile>(getUpdateCurrentProfileUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(profileUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateCurrentProfileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCurrentProfile>>, TError,{data: BodyType<ProfileUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCurrentProfile>>, TError,{data: BodyType<ProfileUpdate>}, TContext> => {
+
+const mutationKey = ['updateCurrentProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCurrentProfile>>, {data: BodyType<ProfileUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateCurrentProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCurrentProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateCurrentProfile>>>
+    export type UpdateCurrentProfileMutationBody = BodyType<ProfileUpdate>
+    export type UpdateCurrentProfileMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update editable current user profile fields
+ */
+export const useUpdateCurrentProfile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCurrentProfile>>, TError,{data: BodyType<ProfileUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCurrentProfile>>,
+        TError,
+        {data: BodyType<ProfileUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateCurrentProfileMutationOptions(options));
+    }
+
+export const getListMyItemsUrl = () => {
+
+
+
+
+  return `/api/profile/listings`
+}
+
+/**
+ * @summary List listings owned by the current user
+ */
+export const listMyItems = async ( options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceItem[]> => {
+
+  return customFetch<MarketplaceItem[]>(getListMyItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyItemsQueryKey = () => {
+    return [
+    `/api/profile/listings`
+    ] as const;
+    }
+
+
+export const getListMyItemsQueryOptions = <TData = Awaited<ReturnType<typeof listMyItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyItems>>> = ({ signal }) => listMyItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyItems>>>
+export type ListMyItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List listings owned by the current user
+ */
+
+export function useListMyItems<TData = Awaited<ReturnType<typeof listMyItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSellerProfileUrl = (id: string,) => {
+
+
+
+
+  return `/api/sellers/${id}`
+}
+
+/**
+ * @summary Get a seller's public profile
+ */
+export const getSellerProfile = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<SellerProfile> => {
+
+  return customFetch<SellerProfile>(getGetSellerProfileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSellerProfileQueryKey = (id: string,) => {
+    return [
+    `/api/sellers/${id}`
+    ] as const;
+    }
+
+
+export const getGetSellerProfileQueryOptions = <TData = Awaited<ReturnType<typeof getSellerProfile>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSellerProfileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSellerProfile>>> = ({ signal }) => getSellerProfile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSellerProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getSellerProfile>>>
+export type GetSellerProfileQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a seller's public profile
+ */
+
+export function useGetSellerProfile<TData = Awaited<ReturnType<typeof getSellerProfile>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSellerProfileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetProfileSummaryUrl = () => {
 

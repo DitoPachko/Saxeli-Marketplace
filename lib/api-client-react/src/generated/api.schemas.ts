@@ -46,6 +46,53 @@ export interface ItemInput {
   delivery?: string[];
 }
 
+export interface ItemUpdate {
+  /** @minLength 2 */
+  title?: string;
+  /** @minimum 0 */
+  price?: number;
+  category?: string;
+  condition?: string;
+  city?: string;
+  image?: string;
+  images?: string[];
+  description?: string;
+  delivery?: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  /** @nullable */
+  phoneNumber: string | null;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  avatarUrl: string | null;
+}
+
+export interface ProfileUpdate {
+  /** @minLength 1 */
+  fullName?: string;
+  /** @nullable */
+  phoneNumber?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+}
+
+export interface SellerProfile {
+  id: string;
+  fullName: string;
+  /** @nullable */
+  city: string | null;
+  /** @nullable */
+  avatarUrl: string | null;
+  listings: number;
+}
+
 export interface FavoriteState {
   id: string;
   isFavorite: boolean;

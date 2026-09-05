@@ -122,6 +122,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FavoriteState"
+    patch:
+      operationId: updateItem
+      tags: [marketplace]
+      summary: Update an owned marketplace listing
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ItemUpdate"
+      responses:
+        "200":
+          description: Updated marketplace item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketplaceItem"
+        "403": { description: Listing is not owned by the current user }
+        "404": { description: Item not found }
+    delete:
+      operationId: deleteItem
+      tags: [marketplace]
+      summary: Delete an owned marketplace listing
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204": { description: Listing deleted }
+        "403": { description: Listing is not owned by the current user }
+        "404": { description: Item not found }
+  /profile:
+    get:
+      operationId: getCurrentProfile
+      tags: [profile]
+      summary: Get the current user profile
+      responses:
+        "200":
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateCurrentProfile
+      tags: [profile]
+      summary: Update editable current user profile fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+  /profile/listings:
+    get:
+      operationId: listMyItems
+      tags: [profile, marketplace]
+      summary: List listings owned by the current user
+      responses:
+        "200":
+          description: Current user listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketplaceItem"
+  /sellers/{id}:
+    get:
+      operationId: getSellerProfile
+      tags: [profile]
+      summary: Get a seller's public profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Seller public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerProfile"
+        "404": { description: Seller not found }
   /profile/summary:
     get:
       operationId: getProfileSummary
@@ -169,6 +261,12 @@ paths:
         "503":
           description: AI analysis is unavailable
 components:
+  parameters:
+    ItemId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
   schemas:
     HealthStatus:
       type: object
@@ -231,6 +329,50 @@ components:
         delivery:
           type: array
           items: { type: string }
+    ItemUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 2 }
+        price: { type: number, minimum: 0 }
+        category: { type: string }
+        condition: { type: string }
+        city: { type: string }
+        image: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        description: { type: string }
+        delivery:
+          type: array
+          items: { type: string }
+    UserProfile:
+      type: object
+      required: [id, fullName, email, phoneNumber, city, avatarUrl]
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        email: { type: string }
+        phoneNumber: { type: [string, "null"] }
+        city: { type: [string, "null"] }
+        avatarUrl: { type: [string, "null"] }
+    ProfileUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        fullName: { type: string, minLength: 1 }
+        phoneNumber: { type: [string, "null"] }
+        city: { type: [string, "null"] }
+        avatarUrl: { type: [string, "null"] }
+    SellerProfile:
+      type: object
+      required: [id, fullName, city, avatarUrl, listings]
+      properties:
+        id: { type: string }
+        fullName: { type: string }
+        city: { type: [string, "null"] }
+        avatarUrl: { type: [string, "null"] }
+        listings: { type: number }
     FavoriteState:
       type: object
       required: [id, isFavorite]

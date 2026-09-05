@@ -108,9 +108,9 @@ export function PageHeader({ title, eyebrow, children }: { title: string; eyebro
   );
 }
 
-export function Avatar({ initials, size = 'md', testId }: { initials: string; size?: 'sm' | 'md' | 'lg'; testId?: string }) {
+export function Avatar({ initials, size = 'md', testId, src }: { initials: string; size?: 'sm' | 'md' | 'lg'; testId?: string; src?: string }) {
   const sizes = { sm: 'h-8 w-8 text-[10px]', md: 'h-10 w-10 text-xs', lg: 'h-16 w-16 text-lg' };
-  return <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent)/.22)] font-semibold text-[hsl(var(--foreground))] ${sizes[size]}`} data-testid={testId}>{initials}</span>;
+  return <span className={`relative overflow-hidden inline-flex shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent)/.22)] font-semibold text-[hsl(var(--foreground))] ${sizes[size]}`} data-testid={testId}>{src ? <img src={src} alt={initials} className="absolute inset-0 h-full w-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} /> : null}<span>{initials}</span></span>;
 }
 
 export function ItemVisual({ src, title, className = '' }: { src?: string; title: string; className?: string }) {

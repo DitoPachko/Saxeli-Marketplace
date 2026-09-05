@@ -18,7 +18,9 @@ import { MarketplaceChrome } from "@/components/MarketplaceChrome";
 import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
 import ItemDetail from "@/pages/ItemDetail";
+import EditItem from "@/pages/EditItem";
 import Profile from "@/pages/Profile";
+import SellerProfile from "@/pages/SellerProfile";
 import Sell from "@/pages/Sell";
 import NotFound from "@/pages/not-found";
 import {
@@ -162,6 +164,14 @@ function Router() {
         <Route path="/sell">
           <ProtectedRoute>
             <Sell />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/seller/:id">
+          <SellerProfile />
+        </Route>
+        <Route path="/edit/:id">
+          <ProtectedRoute>
+            <EditItem />
           </ProtectedRoute>
         </Route>
         <Route path="/profile">
