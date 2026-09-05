@@ -2,6 +2,8 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { AnalyzeItemImageBody, AnalyzeItemImageResponse } from "@workspace/api-zod";
 
 type Analysis = {
+  brand: string;
+  model: string;
   title: string;
   category: string;
   condition: string;
@@ -40,6 +42,10 @@ function normalizeAnalysis(value: unknown): Analysis {
     ? Math.round(Number(candidate.suggested_price_gel))
     : 0;
   if (
+    typeof candidate.brand !== "string" ||
+    candidate.brand.trim().length < 2 ||
+    typeof candidate.model !== "string" ||
+    candidate.model.trim().length < 2 ||
     typeof candidate.title !== "string" ||
     candidate.title.trim().length < 5 ||
     !suggestedPrice ||
@@ -49,6 +55,8 @@ function normalizeAnalysis(value: unknown): Analysis {
   }
 
   return {
+    brand: candidate.brand.trim(),
+    model: candidate.model.trim(),
     title: candidate.title.trim(),
     category,
     condition,
@@ -58,16 +66,29 @@ function normalizeAnalysis(value: unknown): Analysis {
   };
 }
 
-function normalizeImageForVision(image: string) {
+function parseImageForGemini(image: string) {
   const trimmed = image.trim();
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-
   const dataUrlMatch = trimmed.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/is);
-  if (dataUrlMatch) {
-    return `data:${dataUrlMatch[1]};base64,${dataUrlMatch[2].replace(/\s/g, "")}`;
+  const mimeType = dataUrlMatch?.[1] ?? "image/jpeg";
+  const data = (dataUrlMatch?.[2] ?? trimmed).replace(/\s/g, "");
+
+  if (!data || !/^[A-Za-z0-9+/]+={0,2}$/.test(data)) {
+    throw new Error("Uploaded image is not valid Base64 data");
   }
 
-  return `data:image/jpeg;base64,${trimmed.replace(/\s/g, "")}`;
+  return {
+    mimeType,
+    data,
+  };
+}
+
+function parseGeminiJson(content: string) {
+  const cleaned = content
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/\s*```$/, "");
+
+  return JSON.parse(cleaned) as unknown;
 }
 
 function respondWithVisionError(req: Request, res: Response, reason: string) {
@@ -84,67 +105,111 @@ const analyzeItem = async (req: Request, res: Response) => {
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
-    const error = new Error("OPENAI_API_KEY is not configured");
-    console.error("Vision API Error:", error);
+    const error = new Error("GEMINI_API_KEY is not configured");
+    console.error("Gemini Vision API Error:", error);
     respondWithVisionError(req, res, error.message);
     return;
   }
 
   try {
-    const imageUrl = normalizeImageForVision(parsed.data.image);
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content:
-              "Analyze the provided product photo for a peer-to-peer marketplace listing. Identify EXACTLY what the item is. Return only a JSON object with title, category, condition, suggested_price_gel, description, and city. The title must use the exact visible brand, model, type, or style whenever legible, including the brand's own product naming. Never return a generic title such as Laptop, Shoes, Phone, or Item when the photo shows more identifying detail, and never invent an exact model that is not supported by the image. Pick category exactly from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Pick condition exactly from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic market value in GEL for Georgia. Set city to თბილისი. The description must be Georgian text with three formatted sections: 1) a brief overview of the detected item, 2) key visual specifications including brand, color, visible design details, and size if visible, and 3) condition details. Use the uploaded image itself as the source of truth and never assume a fixed product type.",
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Identify this exact item, brand, model, category, realistic GEL market price, and write a structured Georgian sales description.",
+    const image = parseImageForGemini(parsed.data.image);
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": apiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text:
+                    "Analyze this uploaded marketplace product photo using only visible evidence. Return a JSON object with brand, model, title, category, condition, suggested_price_gel, city, and description. Identify the exact visible brand and model when legible; use უცნობი when either cannot be verified and never invent details. The title must be specific and include the verified brand/model or visible product type. category must be exactly one Georgian value from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. condition must be exactly one value from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic positive GEL resale price for Georgia. Set city to თბილისი. description must be Georgian and contain a short overview, visible specifications such as color/design/size, and condition details.",
+                },
+                {
+                  inline_data: {
+                    mime_type: image.mimeType,
+                    data: image.data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                brand: { type: "STRING" },
+                model: { type: "STRING" },
+                title: { type: "STRING" },
+                category: {
+                  type: "STRING",
+                  enum: allowedCategories,
+                },
+                condition: {
+                  type: "STRING",
+                  enum: allowedConditions,
+                },
+                suggested_price_gel: { type: "NUMBER" },
+                city: {
+                  type: "STRING",
+                  enum: allowedCities,
+                },
+                description: { type: "STRING" },
               },
-              { type: "image_url", image_url: { url: imageUrl } },
-            ],
+              required: [
+                "brand",
+                "model",
+                "title",
+                "category",
+                "condition",
+                "suggested_price_gel",
+                "city",
+                "description",
+              ],
+            },
           },
-        ],
-      }),
-    });
+        }),
+      },
+    );
 
     if (!response.ok) {
       const details = (await response.text()).slice(0, 500);
-      throw new Error(`OpenAI vision request failed (${response.status}): ${details}`);
+      throw new Error(`Gemini vision request failed (${response.status}): ${details}`);
     }
 
     const payload = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{ text?: string }>;
+        };
+      }>;
     };
-    const content = payload.choices?.[0]?.message?.content;
+    const content = payload.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text ?? "")
+      .join("")
+      .trim();
     if (!content) {
-      throw new Error("OpenAI returned an empty vision analysis");
+      throw new Error("Gemini returned an empty vision analysis");
     }
 
-    const analysis = normalizeAnalysis(AnalyzeItemImageResponse.parse(JSON.parse(content)));
+    const analysis = normalizeAnalysis(
+      AnalyzeItemImageResponse.parse(parseGeminiJson(content)),
+    );
     res.json(analysis);
   } catch (error) {
-    console.error("Vision API Error:", error);
-    respondWithVisionError(req, res, "OpenAI vision analysis could not be completed");
+    console.error("Gemini Vision API Error:", error);
+    respondWithVisionError(req, res, "Gemini vision analysis could not be completed");
   }
 };
 
 router.post("/ai-analyze", analyzeItem);
-router.post("/openai/analyze-item", analyzeItem);
 
 export default router;

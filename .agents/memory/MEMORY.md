@@ -1,2 +1,3 @@
 - [API codegen compatibility](api-codegen-compatibility.md) — use number for integer-like OpenAPI fields with this Zod 3 workspace
-- [AI integration fallback](ai-integration-fallback.md) — keep AI calls server-side when built-in credit setup is unavailable
+- [AI provider policy](ai-integration-fallback.md) — keep provider keys server-side and never replace failed visual recognition with mock listing data
+- [Gemini model availability](gemini-model-availability.md) — this direct API account requires Gemini 3.6 Flash; 2.5 Flash is retired for new users

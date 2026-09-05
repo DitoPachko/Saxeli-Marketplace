@@ -76,6 +76,8 @@ export interface ItemAnalysisInput {
 }
 
 export interface ItemAnalysis {
+  brand: string;
+  model: string;
   title: string;
   category: string;
   condition: string;

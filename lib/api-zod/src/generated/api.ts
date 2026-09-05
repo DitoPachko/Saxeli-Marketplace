@@ -178,6 +178,8 @@ export const AnalyzeItemImageBody = zod.object({
 })
 
 export const AnalyzeItemImageResponse = zod.object({
+  "brand": zod.string(),
+  "model": zod.string(),
   "title": zod.string(),
   "category": zod.string(),
   "condition": zod.string(),

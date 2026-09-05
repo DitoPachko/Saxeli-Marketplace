@@ -267,8 +267,10 @@ components:
           description: Base64-encoded image data URL
     ItemAnalysis:
       type: object
-      required: [title, category, condition, suggested_price_gel, city, description]
+      required: [brand, model, title, category, condition, suggested_price_gel, city, description]
       properties:
+        brand: { type: string }
+        model: { type: string }
         title: { type: string }
         category: { type: string }
         condition: { type: string }
