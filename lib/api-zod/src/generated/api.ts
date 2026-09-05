@@ -174,7 +174,8 @@ export const ListMessagesResponse = zod.array(ListMessagesResponseItem)
  * @summary Analyze an item photo for listing autofill
  */
 export const AnalyzeItemImageBody = zod.object({
-  "image": zod.string().describe('Base64-encoded image data URL')
+  "image": zod.string().describe('Base64-encoded image data URL'),
+  "filename": zod.string().optional().describe('Original uploaded image filename used only for fallback hints')
 })
 
 export const AnalyzeItemImageResponse = zod.object({
@@ -183,13 +184,7 @@ export const AnalyzeItemImageResponse = zod.object({
   "condition": zod.string(),
   "suggested_price_gel": zod.number(),
   "city": zod.string(),
-  "description": zod.string(),
-  "model": zod.string(),
-  "year": zod.string(),
-  "brand": zod.string(),
-  "color": zod.string(),
-  "keySpecs": zod.array(zod.string()),
-  "accessories": zod.array(zod.string())
+  "description": zod.string()
 })
 
 

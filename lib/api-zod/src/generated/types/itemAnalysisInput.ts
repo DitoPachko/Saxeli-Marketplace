@@ -9,4 +9,6 @@
 export interface ItemAnalysisInput {
   /** Base64-encoded image data URL */
   image: string;
+  /** Original uploaded image filename used only for fallback hints */
+  filename?: string;
 }

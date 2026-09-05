@@ -73,6 +73,8 @@ export interface MessageThread {
 export interface ItemAnalysisInput {
   /** Base64-encoded image data URL */
   image: string;
+  /** Original uploaded image filename used only for fallback hints */
+  filename?: string;
 }
 
 export interface ItemAnalysis {
@@ -82,12 +84,6 @@ export interface ItemAnalysis {
   suggested_price_gel: number;
   city: string;
   description: string;
-  model: string;
-  year: string;
-  brand: string;
-  color: string;
-  keySpecs: string[];
-  accessories: string[];
 }
 
 export type ListItemsParams = {

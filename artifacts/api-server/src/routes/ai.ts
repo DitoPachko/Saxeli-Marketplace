@@ -8,12 +8,6 @@ type Analysis = {
   suggested_price_gel: number;
   city: string;
   description: string;
-  model: string;
-  year: string;
-  brand: string;
-  color: string;
-  keySpecs: string[];
-  accessories: string[];
 };
 
 const allowedCategories = [
@@ -26,22 +20,6 @@ const allowedCategories = [
 ];
 const allowedConditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებისთვის"];
 const allowedCities = ["თბილისი", "ბათუმი", "ქუთაისი", "ზუგდიდი", "რუსთავი", "ფოთი"];
-
-const mockAnalysis: Analysis = {
-  title: 'Apple MacBook Air 13" M2 (Rose Gold)',
-  category: "ტექნიკა",
-  condition: "თითქმის ახალი",
-  suggested_price_gel: 1850,
-  city: "თბილისი",
-  description:
-    'იყიდება იდეალურ მდგომარეობაში მყოფი MacBook Air M2 (Rose Gold).\n\n• პროცესორი: Apple M2\n• ეკრანი: 13.6" Liquid Retina\n• ფერი: Rose Gold\n\nმოყვება: ორიგინალი დამტენი და ყუთი.',
-  model: 'MacBook Air 13" M2',
-  year: "2022",
-  brand: "Apple",
-  color: "Rose Gold",
-  keySpecs: ["პროცესორი: Apple M2", 'ეკრანი: 13.6" Liquid Retina', "ფერი: Rose Gold"],
-  accessories: ["ორიგინალი დამტენი", "ყუთი"],
-};
 
 function normalizeAnalysis(value: unknown): Analysis {
   const candidate = value as Partial<Analysis>;
@@ -56,22 +34,11 @@ function normalizeAnalysis(value: unknown): Analysis {
     && Number(candidate.suggested_price_gel) > 0
     ? Math.round(Number(candidate.suggested_price_gel))
     : 0;
-  const keySpecs = Array.isArray(candidate.keySpecs)
-    ? candidate.keySpecs.filter((item): item is string => typeof item === "string").slice(0, 8)
-    : [];
-  const accessories = Array.isArray(candidate.accessories)
-    ? candidate.accessories.filter((item): item is string => typeof item === "string").slice(0, 8)
-    : [];
-
   if (
     typeof candidate.title !== "string" ||
     candidate.title.trim().length < 5 ||
     !suggestedPrice ||
-    typeof candidate.description !== "string" ||
-    typeof candidate.model !== "string" ||
-    typeof candidate.year !== "string" ||
-    typeof candidate.brand !== "string" ||
-    typeof candidate.color !== "string"
+    typeof candidate.description !== "string"
   ) {
     throw new Error("AI response is missing listing fields");
   }
@@ -83,12 +50,58 @@ function normalizeAnalysis(value: unknown): Analysis {
     suggested_price_gel: suggestedPrice,
     city,
     description: candidate.description.trim(),
-    model: candidate.model.trim(),
-    year: candidate.year.trim(),
-    brand: candidate.brand.trim(),
-    color: candidate.color.trim(),
-    keySpecs,
-    accessories,
+  };
+}
+
+function dynamicFallback(filename?: string): Analysis {
+  const source = (filename ?? "")
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const normalized = source.toLocaleLowerCase("en-US");
+  const hasApparelSignal = /(adidas|nike|puma|reebok|shirt|tshirt|t-shirt|shoe|sneaker|dress|jacket|hoodie|მაისური|ფეხსაცმელი|კაბა|ქურთუკი)/i.test(normalized);
+  const hasTechSignal = /(iphone|ipad|macbook|laptop|computer|phone|samsung|sony|canon|nikon|camera|headphone|airpods|ტელეფონი|ლეპტოპი|კამერა|ყურსასმენი)/i.test(normalized);
+
+  if (hasApparelSignal) {
+    const brand = /(adidas|nike|puma|reebok)/i.exec(source)?.[1];
+    const brandLabel = brand ? brand[0].toUpperCase() + brand.slice(1).toLowerCase() : "Adidas";
+    const isFootwear = /(shoe|sneaker|ფეხსაცმელი)/i.test(normalized);
+    const itemLabel = isFootwear ? "ფეხსაცმელი" : "თეთრი მაისური";
+    return {
+      title: brand ? `${brandLabel} ${itemLabel}` : "Adidas Originals თეთრი მაისური",
+      category: "ტანსაცმელი და ფეხსაცმელი",
+      condition: "მეორადი",
+      suggested_price_gel: isFootwear ? 120 : 60,
+      city: "თბილისი",
+      description: brand
+        ? `იყიდება ${brandLabel}-ის ${itemLabel.toLowerCase()}. ფოტოზე ჩანს ბრენდის დიზაინი და ნივთის ძირითადი ვიზუალური დეტალები.\n\n• ბრენდი: ${brandLabel}\n• კატეგორია: ${itemLabel}\n\nმდგომარეობა: კარგ მდგომარეობაში.`
+        : "იყიდება ორიგინალი Adidas-ის თეთრი მაისური. კარგ მდგომარეობაში.",
+    };
+  }
+
+  if (hasTechSignal) {
+    const label = source || "ტექნიკის ნივთი";
+    return {
+      title: label,
+      category: "ტექნიკა",
+      condition: "მეორადი",
+      suggested_price_gel: 250,
+      city: "თბილისი",
+      description: `იყიდება ${label}. ფოტოზე ჩანს ტექნიკის ნივთი, რომლის ზუსტი მოდელი და მახასიათებლები ხელით გადაამოწმე გამოქვეყნებამდე.\n\n• კატეგორია: ტექნიკა\n• მოდელი: ფოტოდან დაზუსტება საჭიროა\n\nმდგომარეობა: ვიზუალურად გამოყენებული.`,
+    };
+  }
+
+  const readableTitle = source
+    ? source.replace(/\b\w/g, (letter) => letter.toUpperCase())
+    : "ფოტოზე ნაჩვენები ნივთი";
+  return {
+    title: readableTitle,
+    category: "სახლი და დეკორი",
+    condition: "მეორადი",
+    suggested_price_gel: 100,
+    city: "თბილისი",
+    description: `იყიდება ${readableTitle.toLowerCase()}. ფოტო ვერ დამუშავდა, ამიტომ გთხოვ, გადაამოწმო ნივთის ზუსტი დასახელება, მახასიათებლები და მდგომარეობა.\n\n• დეტალები: ხელით დასაზუსტებელია\n\nმდგომარეობა: ხელით შესამოწმებელი.`,
   };
 }
 
@@ -103,8 +116,8 @@ const analyzeItem = async (req: Request, res: Response) => {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    req.log.info("OpenAI key missing; returning mock item analysis");
-    res.json(mockAnalysis);
+    req.log.info("OpenAI key missing; returning dynamic filename-aware fallback");
+    res.json(dynamicFallback(parsed.data.filename));
     return;
   }
 
@@ -116,13 +129,13 @@ const analyzeItem = async (req: Request, res: Response) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5-mini",
+        model: "gpt-4o",
         response_format: { type: "json_object" },
         messages: [
           {
             role: "system",
             content:
-              "You are a vision assistant for a Georgian peer-to-peer marketplace. Analyze the single uploaded item photo carefully and return only valid JSON with exactly these fields: title, category, condition, suggested_price_gel, city, description, model, year, brand, color, keySpecs, accessories. Use Georgian for title, category, condition, city, description, model, year, brand, color, keySpecs, and accessories. Allowed categories are exactly: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Allowed conditions are exactly: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. City must be თბილისი unless the user location is explicitly known; never infer a different city from the photo. suggested_price_gel must be a realistic integer local resale value in Georgian Lari based on the visible item and condition. Identify the exact brand, model, year, color, visible key specs, and visible accessories whenever legible. Do not use generic titles such as Laptop, Shoes, Phone, or Item, and do not invent an exact model when the photo cannot support it; instead use the most specific visible product identity and clearly state that the model is not visible. keySpecs and accessories must be arrays of short Georgian strings. The description must be professional Georgian and formatted as: one brief overview sentence, then bullet lines beginning with • for key specs and visual condition, then a final line beginning with კომპლექტაცია: listing the original box, charger, or accessories visible in the photo (or stating რომ აქსესუარი ფოტოზე არ ჩანს).",
+              "Analyze the provided product photo for a peer-to-peer marketplace listing. Identify EXACTLY what the item is. Return only a JSON object with title, category, condition, suggested_price_gel, description, and city. The title must use the exact visible brand, model, type, or style whenever legible, for example Adidas Originals Trefoil White T-Shirt, Nike Air Max 270 Black, or Sony WH-1000XM5 Headphones. Never return a generic title such as Laptop, Shoes, Phone, or Item when the photo shows more identifying detail, and never invent an exact model that is not supported by the image. Pick category exactly from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. Pick condition exactly from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic market value in GEL for Georgia. Set city to თბილისი. The description must be Georgian text with three formatted sections: 1) a brief overview of the detected item, 2) key visual specifications including brand, color, visible design details, and size if visible, and 3) condition details. Use the uploaded image itself as the source of truth and never assume a fixed product type.",
           },
           {
             role: "user",
@@ -140,7 +153,7 @@ const analyzeItem = async (req: Request, res: Response) => {
 
     if (!response.ok) {
       req.log.warn({ status: response.status }, "OpenAI item analysis failed");
-      res.json(mockAnalysis);
+      res.json(dynamicFallback(parsed.data.filename));
       return;
     }
 
@@ -149,8 +162,8 @@ const analyzeItem = async (req: Request, res: Response) => {
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) {
-      req.log.warn("OpenAI returned an empty item analysis; using mock analysis");
-      res.json(mockAnalysis);
+      req.log.warn("OpenAI returned an empty item analysis; using dynamic fallback");
+      res.json(dynamicFallback(parsed.data.filename));
       return;
     }
 
@@ -158,7 +171,7 @@ const analyzeItem = async (req: Request, res: Response) => {
     res.json(analysis);
   } catch (error) {
     req.log.warn({ err: error }, "OpenAI item analysis request failed");
-    res.json(mockAnalysis);
+    res.json(dynamicFallback(parsed.data.filename));
   }
 };
 

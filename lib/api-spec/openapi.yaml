@@ -265,9 +265,12 @@ components:
         image:
           type: string
           description: Base64-encoded image data URL
+        filename:
+          type: string
+          description: Original uploaded image filename used only for fallback hints
     ItemAnalysis:
       type: object
-      required: [title, category, condition, suggested_price_gel, city, description, model, year, brand, color, keySpecs, accessories]
+      required: [title, category, condition, suggested_price_gel, city, description]
       properties:
         title: { type: string }
         category: { type: string }
@@ -275,14 +278,4 @@ components:
         suggested_price_gel: { type: number }
         city: { type: string }
         description: { type: string }
-        model: { type: string }
-        year: { type: string }
-        brand: { type: string }
-        color: { type: string }
-        keySpecs:
-          type: array
-          items: { type: string }
-        accessories:
-          type: array
-          items: { type: string }
 

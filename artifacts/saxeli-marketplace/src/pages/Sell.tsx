@@ -64,6 +64,7 @@ export default function Sell() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("photo");
   const [form, setForm] = useState<ItemInput>(emptyForm);
+  const [photoFilename, setPhotoFilename] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
@@ -88,6 +89,7 @@ export default function Sell() {
         return;
       }
       update("image", image);
+      setPhotoFilename(file.name);
       setAiFilled(false);
       setError("");
       setStage("choice");
@@ -101,14 +103,16 @@ export default function Sell() {
     setError("");
     setIsAnalyzing(true);
     try {
-      const analysis = await analyzeItem.mutateAsync({ data: { image: form.image } });
+      const analysis = await analyzeItem.mutateAsync({
+        data: { image: form.image, filename: photoFilename },
+      });
       setForm((current) => ({
         ...current,
         title: analysis.title,
         category: analysis.category,
         condition: analysis.condition,
         price: analysis.suggested_price_gel,
-        city: analysis.city,
+        city: analysis.city || "თბილისი",
         description: analysis.description,
       }));
       setAiFilled(true);
