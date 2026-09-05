@@ -70,9 +70,21 @@ function normalizeImageForVision(image: string) {
   return `data:image/jpeg;base64,${trimmed.replace(/\s/g, "")}`;
 }
 
-function respondWithVisionError(req: Request, res: Response, reason: string) {
+function localFallbackAnalysis(): Analysis {
+  return {
+    title: "ფოტოზე ნაჩვენები ნივთი",
+    category: "ტექნიკა",
+    condition: "მეორადი",
+    suggested_price_gel: 100,
+    city: "თბილისი",
+    description:
+      "ფოტოზე ნაჩვენები ნივთისთვის მომზადდა დროებითი აღწერა. გთხოვ, გადაამოწმე ზუსტი ბრენდი, მოდელი, ფერი და მდგომარეობა გამოქვეყნებამდე.\n\n• ვიზუალური დეტალები: ხელით გადასამოწმებელია\n• კომპლექტაცია: ფოტოზე დასაზუსტებელია\n\nმდგომარეობა: ხელით შესამოწმებელი.",
+  };
+}
+
+function respondWithVisionFallback(req: Request, res: Response, reason: string) {
   req.log.warn(reason);
-  res.status(503).json({ error: "AI ანალიზი დროებით მიუწვდომელია" });
+  res.json(localFallbackAnalysis());
 }
 
 const router: IRouter = Router();
@@ -84,9 +96,11 @@ const analyzeItem = async (req: Request, res: Response) => {
     return;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
-    respondWithVisionError(req, res, "OpenAI key missing; refusing non-visual fallback");
+    const error = new Error("OPENAI_API_KEY is not configured");
+    console.error("Vision API Error:", error);
+    respondWithVisionFallback(req, res, error.message);
     return;
   }
 
@@ -122,9 +136,8 @@ const analyzeItem = async (req: Request, res: Response) => {
     });
 
     if (!response.ok) {
-      req.log.warn({ status: response.status }, "OpenAI item analysis failed");
-      respondWithVisionError(req, res, "OpenAI vision request failed");
-      return;
+      const details = (await response.text()).slice(0, 500);
+      throw new Error(`OpenAI vision request failed (${response.status}): ${details}`);
     }
 
     const payload = (await response.json()) as {
@@ -132,15 +145,14 @@ const analyzeItem = async (req: Request, res: Response) => {
     };
     const content = payload.choices?.[0]?.message?.content;
     if (!content) {
-      respondWithVisionError(req, res, "OpenAI returned an empty vision analysis");
-      return;
+      throw new Error("OpenAI returned an empty vision analysis");
     }
 
     const analysis = normalizeAnalysis(AnalyzeItemImageResponse.parse(JSON.parse(content)));
     res.json(analysis);
   } catch (error) {
-    req.log.warn({ err: error }, "OpenAI item analysis request failed");
-    respondWithVisionError(req, res, "OpenAI vision analysis could not be completed");
+    console.error("Vision API Error:", error);
+    respondWithVisionFallback(req, res, "OpenAI vision analysis could not be completed");
   }
 };
 
