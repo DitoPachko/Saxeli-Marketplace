@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Bookmark, Compass, Inbox, LogIn, Plus, UserRound } from 'lucide-react';
+import { useClerk, useUser } from '@clerk/react';
+import { Bookmark, Compass, Inbox, LogIn, LogOut, Plus, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 
 type MarketplaceChromeProps = { children: ReactNode };
@@ -11,7 +12,13 @@ const navigation = [
 
 export function MarketplaceChrome({ children }: MarketplaceChromeProps) {
   const [location] = useLocation();
-  const isAuth = location === '/login' || location === '/register';
+  const { signOut } = useClerk();
+  const { isSignedIn } = useUser();
+  const isAuth =
+    location.startsWith('/sign-in') ||
+    location.startsWith('/sign-up') ||
+    location === '/login' ||
+    location === '/register';
 
   if (isAuth) return <div className="page-shell noise">{children}</div>;
 
@@ -50,10 +57,22 @@ export function MarketplaceChrome({ children }: MarketplaceChromeProps) {
           </div>
         </div>
         <div className="border-t border-[hsl(var(--sidebar-border))] pt-5">
-          <Link href="/login" className="nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium" data-testid="link-login">
-            <LogIn size={18} strokeWidth={1.8} />
-            <span>შესვლა</span>
-          </Link>
+          {isSignedIn ? (
+            <button
+              type="button"
+              onClick={() => signOut({ redirectUrl: '/' })}
+              className="nav-link flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium"
+              data-testid="button-sign-out"
+            >
+              <LogOut size={18} strokeWidth={1.8} />
+              <span>გასვლა</span>
+            </button>
+          ) : (
+            <Link href="/sign-in" className="nav-link flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium" data-testid="link-login">
+              <LogIn size={18} strokeWidth={1.8} />
+              <span>შესვლა</span>
+            </Link>
+          )}
           <p className="mt-6 px-3 font-mono-ui text-[9px] uppercase tracking-[.16em] text-[hsl(var(--sidebar-foreground)/.28)]">თბილისი · საქართველო</p>
         </div>
       </aside>
