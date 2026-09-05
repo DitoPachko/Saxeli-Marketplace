@@ -70,21 +70,9 @@ function normalizeImageForVision(image: string) {
   return `data:image/jpeg;base64,${trimmed.replace(/\s/g, "")}`;
 }
 
-function localFallbackAnalysis(): Analysis {
-  return {
-    title: "ფოტოზე ნაჩვენები ნივთი",
-    category: "ტექნიკა",
-    condition: "მეორადი",
-    suggested_price_gel: 100,
-    city: "თბილისი",
-    description:
-      "ფოტოზე ნაჩვენები ნივთისთვის მომზადდა დროებითი აღწერა. გთხოვ, გადაამოწმე ზუსტი ბრენდი, მოდელი, ფერი და მდგომარეობა გამოქვეყნებამდე.\n\n• ვიზუალური დეტალები: ხელით გადასამოწმებელია\n• კომპლექტაცია: ფოტოზე დასაზუსტებელია\n\nმდგომარეობა: ხელით შესამოწმებელი.",
-  };
-}
-
-function respondWithVisionFallback(req: Request, res: Response, reason: string) {
+function respondWithVisionError(req: Request, res: Response, reason: string) {
   req.log.warn(reason);
-  res.json(localFallbackAnalysis());
+  res.status(503).json({ error: "AI ანალიზი დროებით მიუწვდომელია" });
 }
 
 const router: IRouter = Router();
@@ -100,7 +88,7 @@ const analyzeItem = async (req: Request, res: Response) => {
   if (!apiKey) {
     const error = new Error("OPENAI_API_KEY is not configured");
     console.error("Vision API Error:", error);
-    respondWithVisionFallback(req, res, error.message);
+    respondWithVisionError(req, res, error.message);
     return;
   }
 
@@ -152,7 +140,7 @@ const analyzeItem = async (req: Request, res: Response) => {
     res.json(analysis);
   } catch (error) {
     console.error("Vision API Error:", error);
-    respondWithVisionFallback(req, res, "OpenAI vision analysis could not be completed");
+    respondWithVisionError(req, res, "OpenAI vision analysis could not be completed");
   }
 };
 
