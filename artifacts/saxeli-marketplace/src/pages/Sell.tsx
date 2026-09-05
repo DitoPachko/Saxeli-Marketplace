@@ -19,12 +19,12 @@ import {
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
 
 const categories = [
-  "ტექნიკა",
+  "ტექნიკა და ელექტრონიკა",
   "ტანსაცმელი და ფეხსაცმელი",
-  "ჰობი და სპორტი",
-  "თავის მოვლა",
-  "საბავშვო",
-  "სახლი და დეკორი",
+  "ავტო / მოტო",
+  "ჰობი, სპორტი და დასვენება",
+  "სახლი და ინტერიერი",
+  "სხვა",
 ];
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
@@ -108,9 +108,7 @@ export default function Sell() {
         ...current,
         title: analysis.title,
         category: analysis.category,
-        condition: analysis.condition,
-        price: analysis.suggested_price_gel,
-        city: analysis.city || "თბილისი",
+        price: analysis.estimatedPrice,
         description: analysis.description,
       }));
       setAiFilled(true);

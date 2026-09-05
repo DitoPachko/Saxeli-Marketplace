@@ -7,12 +7,8 @@
  */
 
 export interface ItemAnalysis {
-  brand: string;
-  model: string;
   title: string;
   category: string;
-  condition: string;
-  suggested_price_gel: number;
-  city: string;
+  estimatedPrice: number;
   description: string;
 }

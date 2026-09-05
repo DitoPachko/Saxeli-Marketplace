@@ -2,66 +2,44 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { AnalyzeItemImageBody, AnalyzeItemImageResponse } from "@workspace/api-zod";
 
 type Analysis = {
-  brand: string;
-  model: string;
   title: string;
   category: string;
-  condition: string;
-  suggested_price_gel: number;
-  city: string;
+  estimatedPrice: number;
   description: string;
 };
 
 const allowedCategories = [
-  "ტექნიკა",
+  "ტექნიკა და ელექტრონიკა",
   "ტანსაცმელი და ფეხსაცმელი",
-  "ჰობი და სპორტი",
-  "თავის მოვლა",
-  "საბავშვო",
-  "სახლი და დეკორი",
+  "ავტო / მოტო",
+  "ჰობი, სპორტი და დასვენება",
+  "სახლი და ინტერიერი",
+  "სხვა",
 ];
-const allowedConditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებისთვის"];
-const allowedCities = ["თბილისი", "ბათუმი", "ქუთაისი", "ზუგდიდი", "რუსთავი", "ფოთი"];
 
 function normalizeAnalysis(value: unknown): Analysis {
   const candidate = value as Partial<Analysis>;
   if (!allowedCategories.includes(candidate.category ?? "")) {
     throw new Error("AI response has an invalid marketplace category");
   }
-  if (!allowedConditions.includes(candidate.condition ?? "")) {
-    throw new Error("AI response has an invalid item condition");
-  }
-  if (!allowedCities.includes(candidate.city ?? "")) {
-    throw new Error("AI response has an invalid city");
-  }
   const category = candidate.category!;
-  const condition = candidate.condition!;
-  const city = candidate.city!;
-  const suggestedPrice = Number.isFinite(candidate.suggested_price_gel)
-    && Number(candidate.suggested_price_gel) > 0
-    ? Math.round(Number(candidate.suggested_price_gel))
+  const estimatedPrice = Number.isFinite(candidate.estimatedPrice)
+    && Number(candidate.estimatedPrice) > 0
+    ? Math.round(Number(candidate.estimatedPrice))
     : 0;
   if (
-    typeof candidate.brand !== "string" ||
-    candidate.brand.trim().length < 2 ||
-    typeof candidate.model !== "string" ||
-    candidate.model.trim().length < 2 ||
     typeof candidate.title !== "string" ||
     candidate.title.trim().length < 5 ||
-    !suggestedPrice ||
+    !estimatedPrice ||
     typeof candidate.description !== "string"
   ) {
     throw new Error("AI response is missing listing fields");
   }
 
   return {
-    brand: candidate.brand.trim(),
-    model: candidate.model.trim(),
     title: candidate.title.trim(),
     category,
-    condition,
-    suggested_price_gel: suggestedPrice,
-    city,
+    estimatedPrice,
     description: candidate.description.trim(),
   };
 }
@@ -124,13 +102,20 @@ const analyzeItem = async (req: Request, res: Response) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  "You are an expert AI product recognition and valuation engine for a Georgian P2P marketplace. Analyze the uploaded photo and execute these steps in order:\n\n1. IDENTIFY BRAND & MODEL: Examine text, logos, silhouettes, tags, stitching, serial numbers, or distinct design languages. If a brand/model exists (e.g. BMW, Nike, Apple, Sony, Bosch, Zara), you MUST explicitly state it.\n2. TITLE FORMATION: The title MUST start with '[Brand] [Model/Item Name]' in Georgian or Latin script (e.g., 'BMW E39 M Sport-ის ბამპერი', 'iPhone 13 Pro', 'Maison Margiela Replica'). NEVER output purely descriptive sentences like 'შავი ნივთი' or 'ფოტოზე ნაჩვენები ნივთი'.\n3. CATEGORY CLASSIFICATION: Map strictly to one of: 'ტექნიკა და ელექტრონიკა', 'ტანსაცმელი და ფეხსაცმელი', 'ავტო / მოტო', 'ჰობი, სპორტი და დასვენება', 'სახლი და ინტერიერი', 'სხვა'.\n4. ACCURATE LOCAL VALUATION: Estimate the realistic second-hand market value in Georgian Lari (GEL ₾) based on the recognized brand tier, rarity, and visible condition. Avoid generic 100-120 ₾ placeholders.\n5. DESCRIPTION: Provide a concise Georgian breakdown detailing brand, specifications, materials, and condition.\n\nReturn ONLY valid raw JSON matching this schema:\n{\n  \"title\": \"string\",\n  \"category\": \"string\",\n  \"estimatedPrice\": number,\n  \"description\": \"string\"\n}",
+              },
+            ],
+          },
           contents: [
             {
               role: "user",
               parts: [
                 {
-                  text:
-                    "Analyze this uploaded marketplace product photo using only visible evidence. Return a JSON object with brand, model, title, category, condition, suggested_price_gel, city, and description. Identify the exact visible brand and model when legible; use უცნობი when either cannot be verified and never invent details. The title must be specific and include the verified brand/model or visible product type. category must be exactly one Georgian value from: ტექნიკა, ტანსაცმელი და ფეხსაცმელი, ჰობი და სპორტი, თავის მოვლა, საბავშვო, სახლი და დეკორი. condition must be exactly one value from: ახალი, თითქმის ახალი, მეორადი, ნაწილებისთვის. suggested_price_gel must be a realistic positive GEL resale price for Georgia. Set city to თბილისი. description must be Georgian and contain a short overview, visible specifications such as color/design/size, and condition details.",
+                  text: "Analyze this physical item and return only the required JSON object.",
                 },
                 {
                   inline_data: {
@@ -146,32 +131,18 @@ const analyzeItem = async (req: Request, res: Response) => {
             responseSchema: {
               type: "OBJECT",
               properties: {
-                brand: { type: "STRING" },
-                model: { type: "STRING" },
                 title: { type: "STRING" },
                 category: {
                   type: "STRING",
                   enum: allowedCategories,
                 },
-                condition: {
-                  type: "STRING",
-                  enum: allowedConditions,
-                },
-                suggested_price_gel: { type: "NUMBER" },
-                city: {
-                  type: "STRING",
-                  enum: allowedCities,
-                },
+                estimatedPrice: { type: "NUMBER" },
                 description: { type: "STRING" },
               },
               required: [
-                "brand",
-                "model",
                 "title",
                 "category",
-                "condition",
-                "suggested_price_gel",
-                "city",
+                "estimatedPrice",
                 "description",
               ],
             },
