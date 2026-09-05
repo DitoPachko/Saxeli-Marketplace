@@ -74,6 +74,45 @@ function respondWithVisionError(req: Request, res: Response, reason: string) {
   res.status(503).json({ error: "AI ანალიზი დროებით მიუწვდომელია" });
 }
 
+async function fetchGeminiWithRetry(apiKey: string, body: string) {
+  const retryableStatuses = new Set([429, 500, 502, 503, 504]);
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    let response: globalThis.Response;
+    try {
+      response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": apiKey,
+            "Content-Type": "application/json",
+          },
+          body,
+        },
+      );
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === 3) throw lastError;
+      await new Promise((resolve) => setTimeout(resolve, 750 * 2 ** (attempt - 1)));
+      continue;
+    }
+
+    if (response.ok) return response;
+
+    const details = (await response.text()).slice(0, 500);
+    lastError = new Error(`Gemini vision request failed (${response.status}): ${details}`);
+    if (!retryableStatuses.has(response.status) || attempt === 3) {
+      throw lastError;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 750 * 2 ** (attempt - 1)));
+  }
+
+  throw lastError ?? new Error("Gemini vision request failed");
+}
+
 const router: IRouter = Router();
 
 const analyzeItem = async (req: Request, res: Response) => {
@@ -93,15 +132,7 @@ const analyzeItem = async (req: Request, res: Response) => {
 
   try {
     const image = parseImageForGemini(parsed.data.image);
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "x-goog-api-key": apiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+    const requestBody = JSON.stringify({
           systemInstruction: {
             parts: [
               {
@@ -147,14 +178,8 @@ const analyzeItem = async (req: Request, res: Response) => {
               ],
             },
           },
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const details = (await response.text()).slice(0, 500);
-      throw new Error(`Gemini vision request failed (${response.status}): ${details}`);
-    }
+        });
+    const response = await fetchGeminiWithRetry(apiKey, requestBody);
 
     const payload = (await response.json()) as {
       candidates?: Array<{
@@ -176,11 +201,13 @@ const analyzeItem = async (req: Request, res: Response) => {
     );
     res.json(analysis);
   } catch (error) {
-    console.error("Gemini Vision API Error:", error);
-    respondWithVisionError(req, res, "Gemini vision analysis could not be completed");
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Gemini Vision API Error:", message);
+    respondWithVisionError(req, res, message);
   }
 };
 
 router.post("/ai-analyze", analyzeItem);
+router.post("/analyze-image", analyzeItem);
 
 export default router;
