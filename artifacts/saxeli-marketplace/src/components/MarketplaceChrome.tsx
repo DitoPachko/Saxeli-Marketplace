@@ -132,9 +132,9 @@ function Footer() {
           <div>
             <h3 className="font-semibold mb-4">კატეგორიები</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <li><button onClick={() => openCategory('vehicle-rentals')} className="hover:text-[hsl(var(--foreground))]">მანქანები (Vehicles)</button></li>
-              <li><button onClick={() => openCategory('property-rentals')} className="hover:text-[hsl(var(--foreground))]">უძრავი ქონება (Real Estate)</button></li>
-              <li><button onClick={() => openCategory('electronics')} className="hover:text-[hsl(var(--foreground))]">ელექტრონიკა (Electronics)</button></li>
+              <li><button onClick={() => openCategory('electronics')} className="hover:text-[hsl(var(--foreground))]">ტექნიკა</button></li>
+              <li><button onClick={() => openCategory('beauty-fashion')} className="hover:text-[hsl(var(--foreground))]">სილამაზე და მოდა</button></li>
+              <li><button onClick={() => openCategory('music')} className="hover:text-[hsl(var(--foreground))]">მუსიკა</button></li>
             </ul>
           </div>
           <div>

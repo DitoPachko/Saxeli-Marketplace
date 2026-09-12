@@ -6,6 +6,7 @@ let seedPromise: Promise<void> | null = null;
 export function ensureCategoryCatalog() {
   if (!seedPromise) {
     seedPromise = (async () => {
+      await db.delete(categories).where(eq(categories.id, "rentals"));
       for (const category of flattenCategoryTree()) {
         await db
           .insert(categories)
