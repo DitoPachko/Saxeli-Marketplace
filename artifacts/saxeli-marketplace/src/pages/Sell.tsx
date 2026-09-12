@@ -546,6 +546,42 @@ export default function Sell() {
                       data-testid="input-sell-price"
                     />
                   </label>
+                  <div>
+                    <p className="text-sm font-semibold">ფასისა და გაცვლის პირობები</p>
+                    <div className="mt-2 flex gap-2">
+                      {[
+                        ["negotiable", "ფასი შეთანხმებით"],
+                        ["tradeAvailable", "გაცვლა"],
+                      ].map(([key, label]) => {
+                        const selected = form[key as "negotiable" | "tradeAvailable"];
+                        return (
+                          <label
+                            key={key}
+                            className={`flex min-h-[52px] flex-1 cursor-pointer items-center justify-center rounded-xl border px-3 text-center text-xs font-semibold transition ${
+                              selected
+                                ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.12)] text-[hsl(var(--foreground))]"
+                                : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary)/.6)] hover:bg-[hsl(var(--muted))]"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={(event) => update(key as "negotiable" | "tradeAvailable", event.target.checked)}
+                              className="sr-only"
+                              data-testid={`checkbox-${key}`}
+                            />
+                            <span className="flex items-center gap-1.5">
+                              {selected ? <Check size={14} /> : null}
+                              {label}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-sm font-semibold">
                     ქალაქი
                     <select
@@ -559,21 +595,20 @@ export default function Sell() {
                       ))}
                     </select>
                   </label>
+                  <label className="block text-sm font-semibold">
+                    უბანი / რაიონი
+                    <select
+                      value={form.district}
+                      onChange={(event) => update("district", event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                      data-testid="select-sell-district"
+                    >
+                      {(districtsByCity[form.city] ?? []).map((district) => (
+                        <option key={district}>{district}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
-
-                <label className="block text-sm font-semibold">
-                  უბანი / რაიონი
-                  <select
-                    value={form.district}
-                    onChange={(event) => update("district", event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
-                    data-testid="select-sell-district"
-                  >
-                    {(districtsByCity[form.city] ?? []).map((district) => (
-                      <option key={district}>{district}</option>
-                    ))}
-                  </select>
-                </label>
 
                 <label className="block text-sm font-semibold">
                   აღწერა
@@ -588,19 +623,38 @@ export default function Sell() {
                 </label>
 
                 <div>
-                  <p className="text-sm font-semibold">მიტანის სერვისი</p>
-                  <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    მიუთითე, თუ მყიდველს მიტანის სერვისს სთავაზობ.
-                  </p>
-                  <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-[hsl(var(--border))] p-4 transition hover:border-[hsl(var(--primary)/.6)]">
+                  <label className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
+                    form.deliveryAvailable
+                      ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.08)]"
+                      : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary)/.6)]"
+                  }`}>
                     <input
                       type="checkbox"
                       checked={form.deliveryAvailable}
                       onChange={toggleDeliveryAvailable}
-                      className="h-5 w-5 accent-[hsl(var(--primary))]"
+                      className="sr-only"
                       data-testid="checkbox-delivery-available"
                     />
-                    <span className="text-sm font-semibold">მიტანის სერვისი</span>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                      form.deliveryAvailable
+                        ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
+                        : "bg-[hsl(var(--muted))]"
+                    }`}>
+                      <Truck size={19} />
+                    </span>
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold">მიტანის სერვისი</span>
+                      <span className="mt-1 block text-xs font-normal leading-relaxed text-[hsl(var(--muted-foreground))]">
+                        გაქვთ თუ არა ნივთის ადგილზე მიტანის ან ფოსტით გაგზავნის სერვისი?
+                      </span>
+                    </span>
+                    <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                      form.deliveryAvailable ? "bg-[hsl(var(--primary))]" : "bg-[hsl(var(--muted-foreground)/.35)]"
+                    }`}>
+                      <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition ${
+                        form.deliveryAvailable ? "left-6" : "left-1"
+                      }`} />
+                    </span>
                   </label>
                   {form.deliveryAvailable ? (
                   <div className="mt-3 grid gap-3">
@@ -647,24 +701,6 @@ export default function Sell() {
                     })}
                   </div>
                   ) : null}
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["negotiable", "ფასი შეთანხმებით"],
-                    ["tradeAvailable", "გაცვლა"],
-                  ].map(([key, label]) => (
-                    <label key={key} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[hsl(var(--border))] p-4 text-sm font-semibold transition hover:border-[hsl(var(--primary)/.6)]">
-                      <input
-                        type="checkbox"
-                        checked={form[key as "negotiable" | "tradeAvailable"]}
-                        onChange={(event) => update(key as "negotiable" | "tradeAvailable", event.target.checked)}
-                        className="h-5 w-5 accent-[hsl(var(--primary))]"
-                        data-testid={`checkbox-${key}`}
-                      />
-                      {label}
-                    </label>
-                  ))}
                 </div>
 
                 <div className="space-y-5">
