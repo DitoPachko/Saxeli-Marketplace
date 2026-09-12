@@ -664,6 +664,83 @@ export const useDeleteItem = <TError = ErrorType<void>,
       return useMutation(getDeleteItemMutationOptions(options));
     }
 
+export const getListFavoriteItemsUrl = () => {
+
+
+
+
+  return `/api/favorites`
+}
+
+/**
+ * @summary List the current user's saved items
+ */
+export const listFavoriteItems = async ( options?: Parameters<typeof customFetch>[1]): Promise<MarketplaceItem[]> => {
+
+  return customFetch<MarketplaceItem[]>(getListFavoriteItemsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFavoriteItemsQueryKey = () => {
+    return [
+    `/api/favorites`
+    ] as const;
+    }
+
+
+export const getListFavoriteItemsQueryOptions = <TData = Awaited<ReturnType<typeof listFavoriteItems>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavoriteItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFavoriteItemsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFavoriteItems>>> = ({ signal }) => listFavoriteItems({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFavoriteItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFavoriteItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listFavoriteItems>>>
+export type ListFavoriteItemsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the current user's saved items
+ */
+
+export function useListFavoriteItems<TData = Awaited<ReturnType<typeof listFavoriteItems>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavoriteItems>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFavoriteItemsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetCurrentProfileUrl = () => {
 
 

@@ -9,7 +9,7 @@ import {
   UpdateCurrentProfileBody,
   UpdateCurrentProfileResponse,
 } from "@workspace/api-zod";
-import { db, listings, users } from "@workspace/db";
+import { db, favorites, listings, users } from "@workspace/db";
 import { getCurrentUser } from "../lib/currentUser";
 
 const router: IRouter = Router();
@@ -74,13 +74,17 @@ router.get("/profile/summary", async (req, res) => {
     .select({ count: sql<number>`count(*)::int` })
     .from(listings)
     .where(eq(listings.userId, user.id));
+  const [saved] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(favorites)
+    .where(eq(favorites.userId, user.id));
   res.json(
     GetProfileSummaryResponse.parse({
       name: user.fullName,
       initials: user.fullName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase(),
       rating: 0,
       activeListings: result?.count ?? 0,
-      savedItems: 0,
+      savedItems: saved?.count ?? 0,
       unreadMessages: 0,
     }),
   );

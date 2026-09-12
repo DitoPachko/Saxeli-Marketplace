@@ -167,6 +167,20 @@ paths:
         "204": { description: Listing deleted }
         "403": { description: Listing is not owned by the current user }
         "404": { description: Item not found }
+  /favorites:
+    get:
+      operationId: listFavoriteItems
+      tags: [profile, marketplace]
+      summary: List the current user's saved items
+      responses:
+        "200":
+          description: Current user's saved marketplace items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MarketplaceItem"
   /profile:
     get:
       operationId: getCurrentProfile

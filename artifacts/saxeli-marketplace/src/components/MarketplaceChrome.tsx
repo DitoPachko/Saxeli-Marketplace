@@ -22,7 +22,7 @@ function Navbar() {
 
   const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
   const returnTo = encodeURIComponent(location + currentSearch);
-  const savedReturnTo = encodeURIComponent('/profile#saved');
+  const savedReturnTo = encodeURIComponent('/saved');
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.85)] backdrop-blur-lg">
@@ -60,7 +60,7 @@ function Navbar() {
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <Link href={isSignedIn ? "/profile#saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
+          <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
             <Heart size={20} />
           </Link>
           
@@ -72,7 +72,7 @@ function Navbar() {
               </summary>
               <div className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-lg)]">
                 <Link href="/profile" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">ჩემი პროფილი</Link>
-                <Link href="/profile#saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შენახული ნივთები</Link>
+                <Link href="/saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შენახული ნივთები</Link>
                 <button type="button" onClick={() => signOut({ redirectUrl: '/' })} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[hsl(var(--muted))]"><LogOut size={15} /> გასვლა</button>
               </div>
             </details>

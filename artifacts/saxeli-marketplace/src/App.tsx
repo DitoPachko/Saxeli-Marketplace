@@ -23,6 +23,7 @@ import Home from "@/pages/Home";
 import ItemDetail from "@/pages/ItemDetail";
 import EditItem from "@/pages/EditItem";
 import Profile from "@/pages/Profile";
+import Saved from "@/pages/Saved";
 import SellerProfile from "@/pages/SellerProfile";
 import Sell from "@/pages/Sell";
 import NotFound from "@/pages/not-found";
@@ -184,6 +185,12 @@ function Router() {
         <Route path="/profile">
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/saved">
+          <ProtectedRoute>
+            <Saved />
           </ProtectedRoute>
         </Route>
         

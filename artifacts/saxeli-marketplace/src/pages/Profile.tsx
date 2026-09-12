@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ListPlus, Settings, Save, MapPin, Package, Edit, Trash2 } from "lucide-react";
+import { useUser } from "@clerk/react";
+import { Camera, ListPlus, Settings, Save, MapPin, Package, Edit, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetCurrentProfileQueryKey,
@@ -34,9 +35,12 @@ export default function Profile() {
     phoneNumber: "",
     city: "",
   });
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useUser();
 
   const { data: profile, isLoading: profileLoading, isError } = useGetCurrentProfile({
     query: { queryKey: getGetCurrentProfileQueryKey() },
@@ -86,6 +90,31 @@ export default function Profile() {
     updateProfileMutation.mutate({ data: formData });
   };
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "არასწორი ფაილი", description: "აირჩიე სურათი.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "ფაილი ძალიან დიდია", description: "სურათი 5MB-ზე პატარა უნდა იყოს.", variant: "destructive" });
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      await user.setProfileImage({ file });
+      await user.reload();
+      await queryClient.invalidateQueries({ queryKey: getGetCurrentProfileQueryKey() });
+      toast({ title: "პროფილის ფოტო განახლდა" });
+    } catch {
+      toast({ title: "შეცდომა", description: "პროფილის ფოტოს შეცვლა ვერ მოხერხდა.", variant: "destructive" });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const loading = profileLoading || itemsLoading;
 
   if (loading) return <ProfileLoading />;
@@ -119,7 +148,19 @@ export default function Profile() {
         <aside>
           <div className="rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
             <div className="flex items-center gap-4 mb-6">
-              <Avatar initials={initials} size="lg" src={profile?.avatarUrl ?? undefined} />
+              <div className="relative shrink-0">
+                <Avatar initials={initials} size="lg" src={profile?.avatarUrl ?? undefined} />
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
+                  aria-label="პროფილის ფოტოს შეცვლა"
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[hsl(var(--card))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] transition hover:scale-105 disabled:cursor-wait disabled:opacity-60"
+                >
+                  <Camera size={14} />
+                </button>
+                <input ref={avatarInputRef} type="file" accept="image/*" className="sr-only" onChange={handleAvatarChange} />
+              </div>
               <div>
                 <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
                   მოგესალმები

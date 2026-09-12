@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -42,11 +43,28 @@ export const listings = pgTable("listings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const favorites = pgTable(
+  "favorites",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => listings.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    primaryKey: primaryKey({ columns: [table.userId, table.listingId] }),
+  }),
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   listings: many(listings),
+  favorites: many(favorites),
 }));
 
-export const listingsRelations = relations(listings, ({ one }) => ({
+export const listingsRelations = relations(listings, ({ one, many }) => ({
   user: one(users, {
     fields: [listings.userId],
     references: [users.id],
@@ -55,7 +73,20 @@ export const listingsRelations = relations(listings, ({ one }) => ({
     fields: [listings.categoryId],
     references: [categories.id],
   }),
+  favorites: many(favorites),
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  listing: one(listings, {
+    fields: [favorites.listingId],
+    references: [listings.id],
+  }),
 }));
 
 export type User = typeof users.$inferSelect;
 export type Listing = typeof listings.$inferSelect;
+export type Favorite = typeof favorites.$inferSelect;

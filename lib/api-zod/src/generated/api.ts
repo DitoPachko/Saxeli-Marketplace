@@ -220,6 +220,34 @@ export const DeleteItemResponse = zod.void()
 
 
 /**
+ * @summary List the current user's saved items
+ */
+export const ListFavoriteItemsResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "price": zod.number(),
+  "category": zod.string(),
+  "categorySlug": zod.string(),
+  "condition": zod.string(),
+  "city": zod.string(),
+  "postedAt": zod.string(),
+  "image": zod.string(),
+  "images": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "seller": zod.object({
+  "name": zod.string(),
+  "initials": zod.string(),
+  "rating": zod.number(),
+  "listings": zod.number(),
+  "responseTime": zod.string().optional()
+}),
+  "isFavorite": zod.boolean().optional(),
+  "delivery": zod.array(zod.string()).optional()
+})
+export const ListFavoriteItemsResponse = zod.array(ListFavoriteItemsResponseItem)
+
+
+/**
  * @summary Get the current user profile
  */
 export const GetCurrentProfileResponse = zod.object({

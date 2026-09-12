@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { getAuth } from "@clerk/express";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import {
   CreateItemBody,
@@ -16,7 +17,7 @@ import {
   UpdateItemParams,
   UpdateItemResponse,
 } from "@workspace/api-zod";
-import { db, listings, users, type Listing, type User } from "@workspace/db";
+import { db, favorites, listings, users, type Listing, type User } from "@workspace/db";
 import { getCurrentUser } from "../lib/currentUser";
 import { categoryAndDescendantIds, getCategoryCatalog, resolveCategory } from "../lib/categoryCatalog";
 
@@ -39,7 +40,7 @@ function postedAt(createdAt: Date) {
   return createdAt.toLocaleDateString("ka-GE");
 }
 
-function item(listing: Listing, user: User, listingCount: number) {
+function item(listing: Listing, user: User, listingCount: number, isFavorite = false) {
   return {
     id: listing.id,
     title: listing.title,
@@ -58,9 +59,18 @@ function item(listing: Listing, user: User, listingCount: number) {
       rating: 0,
       listings: listingCount,
     },
-    isFavorite: false,
+    isFavorite,
     delivery: listing.delivery,
   };
+}
+
+async function favoriteListingIds(userId: string | null | undefined, listingIds: string[]) {
+  if (!userId || listingIds.length === 0) return new Set<string>();
+  const rows = await db
+    .select({ listingId: favorites.listingId })
+    .from(favorites)
+    .where(and(eq(favorites.userId, userId), inArray(favorites.listingId, listingIds)));
+  return new Set(rows.map((row) => row.listingId));
 }
 
 async function listingCount(userId: string) {
@@ -108,8 +118,9 @@ router.get("/items", async (req, res) => {
     .where(filters.length ? and(...filters) : undefined)
     .orderBy(desc(listings.createdAt))
     .limit(limit);
+  const favoriteIds = await favoriteListingIds(getAuth(req).userId, rows.map((row) => row.listing.id));
   const counts = await Promise.all(rows.map((row) => listingCount(row.user.id)));
-  res.json(ListItemsResponse.parse(rows.map((row, index) => item(row.listing, row.user, counts[index]))));
+  res.json(ListItemsResponse.parse(rows.map((row, index) => item(row.listing, row.user, counts[index], favoriteIds.has(row.listing.id)))));
 });
 
 router.get("/categories", async (_req, res) => {
@@ -135,7 +146,21 @@ router.get("/items/:id", async (req, res) => {
   if (!parsed.success) return void res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
   const row = await findItem(parsed.data.id);
   if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
-  res.json(GetItemResponse.parse(item(row.listing, row.user, await listingCount(row.user.id))));
+  const favoriteIds = await favoriteListingIds(getAuth(req).userId, [row.listing.id]);
+  res.json(GetItemResponse.parse(item(row.listing, row.user, await listingCount(row.user.id), favoriteIds.has(row.listing.id))));
+});
+
+router.get("/favorites", async (req, res) => {
+  const user = await getCurrentUser(req);
+  const rows = await db
+    .select({ listing: listings, seller: users })
+    .from(favorites)
+    .innerJoin(listings, eq(favorites.listingId, listings.id))
+    .innerJoin(users, eq(listings.userId, users.id))
+    .where(eq(favorites.userId, user.id))
+    .orderBy(desc(favorites.createdAt));
+  const counts = await Promise.all(rows.map((row) => listingCount(row.seller.id)));
+  res.json(ListItemsResponse.parse(rows.map((row, index) => item(row.listing, row.seller, counts[index], true))));
 });
 
 router.get("/profile/listings", async (req, res) => {
@@ -180,8 +205,19 @@ router.post("/items/:id", async (req, res) => {
   if (!parsed.success) return void res.status(400).json({ error: "ნივთის იდენტიფიკატორი არასწორია" });
   const row = await findItem(parsed.data.id);
   if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
-  // Favorites are not persisted until a favorites model is introduced.
-  res.json(ToggleItemFavoriteResponse.parse({ id: row.listing.id, isFavorite: false }));
+  const user = await getCurrentUser(req);
+  const [existing] = await db
+    .select({ listingId: favorites.listingId })
+    .from(favorites)
+    .where(and(eq(favorites.userId, user.id), eq(favorites.listingId, row.listing.id)));
+
+  if (existing) {
+    await db.delete(favorites).where(and(eq(favorites.userId, user.id), eq(favorites.listingId, row.listing.id)));
+  } else {
+    await db.insert(favorites).values({ userId: user.id, listingId: row.listing.id });
+  }
+
+  res.json(ToggleItemFavoriteResponse.parse({ id: row.listing.id, isFavorite: !existing }));
 });
 
 export default router;
