@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import {
   useAnalyzeItemImage,
   useCreateItem,
@@ -25,6 +26,15 @@ import { CategoryPicker } from "@/components/CategoryPicker";
 import { useCategoryTree } from "@/hooks/use-categories";
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
+const cities = ["თბილისი", "ბათუმი", "ქუთაისი", "რუსთავი", "გორი", "ზუგდიდი"];
+const districtsByCity: Record<string, string[]> = {
+  თბილისი: ["ვაკე", "საბურთალო", "ვერა", "დიდუბე", "ჩუღურეთი", "ისანი", "სამგორი", "გლდანი", "ნაძალადევი", "მთაწმინდა"],
+  ბათუმი: ["ძველი ბათუმი", "ახალი ბათუმი", "ანგისა", "ბონი-გოროდოკი"],
+  ქუთაისი: ["ცენტრი", "ავანგარდი", "ნიკეა", "საფიჩხია"],
+  რუსთავი: ["ძველი რუსთავი", "ახალი რუსთავი", "მესხიშვილი"],
+  გორი: ["ცენტრი", "ვერხვები", "სადგურის უბანი"],
+  ზუგდიდი: ["ცენტრი", "ბარამიას ქუჩა", "სოხუმის ქუჩა"],
+};
 const deliveryOptions = [
   {
     value: "ადგილზე გატანა",
@@ -43,15 +53,46 @@ const deliveryOptions = [
   },
 ];
 
-const emptyForm: ItemInput = {
+const listingDetailsSchema = z.object({
+  title: z.string().trim().min(2, "სათაური მინიმუმ 2 სიმბოლოსგან უნდა შედგებოდეს."),
+  category: z.string().min(1, "აირჩიე კატეგორია."),
+  condition: z.enum(["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"]),
+  price: z.number().finite().positive("ფასი 0-ზე მეტი უნდა იყოს."),
+  city: z.string().min(1, "აირჩიე ქალაქი."),
+  district: z.string().min(1, "აირჩიე უბანი ან რაიონი."),
+  description: z.string().trim().min(10, "აღწერა მინიმუმ 10 სიმბოლოსგან უნდა შედგებოდეს."),
+  phone: z
+    .string()
+    .trim()
+    .refine((value) => !value || /^(?:\+995|0)?5\d{8}$/.test(value.replace(/[\s()-]/g, "")), {
+      message: "შეიყვანე სწორი ქართული მობილურის ნომერი.",
+    }),
+});
+
+type ListingForm = ItemInput & {
+  district: string;
+  negotiable: boolean;
+  tradeAvailable: boolean;
+  deliveryAvailable: boolean;
+  phone: string;
+  chatOnly: boolean;
+};
+
+const emptyForm: ListingForm = {
   title: "",
   price: 0,
   category: "",
   condition: conditions[1],
   city: "თბილისი",
+  district: districtsByCity["თბილისი"][0],
   image: "",
   description: "",
   delivery: [],
+  negotiable: false,
+  tradeAvailable: false,
+  deliveryAvailable: false,
+  phone: "",
+  chatOnly: false,
 };
 
 type Stage = "photo" | "choice" | "details";
@@ -62,16 +103,32 @@ export default function Sell() {
   const { categories } = useCategoryTree();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stage, setStage] = useState<Stage>("photo");
-  const [form, setForm] = useState<ItemInput>(emptyForm);
+  const [form, setForm] = useState<ListingForm>(emptyForm);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
   const [error, setError] = useState("");
+  const [draftSaved, setDraftSaved] = useState(false);
   const createItem = useCreateItem();
   const analyzeItem = useAnalyzeItemImage();
 
-  const update = <K extends keyof ItemInput>(key: K, value: ItemInput[K]) =>
+  const update = <K extends keyof ListingForm>(key: K, value: ListingForm[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("saxeli-create-listing-draft");
+      if (!saved) return;
+      const parsed = JSON.parse(saved) as Partial<ListingForm>;
+      if (parsed.image || parsed.title || parsed.description) {
+        setForm((current) => ({ ...current, ...parsed }));
+        setStage("details");
+        setDraftSaved(true);
+      }
+    } catch {
+      window.localStorage.removeItem("saxeli-create-listing-draft");
+    }
+  }, []);
 
   const readPhoto = (file?: File) => {
     if (!file || !file.type.startsWith("image/")) {
@@ -142,15 +199,14 @@ export default function Sell() {
   };
 
   const submit = () => {
-    if (
-      !form.image ||
-      !form.title.trim() ||
-      !form.category ||
-      !form.description.trim() ||
-      !form.price ||
-      form.price <= 0
-    ) {
-      setError("შეავსე სათაური, კატეგორია, ფასი და აღწერა, რომ განცხადება გამოაქვეყნო.");
+    if (!form.image) {
+      setError("განცხადების გამოსაქვეყნებლად ნივთის ფოტო ატვირთე.");
+      return;
+    }
+
+    const validation = listingDetailsSchema.safeParse(form);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები.");
       return;
     }
 
@@ -158,28 +214,59 @@ export default function Sell() {
     createItem.mutate(
       {
         data: {
-          ...form,
-          title: form.title.trim(),
-          description: form.description.trim(),
-          price: Number(form.price),
+          title: validation.data.title,
+          description: validation.data.description,
+          price: validation.data.price,
+          category: validation.data.category,
+          condition: validation.data.condition,
+          city: validation.data.city,
+          image: form.image,
+          delivery: form.delivery,
         },
       },
       {
         onSuccess: (item) => {
+          window.localStorage.removeItem("saxeli-create-listing-draft");
           queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListMyItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetProfileSummaryQueryKey() });
           setLocation(`/item/${item.id}`);
         },
         onError: () =>
-          setError("განცხადების დამატება ვერ მოხერხდა. გთხოვ, თავიდან სცადო."),
+          setError("განცხადების გამოქვეყნება ვერ მოხერხდა. გთხოვ, თავიდან სცადო."),
       },
     );
   };
 
+  const saveDraft = () => {
+    try {
+      window.localStorage.setItem("saxeli-create-listing-draft", JSON.stringify(form));
+      setDraftSaved(true);
+      setError("");
+    } catch {
+      setError("პროექტის შენახვა ვერ მოხერხდა. სცადე თავიდან.");
+    }
+  };
+
+  const selectCity = (city: string) => {
+    update("city", city);
+    update("district", districtsByCity[city]?.[0] ?? "");
+  };
+
+  const toggleDeliveryAvailable = () => {
+    const next = !form.deliveryAvailable;
+    update("deliveryAvailable", next);
+    if (next && !form.delivery?.length) {
+      update("delivery", ["საკურიერო მომსახურება"]);
+    }
+    if (!next) {
+      update("delivery", []);
+    }
+  };
+
   return (
     <div>
-      <PageHeader title="ნივთის განცხადება" eyebrow="Saxeli / ნივთი">
+      <PageHeader title="განცხადების დამატება" eyebrow="Saxeli / ნივთი">
         <Link
           href="/"
           className="hidden items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:flex"
@@ -417,7 +504,7 @@ export default function Sell() {
                         value={form.title}
                         onChange={(event) => update("title", event.target.value)}
                         className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm outline-none transition focus:border-[hsl(var(--primary))]"
-                        placeholder="მაგ. ვინტაჟური კამერა"
+                       placeholder="მაგ. iPhone 13 Pro 128GB"
                         data-testid="input-sell-title"
                       />
                     </label>
@@ -455,7 +542,7 @@ export default function Sell() {
                       value={form.price || ""}
                       onChange={(event) => update("price", Number(event.target.value))}
                       className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 font-mono-ui text-lg outline-none focus:border-[hsl(var(--primary))]"
-                      placeholder="0"
+                      placeholder="მაგ. 850"
                       data-testid="input-sell-price"
                     />
                   </label>
@@ -463,16 +550,30 @@ export default function Sell() {
                     ქალაქი
                     <select
                       value={form.city}
-                      onChange={(event) => update("city", event.target.value)}
+                      onChange={(event) => selectCity(event.target.value)}
                       className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
                       data-testid="select-sell-city"
                     >
-                      {["თბილისი", "ბათუმი", "ქუთაისი", "ზუგდიდი", "რუსთავი", "ფოთი"].map((city) => (
+                      {cities.map((city) => (
                         <option key={city}>{city}</option>
                       ))}
                     </select>
                   </label>
                 </div>
+
+                <label className="block text-sm font-semibold">
+                  უბანი / რაიონი
+                  <select
+                    value={form.district}
+                    onChange={(event) => update("district", event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                    data-testid="select-sell-district"
+                  >
+                    {(districtsByCity[form.city] ?? []).map((district) => (
+                      <option key={district}>{district}</option>
+                    ))}
+                  </select>
+                </label>
 
                 <label className="block text-sm font-semibold">
                   აღწერა
@@ -481,16 +582,27 @@ export default function Sell() {
                     onChange={(event) => update("description", event.target.value)}
                     rows={5}
                     className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm leading-relaxed outline-none focus:border-[hsl(var(--primary))]"
-                    placeholder="რა უნდა იცოდეს მომავალმა მფლობელმა?"
+                     placeholder="აღწერეთ ნივთის მდგომარეობა და დეტალები..."
                     data-testid="textarea-sell-description"
                   />
                 </label>
 
                 <div>
-                  <p className="text-sm font-semibold">მიტანა</p>
+                  <p className="text-sm font-semibold">მიტანის სერვისი</p>
                   <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    მონიშნე ერთი ან რამდენიმე ვარიანტი.
+                    მიუთითე, თუ მყიდველს მიტანის სერვისს სთავაზობ.
                   </p>
+                  <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-[hsl(var(--border))] p-4 transition hover:border-[hsl(var(--primary)/.6)]">
+                    <input
+                      type="checkbox"
+                      checked={form.deliveryAvailable}
+                      onChange={toggleDeliveryAvailable}
+                      className="h-5 w-5 accent-[hsl(var(--primary))]"
+                      data-testid="checkbox-delivery-available"
+                    />
+                    <span className="text-sm font-semibold">მიტანის სერვისი</span>
+                  </label>
+                  {form.deliveryAvailable ? (
                   <div className="mt-3 grid gap-3">
                     {deliveryOptions.map(({ value, detail, icon: Icon }) => {
                       const selected = form.delivery?.includes(value);
@@ -534,7 +646,54 @@ export default function Sell() {
                       );
                     })}
                   </div>
+                  ) : null}
                 </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["negotiable", "ფასი შეთანხმებით"],
+                    ["tradeAvailable", "გაცვლა"],
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[hsl(var(--border))] p-4 text-sm font-semibold transition hover:border-[hsl(var(--primary)/.6)]">
+                      <input
+                        type="checkbox"
+                        checked={form[key as "negotiable" | "tradeAvailable"]}
+                        onChange={(event) => update(key as "negotiable" | "tradeAvailable", event.target.checked)}
+                        className="h-5 w-5 accent-[hsl(var(--primary))]"
+                        data-testid={`checkbox-${key}`}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+
+                <div className="space-y-5">
+                  <label className="block text-sm font-semibold">
+                    ტელეფონის ნომერი
+                    <input
+                      type="tel"
+                      value={form.phone}
+                      onChange={(event) => update("phone", event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                      placeholder="+995 5XX XX XX XX"
+                      autoComplete="tel"
+                      data-testid="input-sell-phone"
+                    />
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={form.chatOnly}
+                      onChange={(event) => update("chatOnly", event.target.checked)}
+                      className="h-5 w-5 accent-[hsl(var(--primary))]"
+                      data-testid="checkbox-chat-only"
+                    />
+                    მხოლოდ ჩატში მოწერა
+                  </label>
+                </div>
+                {draftSaved ? (
+                  <Notice tone="success">პროექტი შენახულია ამ მოწყობილობაზე.</Notice>
+                ) : null}
               </div>
             ) : null}
 
@@ -547,6 +706,14 @@ export default function Sell() {
                   data-testid="button-sell-back"
                 >
                   <ArrowLeft size={16} /> უკან
+                </button>
+                <button
+                  type="button"
+                  onClick={saveDraft}
+                  className="rounded-xl border border-[hsl(var(--border))] px-4 py-3 text-sm font-semibold transition hover:border-[hsl(var(--primary)/.6)] hover:bg-[hsl(var(--muted))]"
+                  data-testid="button-save-draft"
+                >
+                  პროექტად შენახვა
                 </button>
                 <button
                   type="button"
