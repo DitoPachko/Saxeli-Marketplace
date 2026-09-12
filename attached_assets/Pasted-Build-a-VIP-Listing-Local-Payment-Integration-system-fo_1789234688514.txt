@@ -1,0 +1,35 @@
+Build a VIP Listing & Local Payment Integration system for our Next.js (App Router) + Supabase marketplace application (Nivtebi.Ge).
+
+Requirements:
+
+1. Database Schema Extensions (Supabase SQL):
+   - Update `products` table with columns:
+     * `status`: string ('standard', 'vip', 'super_vip') DEFAULT 'standard'
+     * `vip_expires_at`: timestamp with time zone NULL
+   - Create `payments` table:
+     * `id`: uuid (pk)
+     * `user_id`: uuid (fk to auth.users)
+     * `product_id`: uuid (fk to products)
+     * `tier`: string ('vip', 'super_vip')
+     * `amount`: numeric
+     * `status`: string ('pending', 'completed', 'failed')
+     * `provider`: string ('tbc', 'bog', 'flou')
+     * `transaction_id`: string NULL
+     * `created_at`: timestamp
+
+2. VIP Promotion Modal (`components/VipModal.tsx`):
+   - Accepts props: `product`, `isOpen`, `onClose`.
+   - Displays pricing plans (e.g., VIP = 3 GEL / 7 days, Super VIP = 7 GEL / 7 days).
+   - Allows seller to select a tier and click "გადახდა" (Pay).
+   - Calls backend endpoint `/api/payments/create` to initiate a payment checkout session.
+
+3. Payment Gateway Webhook & API Routes:
+   - Create `/api/payments/create/route.ts`: Generates a checkout session/redirect URL with the local payment provider and logs a pending payment record in Supabase.
+   - Create `/api/payments/callback/route.ts` (or webhook handler): Validates payment success, updates the `payments` record status to 'completed', and updates the `products` table setting `status` to 'vip' or 'super_vip' along with `vip_expires_at = NOW() + INTERVAL '7 days'`.
+
+4. Marketplace UI Updates (`app/page.tsx`):
+   - Query sorting: Display 'super_vip' listings at the very top, followed by 'vip' listings, then 'standard' listings (and ordered by `created_at` descending).
+   - Card Styling:
+     * `super_vip`: Add a gold/amber gradient border, a "SUPER VIP" badge, and subtle glow.
+     * `vip`: Add a blue/indigo border and a "VIP" badge.
+   - For listing owners, add a "🚀 VIP გახდომა" (Promote to VIP) button on their item cards that triggers the `VipModal`.
