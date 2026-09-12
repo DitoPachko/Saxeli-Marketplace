@@ -158,6 +158,9 @@ function Router() {
           <Auth mode="register" basePath={basePath} />
         </Route>
         
+        <Route path="/listing/:id">
+          <ItemDetail />
+        </Route>
         <Route path="/item/:id">
           <ItemDetail />
         </Route>

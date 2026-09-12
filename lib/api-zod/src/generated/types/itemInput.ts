@@ -14,7 +14,15 @@ export interface ItemInput {
   category: string;
   condition: string;
   city: string;
+  /** @minLength 1 */
+  district: string;
   image: string;
   description: string;
   delivery?: string[];
+  negotiable: boolean;
+  tradeAvailable: boolean;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly: boolean;
 }

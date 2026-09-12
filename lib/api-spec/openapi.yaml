@@ -305,13 +305,17 @@ components:
         - status
     Seller:
       type: object
-      required: [name, initials, rating, listings]
+      required: [id, name, initials, rating, listings]
       properties:
+        id: { type: string }
         name: { type: string }
         initials: { type: string }
         rating: { type: number }
         listings: { type: number }
         responseTime: { type: string }
+        avatarUrl: { type: [string, "null"] }
+        city: { type: [string, "null"] }
+        phoneNumber: { type: [string, "null"] }
     MarketplaceItem:
       type: object
       required:
@@ -322,9 +326,14 @@ components:
         - categorySlug
         - condition
         - city
+        - district
         - postedAt
         - image
         - seller
+        - negotiable
+        - tradeAvailable
+        - deliveryAvailable
+        - chatOnly
       properties:
         id: { type: string }
         title: { type: string }
@@ -333,6 +342,7 @@ components:
         categorySlug: { type: string }
         condition: { type: string }
         city: { type: string }
+        district: { type: string }
         postedAt: { type: string }
         image: { type: string }
         images:
@@ -345,20 +355,31 @@ components:
         delivery:
           type: array
           items: { type: string }
+        negotiable: { type: boolean }
+        tradeAvailable: { type: boolean }
+        deliveryAvailable: { type: boolean }
+        phone: { type: [string, "null"] }
+        chatOnly: { type: boolean }
     ItemInput:
       type: object
-      required: [title, price, category, condition, city, image, description]
+      required: [title, price, category, condition, city, district, image, description, negotiable, tradeAvailable, deliveryAvailable, chatOnly]
       properties:
         title: { type: string, minLength: 2 }
         price: { type: number, minimum: 0 }
         category: { type: string }
         condition: { type: string }
         city: { type: string }
+        district: { type: string, minLength: 1 }
         image: { type: string }
         description: { type: string }
         delivery:
           type: array
           items: { type: string }
+        negotiable: { type: boolean }
+        tradeAvailable: { type: boolean }
+        deliveryAvailable: { type: boolean }
+        phone: { type: [string, "null"] }
+        chatOnly: { type: boolean }
     ItemUpdate:
       type: object
       minProperties: 1
@@ -368,6 +389,7 @@ components:
         category: { type: string }
         condition: { type: string }
         city: { type: string }
+        district: { type: string }
         image: { type: string }
         images:
           type: array
@@ -376,6 +398,11 @@ components:
         delivery:
           type: array
           items: { type: string }
+        negotiable: { type: boolean }
+        tradeAvailable: { type: boolean }
+        deliveryAvailable: { type: boolean }
+        phone: { type: [string, "null"] }
+        chatOnly: { type: boolean }
     Category:
       type: object
       required: [id, name, slug, depth, sortOrder]

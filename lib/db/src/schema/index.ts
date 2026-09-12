@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
@@ -35,10 +36,16 @@ export const listings = pgTable("listings", {
   categoryId: text("category_id").references(() => categories.id, { onDelete: "set null" }),
   condition: text("condition").notNull(),
   city: text("city").notNull(),
+  district: text("district").notNull().default(""),
   image: text("image").notNull(),
   images: jsonb("images").$type<string[]>().notNull().default([]),
   description: text("description").notNull(),
   delivery: jsonb("delivery").$type<string[]>().notNull().default([]),
+  negotiable: boolean("negotiable").notNull().default(false),
+  tradeAvailable: boolean("trade_available").notNull().default(false),
+  deliveryAvailable: boolean("delivery_available").notNull().default(false),
+  phone: text("phone"),
+  chatOnly: boolean("chat_only").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

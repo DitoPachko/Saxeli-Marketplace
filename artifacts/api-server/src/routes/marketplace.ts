@@ -49,18 +49,28 @@ function item(listing: Listing, user: User, listingCount: number, isFavorite = f
     categorySlug: listing.categoryId ?? "other",
     condition: listing.condition,
     city: listing.city,
+    district: listing.district,
     postedAt: postedAt(listing.createdAt),
     image: listing.image,
     images: listing.images,
     description: listing.description,
     seller: {
+      id: user.id,
       name: user.fullName,
       initials: initials(user.fullName),
       rating: 0,
       listings: listingCount,
+      avatarUrl: user.avatarUrl,
+      city: user.city,
+      phoneNumber: user.phoneNumber,
     },
     isFavorite,
     delivery: listing.delivery,
+    negotiable: listing.negotiable,
+    tradeAvailable: listing.tradeAvailable,
+    deliveryAvailable: listing.deliveryAvailable,
+    phone: listing.phone,
+    chatOnly: listing.chatOnly,
   };
 }
 

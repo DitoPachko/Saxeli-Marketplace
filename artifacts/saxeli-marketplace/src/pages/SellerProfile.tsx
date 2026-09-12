@@ -105,7 +105,7 @@ export default function SellerProfile() {
                 key={item.id}
                 className="lift group overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]"
               >
-                <Link href={`/item/${item.id}`} className="block aspect-[1.5]">
+                <Link href={`/listing/${item.id}`} className="block aspect-[1.5]">
                   <ItemVisual
                     src={item.image}
                     title={item.title}
@@ -115,7 +115,7 @@ export default function SellerProfile() {
                 <div className="p-4">
                   <div className="flex justify-between gap-3">
                     <Link
-                      href={`/item/${item.id}`}
+                      href={`/listing/${item.id}`}
                       className="truncate text-sm font-semibold"
                     >
                       {item.title}

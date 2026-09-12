@@ -25,7 +25,7 @@ function ItemCard({ item, favorite, onFavorite }: { item: MarketplaceItem; favor
   return (
     <article className="group lift overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]" data-testid={`card-item-${item.id}`}>
       <div className="relative aspect-[1.08]">
-        <Link href={`/item/${item.id}`} className="absolute inset-0 z-0" data-testid={`link-item-${item.id}`}>
+        <Link href={`/listing/${item.id}`} className="absolute inset-0 z-0" data-testid={`link-item-${item.id}`}>
           <ItemVisual src={item.image} title={item.title} className="h-full w-full" />
         </Link>
         <div className="absolute left-3 top-3 z-10 rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">{item.condition}</div>
@@ -35,7 +35,7 @@ function ItemCard({ item, favorite, onFavorite }: { item: MarketplaceItem; favor
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
-          <Link href={`/item/${item.id}`} className="min-w-0" data-testid={`link-item-title-${item.id}`}>
+          <Link href={`/listing/${item.id}`} className="min-w-0" data-testid={`link-item-title-${item.id}`}>
             <h2 className="truncate text-[15px] font-semibold tracking-[-.02em]">{item.title}</h2>
           </Link>
           <span className="shrink-0 font-mono-ui text-sm font-bold">{formatPrice(item.price)}</span>

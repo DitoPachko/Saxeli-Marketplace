@@ -7,9 +7,16 @@
  */
 
 export interface Seller {
+  id: string;
   name: string;
   initials: string;
   rating: number;
   listings: number;
   responseTime?: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  phoneNumber?: string | null;
 }

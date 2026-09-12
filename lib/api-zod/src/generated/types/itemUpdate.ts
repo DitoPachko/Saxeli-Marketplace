@@ -14,8 +14,15 @@ export interface ItemUpdate {
   category?: string;
   condition?: string;
   city?: string;
+  district?: string;
   image?: string;
   images?: string[];
   description?: string;
   delivery?: string[];
+  negotiable?: boolean;
+  tradeAvailable?: boolean;
+  deliveryAvailable?: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly?: boolean;
 }

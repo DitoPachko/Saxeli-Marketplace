@@ -15,6 +15,7 @@ export interface MarketplaceItem {
   categorySlug: string;
   condition: string;
   city: string;
+  district: string;
   postedAt: string;
   image: string;
   images?: string[];
@@ -22,4 +23,10 @@ export interface MarketplaceItem {
   seller: Seller;
   isFavorite?: boolean;
   delivery?: string[];
+  negotiable: boolean;
+  tradeAvailable: boolean;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly: boolean;
 }

@@ -19,7 +19,7 @@ function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item:
   return (
     <article className="group overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
       <div className="relative aspect-[1.08]">
-        <Link href={`/item/${item.id}`} className="absolute inset-0">
+        <Link href={`/listing/${item.id}`} className="absolute inset-0">
           <ItemVisual src={item.image} title={item.title} className="h-full w-full" />
         </Link>
         <button
@@ -33,7 +33,7 @@ function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item:
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
-          <Link href={`/item/${item.id}`} className="min-w-0">
+        <Link href={`/listing/${item.id}`} className="min-w-0">
             <h2 className="truncate text-[15px] font-semibold">{item.title}</h2>
           </Link>
           <span className="shrink-0 font-mono-ui text-sm font-bold">{price(item.price)}</span>

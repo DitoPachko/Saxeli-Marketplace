@@ -31,9 +31,15 @@ const emptyForm: ItemInput = {
   category: "",
   condition: "",
   city: "",
+  district: "",
   image: "",
   description: "",
   delivery: [],
+  negotiable: false,
+  tradeAvailable: false,
+  deliveryAvailable: false,
+  phone: null,
+  chatOnly: false,
 };
 
 export default function EditItem() {
@@ -61,9 +67,15 @@ export default function EditItem() {
         category: itemData.categorySlug, // Hydrate with slug
         condition: itemData.condition,
         city: itemData.city,
+        district: itemData.district,
         image: itemData.image,
         description: itemData.description ?? "",
         delivery: itemData.delivery ?? [],
+        negotiable: itemData.negotiable,
+        tradeAvailable: itemData.tradeAvailable,
+        deliveryAvailable: itemData.deliveryAvailable,
+        phone: itemData.phone ?? null,
+        chatOnly: itemData.chatOnly,
       });
     }
   }, [itemData]);
@@ -117,7 +129,7 @@ export default function EditItem() {
           queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListMyItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetItemQueryKey(item.id) });
-          setLocation(`/item/${item.id}`);
+           setLocation(`/listing/${item.id}`);
         },
         onError: () => {
           setError("განცხადების განახლება ვერ მოხერხდა. გთხოვ, თავიდან სცადო.");

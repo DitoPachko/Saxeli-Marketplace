@@ -40,19 +40,29 @@ export const ListItemsResponseItem = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 export const ListItemsResponse = zod.array(ListItemsResponseItem)
 
@@ -66,15 +76,22 @@ export const createItemBodyPriceMin = 0;
 
 
 
+
 export const CreateItemBody = zod.object({
   "title": zod.string().min(createItemBodyTitleMin),
   "price": zod.number().min(createItemBodyPriceMin),
   "category": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string().min(1),
   "image": zod.string(),
   "description": zod.string(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 
 export const CreateItemResponse = zod.object({
@@ -85,19 +102,29 @@ export const CreateItemResponse = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 
 
@@ -131,19 +158,29 @@ export const GetItemResponse = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 
 
@@ -179,10 +216,16 @@ export const UpdateItemBody = zod.object({
   "category": zod.string().optional(),
   "condition": zod.string().optional(),
   "city": zod.string().optional(),
+  "district": zod.string().optional(),
   "image": zod.string().optional(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean().optional(),
+  "tradeAvailable": zod.boolean().optional(),
+  "deliveryAvailable": zod.boolean().optional(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean().optional()
 })
 
 export const UpdateItemResponse = zod.object({
@@ -193,19 +236,29 @@ export const UpdateItemResponse = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 
 
@@ -230,19 +283,29 @@ export const ListFavoriteItemsResponseItem = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 export const ListFavoriteItemsResponse = zod.array(ListFavoriteItemsResponseItem)
 
@@ -294,19 +357,29 @@ export const ListMyItemsResponseItem = zod.object({
   "categorySlug": zod.string(),
   "condition": zod.string(),
   "city": zod.string(),
+  "district": zod.string(),
   "postedAt": zod.string(),
   "image": zod.string(),
   "images": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "seller": zod.object({
+  "id": zod.string(),
   "name": zod.string(),
   "initials": zod.string(),
   "rating": zod.number(),
   "listings": zod.number(),
-  "responseTime": zod.string().optional()
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
 }),
   "isFavorite": zod.boolean().optional(),
-  "delivery": zod.array(zod.string()).optional()
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean()
 })
 export const ListMyItemsResponse = zod.array(ListMyItemsResponseItem)
 

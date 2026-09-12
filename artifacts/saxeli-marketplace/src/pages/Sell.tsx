@@ -68,6 +68,10 @@ const listingDetailsSchema = z.object({
     .refine((value) => !value || /^(?:\+995|0)?5\d{8}$/.test(value.replace(/[\s()-]/g, "")), {
       message: "შეიყვანე სწორი ქართული მობილურის ნომერი.",
     }),
+  negotiable: z.boolean(),
+  tradeAvailable: z.boolean(),
+  deliveryAvailable: z.boolean(),
+  chatOnly: z.boolean(),
 });
 
 type ListingForm = ItemInput & {
@@ -301,8 +305,14 @@ export default function Sell() {
           category: validation.data.category,
           condition: validation.data.condition,
           city: validation.data.city,
+          district: validation.data.district,
           image: form.image,
           delivery: form.delivery,
+          negotiable: validation.data.negotiable,
+          tradeAvailable: validation.data.tradeAvailable,
+          deliveryAvailable: validation.data.deliveryAvailable,
+          phone: validation.data.phone || null,
+          chatOnly: validation.data.chatOnly,
         },
       },
       {
@@ -311,7 +321,7 @@ export default function Sell() {
           queryClient.invalidateQueries({ queryKey: getListItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListMyItemsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetProfileSummaryQueryKey() });
-          setLocation(`/item/${item.id}`);
+          setLocation(`/listing/${item.id}`);
         },
         onError: () =>
           setError("განცხადების გამოქვეყნება ვერ მოხერხდა. გთხოვ, თავიდან სცადო."),

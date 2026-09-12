@@ -273,14 +273,14 @@ export default function Profile() {
                   key={item.id}
                   className="group overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]"
                 >
-                  <Link href={`/item/${item.id}`} className="block aspect-[1.3] relative">
+                  <Link href={`/listing/${item.id}`} className="block aspect-[1.3] relative">
                     <ItemVisual src={item.image} title={item.title} className="h-full w-full" />
                     <div className="absolute left-3 top-3 rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">
                       {item.condition}
                     </div>
                   </Link>
                   <div className="p-4">
-                    <Link href={`/item/${item.id}`} className="block truncate text-sm font-semibold mb-1">
+                    <Link href={`/listing/${item.id}`} className="block truncate text-sm font-semibold mb-1">
                       {item.title}
                     </Link>
                     <p className="font-mono-ui text-sm font-bold text-[hsl(var(--primary))]">

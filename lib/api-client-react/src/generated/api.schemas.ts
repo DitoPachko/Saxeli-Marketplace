@@ -10,11 +10,18 @@ export interface HealthStatus {
 }
 
 export interface Seller {
+  id: string;
   name: string;
   initials: string;
   rating: number;
   listings: number;
   responseTime?: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  phoneNumber?: string | null;
 }
 
 export interface MarketplaceItem {
@@ -25,6 +32,7 @@ export interface MarketplaceItem {
   categorySlug: string;
   condition: string;
   city: string;
+  district: string;
   postedAt: string;
   image: string;
   images?: string[];
@@ -32,6 +40,12 @@ export interface MarketplaceItem {
   seller: Seller;
   isFavorite?: boolean;
   delivery?: string[];
+  negotiable: boolean;
+  tradeAvailable: boolean;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly: boolean;
 }
 
 export interface ItemInput {
@@ -42,9 +56,17 @@ export interface ItemInput {
   category: string;
   condition: string;
   city: string;
+  /** @minLength 1 */
+  district: string;
   image: string;
   description: string;
   delivery?: string[];
+  negotiable: boolean;
+  tradeAvailable: boolean;
+  deliveryAvailable: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly: boolean;
 }
 
 export interface ItemUpdate {
@@ -55,10 +77,17 @@ export interface ItemUpdate {
   category?: string;
   condition?: string;
   city?: string;
+  district?: string;
   image?: string;
   images?: string[];
   description?: string;
   delivery?: string[];
+  negotiable?: boolean;
+  tradeAvailable?: boolean;
+  deliveryAvailable?: boolean;
+  /** @nullable */
+  phone?: string | null;
+  chatOnly?: boolean;
 }
 
 export interface Category {

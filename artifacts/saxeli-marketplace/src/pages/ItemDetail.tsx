@@ -1,27 +1,110 @@
-import type { FormEvent } from 'react';
-import { useState } from 'react';
-import { ArrowLeft, Check, Heart, MapPin, MessageCircle, PackageCheck, Send, ShieldCheck, Star, X } from 'lucide-react';
-import { Link, useParams } from 'wouter';
-import { getGetItemQueryKey, useGetItem, useToggleItemFavorite } from '@workspace/api-client-react';
-import { Avatar, ItemVisual, Notice } from '@/components/MarketplaceChrome';
+import type { FormEvent } from "react";
+import { useState } from "react";
+import { useUser } from "@clerk/react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Handshake,
+  Heart,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  ShieldCheck,
+  Star,
+  Truck,
+  X,
+} from "lucide-react";
+import { Link, useLocation, useParams } from "wouter";
+import {
+  getGetItemQueryKey,
+  useGetItem,
+  useToggleItemFavorite,
+} from "@workspace/api-client-react";
+import { Avatar, ItemVisual, Notice } from "@/components/MarketplaceChrome";
 
-function formatPrice(price: number) { return `${price.toLocaleString('ka-GE')} ₾`; }
+function formatPrice(price: number) {
+  return `${price.toLocaleString("ka-GE")} ₾`;
+}
 
 export default function ItemDetail() {
   const params = useParams<{ id: string }>();
-  const id = params.id ?? '';
-  const { data: item, isLoading, isError, refetch } = useGetItem(id, { query: { queryKey: getGetItemQueryKey(id), enabled: Boolean(id) } });
+  const id = params.id ?? "";
+  const [, setLocation] = useLocation();
+  const { isSignedIn } = useUser();
+  const { data: item, isLoading, isError, refetch } = useGetItem(id, {
+    query: { queryKey: getGetItemQueryKey(id), enabled: Boolean(id) },
+  });
   const favoriteMutation = useToggleItemFavorite();
   const [selectedImage, setSelectedImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [dialog, setDialog] = useState<'message' | 'offer' | null>(null);
+  const [phoneVisible, setPhoneVisible] = useState(false);
+  const [dialog, setDialog] = useState<"message" | "offer" | null>(null);
   const [sent, setSent] = useState(false);
 
-  if (isLoading) return <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-10"><div className="skeleton h-5 w-20 rounded" /><div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_.9fr]"><div className="skeleton aspect-square rounded-3xl" /><div className="space-y-4"><div className="skeleton h-12 w-4/5 rounded" /><div className="skeleton h-8 w-1/3 rounded" /><div className="skeleton h-40 rounded-2xl" /></div></div></div>;
-  if (isError || !item) return <div className="mx-auto max-w-[760px] px-5 py-16 md:px-10"><Notice tone="error">ეს ნივთი ვერ მოიძებნა. <button type="button" className="ml-1 font-semibold underline" onClick={() => refetch()} data-testid="button-retry-item">თავიდან ცდა</button></Notice><Link href="/" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold" data-testid="link-back-marketplace"><ArrowLeft size={16} /> ბაზარზე დაბრუნება</Link></div>;
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-10">
+        <div className="skeleton h-5 w-36 rounded" />
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.08fr_.92fr]">
+          <div className="skeleton aspect-[1.06] rounded-3xl" />
+          <div className="space-y-4">
+            <div className="skeleton h-12 w-4/5 rounded" />
+            <div className="skeleton h-8 w-1/3 rounded" />
+            <div className="skeleton h-48 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const gallery = item.images?.length ? item.images : [item.image];
+  if (isError || !item) {
+    return (
+      <div className="mx-auto max-w-[760px] px-5 py-16 md:px-10">
+        <Notice tone="error">
+          ეს ნივთი ვერ მოიძებნა.{" "}
+          <button
+            type="button"
+            className="ml-1 font-semibold underline"
+            onClick={() => refetch()}
+            data-testid="button-retry-item"
+          >
+            თავიდან ცდა
+          </button>
+        </Notice>
+        <Link
+          href="/"
+          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold"
+          data-testid="link-back-marketplace"
+        >
+          <ArrowLeft size={16} /> უკან დაბრუნება
+        </Link>
+      </div>
+    );
+  }
+
+  const gallery = Array.from(
+    new Set(item.images?.length ? item.images : [item.image]),
+  );
+  const activeImage = gallery[selectedImage] ?? gallery[0] ?? item.image;
   const isFavorite = favorite || item.isFavorite || false;
+  const sellerPhone = item.phone || item.seller.phoneNumber;
+  const backLabel = "უკან დაბრუნება";
+
+  const openMessageDialog = () => {
+    if (!isSignedIn) {
+      const returnTo = encodeURIComponent(`/listing/${item.id}`);
+      setLocation(`/login?returnTo=${returnTo}`);
+      return;
+    }
+    setDialog("message");
+    setSent(false);
+  };
+
   const submitDialog = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSent(true);
@@ -29,27 +112,362 @@ export default function ItemDetail() {
 
   return (
     <div className="mx-auto max-w-[1280px] px-5 py-7 md:px-10 md:py-10">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] transition hover:text-[hsl(var(--foreground))]" data-testid="link-back-items"><ArrowLeft size={16} /> ყველა ნივთი</Link>
-      <div className="mt-7 grid gap-9 lg:grid-cols-[minmax(0,1.06fr)_minmax(360px,.94fr)] lg:gap-14">
-        <section>
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(var(--muted-foreground))] transition hover:text-[hsl(var(--foreground))]"
+        data-testid="link-back-items"
+      >
+        <ArrowLeft size={16} /> {backLabel}
+      </Link>
+
+      <div className="mt-7 grid gap-9 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,.92fr)] lg:gap-14">
+        <section className="min-w-0">
           <div className="relative aspect-[1.06] overflow-hidden rounded-[2rem] bg-[hsl(var(--muted))]">
-            <ItemVisual src={gallery[selectedImage]} title={item.title} className="h-full w-full" />
-            <div className="absolute bottom-4 left-4 rounded-full bg-[hsl(var(--card)/.9)] px-3 py-1.5 font-mono-ui text-[10px] backdrop-blur-sm" data-testid="text-gallery-index">{selectedImage + 1} / {gallery.length}</div>
+            <ItemVisual
+              src={activeImage}
+              title={item.title}
+              className="h-full w-full"
+            />
+            {gallery.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedImage(
+                      (selectedImage - 1 + gallery.length) % gallery.length,
+                    )
+                  }
+                  className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[hsl(var(--card)/.9)] shadow-[var(--shadow-sm)] transition hover:bg-[hsl(var(--card))]"
+                  aria-label="წინა ფოტო"
+                  data-testid="button-gallery-previous"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedImage((selectedImage + 1) % gallery.length)
+                  }
+                  className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[hsl(var(--card)/.9)] shadow-[var(--shadow-sm)] transition hover:bg-[hsl(var(--card))]"
+                  aria-label="შემდეგი ფოტო"
+                  data-testid="button-gallery-next"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            ) : null}
+            <div
+              className="absolute bottom-4 left-4 rounded-full bg-[hsl(var(--card)/.9)] px-3 py-1.5 font-mono-ui text-[10px] backdrop-blur-sm"
+              data-testid="text-gallery-index"
+            >
+              {selectedImage + 1} / {gallery.length}
+            </div>
           </div>
-          {gallery.length > 1 ? <div className="mt-3 grid grid-cols-5 gap-3">{gallery.map((image, index) => <button type="button" key={image} onClick={() => setSelectedImage(index)} className={`aspect-square overflow-hidden rounded-xl border-2 bg-[hsl(var(--muted))] ${selectedImage === index ? 'border-[hsl(var(--primary))]' : 'border-transparent opacity-70 hover:opacity-100'}`} data-testid={`button-gallery-${index}`}><img src={image} alt={`${item.title} ${index + 1}`} className="h-full w-full object-cover" /></button>)}</div> : null}
+
+          <div className="mt-3 grid grid-cols-5 gap-3">
+            {gallery.map((image, index) => (
+              <button
+                type="button"
+                key={`${image}-${index}`}
+                onClick={() => setSelectedImage(index)}
+                className={`aspect-square overflow-hidden rounded-xl border-2 bg-[hsl(var(--muted))] transition ${
+                  selectedImage === index
+                    ? "border-[hsl(var(--primary))]"
+                    : "border-transparent opacity-70 hover:opacity-100"
+                }`}
+                data-testid={`button-gallery-${index}`}
+              >
+                <img
+                  src={image}
+                  alt={`${item.title} ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+
+          <section className="mt-8 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 md:p-6">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
+              <ShieldCheck size={16} className="text-[hsl(var(--accent))]" />
+              აღწერა
+            </div>
+            <p
+              className="mt-4 whitespace-pre-line text-[15px] leading-7 text-[hsl(var(--foreground)/.85)]"
+              data-testid="text-item-description"
+            >
+              {item.description || "აღწერა არ არის მითითებული."}
+            </p>
+          </section>
         </section>
-        <section className="enter">
-          <div className="flex items-center justify-between gap-4"><span className="rounded-full bg-[hsl(var(--primary)/.2)] px-3 py-1 font-mono-ui text-[10px] uppercase tracking-[.12em]">{item.condition}</span><button type="button" onClick={() => { const next = !isFavorite; setFavorite(next); favoriteMutation.mutate({ id: item.id }); }} className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${isFavorite ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.16)]' : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]'}`} data-testid="button-detail-favorite"><Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} /> {isFavorite ? 'შენახულია' : 'შენახვა'}</button></div>
-          <h1 className="font-display mt-5 text-4xl font-semibold leading-[1.1] tracking-[-.06em] md:text-5xl" data-testid="text-item-title">{item.title}</h1>
-          <p className="mt-5 font-mono-ui text-2xl font-bold" data-testid="text-item-price">{formatPrice(item.price)}</p>
-          <div className="mt-5 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]"><span className="flex items-center gap-1 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5"><MapPin size={13} /> {item.city}</span><span className="rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">{item.category}</span></div>
-          {item.description ? <p className="mt-8 text-[15px] leading-7 text-[hsl(var(--muted-foreground))]" data-testid="text-item-description">{item.description}</p> : null}
-          <div className="mt-8 grid gap-3 sm:grid-cols-2"><button type="button" onClick={() => { setDialog('message'); setSent(false); }} className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold" data-testid="button-contact-seller"><MessageCircle size={17} /> მიწერე გამყიდველს</button><button type="button" onClick={() => { setDialog('offer'); setSent(false); }} className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold" data-testid="button-make-offer">შეთავაზე ფასი <Send size={16} /></button></div>
-          <div className="mt-10 border-t border-[hsl(var(--border))] pt-6"><p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">გამყიდველი</p><div className="mt-4 flex items-center gap-3"><Link href={`/seller/${(item.seller as any).id || "unknown"}`}><Avatar initials={item.seller.initials} size="md" testId="img-seller-avatar" src={(item.seller as any).avatarUrl} /></Link><div><Link href={`/seller/${(item.seller as any).id || "unknown"}`} className="font-semibold hover:underline" data-testid="text-seller-name">{item.seller.name}</Link><p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]"><Star size={13} className="fill-[hsl(var(--primary))] text-[hsl(var(--primary))]" /> {item.seller.rating.toFixed(1)} · {item.seller.listings} განცხადება { (item.seller as any).city && <span>· {(item.seller as any).city}</span> } { (item.seller as any).phoneNumber && <span>· {(item.seller as any).phoneNumber}</span> }</p></div><span className="ml-auto rounded-lg bg-[hsl(var(--accent)/.14)] px-2 py-1 text-[10px] text-[hsl(var(--foreground))]">{item.seller.responseTime ?? 'სწრაფი პასუხი'}</span></div></div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2"><div className="flex gap-3 rounded-xl bg-[hsl(var(--muted)/.7)] p-3.5"><ShieldCheck size={19} className="shrink-0 text-[hsl(var(--accent))]" /><div><p className="text-xs font-semibold">Saxeli-ს დაცვა</p><p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">ნივთი გადაამოწმე ადგილზე, სანამ გადაიხდი.</p></div></div><div className="flex gap-3 rounded-xl bg-[hsl(var(--muted)/.7)] p-3.5"><PackageCheck size={19} className="shrink-0 text-[hsl(var(--accent))]" /><div><p className="text-xs font-semibold">მიტანის არჩევანი</p><p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">{item.delivery?.join(' · ') ?? 'შეთანხმება ადგილზე'}</p></div></div></div>
+
+        <section className="enter min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <div className="flex items-center justify-between gap-4">
+            <span className="rounded-full bg-[hsl(var(--primary)/.16)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--foreground))]">
+              {item.condition}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !isFavorite;
+                setFavorite(next);
+                favoriteMutation.mutate({ id: item.id });
+              }}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                isFavorite
+                  ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.16)]"
+                  : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]"
+              }`}
+              data-testid="button-detail-favorite"
+            >
+              <Heart size={17} fill={isFavorite ? "currentColor" : "none"} />
+              {isFavorite ? "შენახულია" : "შენახვა"}
+            </button>
+          </div>
+
+          <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
+            <span>{item.category}</span>
+            <span className="text-[hsl(var(--border))]">·</span>
+            <span className="flex items-center gap-1">
+              <CalendarDays size={13} /> {item.postedAt}
+            </span>
+          </p>
+          <h1
+            className="font-display mt-3 text-4xl font-semibold leading-[1.08] tracking-[-.06em] md:text-5xl"
+            data-testid="text-item-title"
+          >
+            {item.title}
+          </h1>
+          <p
+            className="mt-5 font-mono-ui text-3xl font-bold"
+            data-testid="text-item-price"
+          >
+            {formatPrice(item.price)}
+          </p>
+
+          <div className="mt-5 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
+            <span className="flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">
+              <MapPin size={13} />
+              {item.city}
+              {item.district ? ` · ${item.district}` : ""}
+            </span>
+            <span className="flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">
+              <CalendarDays size={13} /> {item.postedAt}
+            </span>
+          </div>
+
+          {item.negotiable || item.tradeAvailable || item.deliveryAvailable ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {item.negotiable ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary)/.14)] px-3 py-1.5 text-xs font-semibold">
+                  ფასი შეთანხმებით
+                </span>
+              ) : null}
+              {item.tradeAvailable ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.14)] px-3 py-1.5 text-xs font-semibold">
+                  <Handshake size={14} /> გაცვლა
+                </span>
+              ) : null}
+              {item.deliveryAvailable ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.14)] px-3 py-1.5 text-xs font-semibold">
+                  <Truck size={14} /> მიტანის სერვისი
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="mt-8 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-sm)] md:p-6">
+            <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
+              გამყიდველი
+            </p>
+            <div className="mt-4 flex items-start gap-3">
+              <Link href={`/seller/${item.seller.id}`}>
+                <Avatar
+                  initials={item.seller.initials}
+                  size="lg"
+                  testId="img-seller-avatar"
+                  src={item.seller.avatarUrl ?? undefined}
+                />
+              </Link>
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={`/seller/${item.seller.id}`}
+                  className="font-semibold hover:underline"
+                  data-testid="text-seller-name"
+                >
+                  {item.seller.name}
+                </Link>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
+                  <span className="flex items-center gap-1">
+                    <Star
+                      size={13}
+                      className="fill-[hsl(var(--primary))] text-[hsl(var(--primary))]"
+                    />{" "}
+                    {item.seller.rating.toFixed(1)}
+                  </span>
+                  <span>·</span>
+                  <span>{item.seller.listings} განცხადება</span>
+                </p>
+                {item.seller.city ? (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
+                    <MapPin size={12} /> {item.seller.city}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.13)] px-2.5 py-1.5 text-[11px] font-semibold">
+                <BadgeCheck size={14} /> Saxeli პროფილი
+              </span>
+              {sellerPhone ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--muted))] px-2.5 py-1.5 text-[11px] font-semibold">
+                  <ShieldCheck size={14} /> ტელეფონი მითითებულია
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-5 grid gap-2">
+              {!item.chatOnly ? (
+                phoneVisible && sellerPhone ? (
+                  <a
+                    href={`tel:${sellerPhone}`}
+                    className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
+                    data-testid="link-seller-phone"
+                  >
+                    <Phone size={17} /> {sellerPhone}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setPhoneVisible(true)}
+                    disabled={!sellerPhone}
+                    className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                    data-testid="button-reveal-phone"
+                  >
+                    <Phone size={17} />{" "}
+                    {sellerPhone ? "დარეკვა" : "ტელეფონი არ არის მითითებული"}
+                  </button>
+                )
+              ) : null}
+              {item.chatOnly ? (
+                <div className="rounded-xl bg-[hsl(var(--muted))] px-4 py-3 text-center text-xs font-semibold text-[hsl(var(--muted-foreground))]">
+                  გამყიდველი მხოლოდ ჩატში პასუხობს
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={openMessageDialog}
+                className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
+                data-testid="button-contact-seller"
+              >
+                <MessageCircle size={17} /> ჩატში მიწერა
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="flex gap-3 rounded-xl bg-[hsl(var(--muted)/.7)] p-3.5">
+              <ShieldCheck
+                size={19}
+                className="shrink-0 text-[hsl(var(--accent))]"
+              />
+              <div>
+                <p className="text-xs font-semibold">უსაფრთხო შეხვედრა</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+                  ნივთი გადაამოწმე ადგილზე, სანამ გადაიხდი.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 rounded-xl bg-[hsl(var(--muted)/.7)] p-3.5">
+              <Truck
+                size={19}
+                className="shrink-0 text-[hsl(var(--accent))]"
+              />
+              <div>
+                <p className="text-xs font-semibold">მიტანის არჩევანი</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">
+                  {item.delivery?.length
+                    ? item.delivery.join(" · ")
+                    : "შეთანხმება ადგილზე"}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
-      {dialog ? <div className="fixed inset-0 z-40 flex items-end justify-center bg-[hsl(var(--secondary)/.45)] p-4 backdrop-blur-sm md:items-center"><div className="w-full max-w-md rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--shadow-xl)] enter" role="dialog" aria-modal="true">{sent ? <div className="py-7 text-center"><div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent)/.18)]"><Check size={25} /></div><h2 className="font-display mt-4 text-2xl font-semibold">{dialog === 'offer' ? 'შეთავაზება გაიგზავნა' : 'შეტყობინება გაიგზავნა'}</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">გამყიდველი მალე დაგიბრუნდება პასუხით.</p><button type="button" onClick={() => setDialog(null)} className="btn-ink mt-6 rounded-xl px-5 py-3 text-sm font-bold" data-testid="button-close-sent">დახურვა</button></div> : <><div className="flex items-start justify-between"><div><p className="font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">{dialog === 'offer' ? 'შეთავაზება' : 'ახალი შეტყობინება'}</p><h2 className="font-display mt-1 text-2xl font-semibold">{dialog === 'offer' ? 'რა ფასს სთავაზობ?' : `მიწერე ${item.seller.name}-ს`}</h2></div><button type="button" onClick={() => setDialog(null)} className="rounded-lg p-2 hover:bg-[hsl(var(--muted))]" aria-label="დახურვა" data-testid="button-close-dialog"><X size={18} /></button></div><form onSubmit={submitDialog} className="mt-6 space-y-4">{dialog === 'offer' ? <label className="block text-sm font-medium">შენი ფასი<input required type="number" min="0" className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3 outline-none focus:border-[hsl(var(--primary))]" placeholder={`${item.price}`} data-testid="input-offer-price" /></label> : null}<label className="block text-sm font-medium">{dialog === 'offer' ? 'მოკლე კომენტარი' : 'შეტყობინება'}<textarea required rows={4} className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]" placeholder="დაწერე აქ..." data-testid="input-message" /></label><button type="submit" className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold" data-testid="button-send-dialog"><Send size={16} /> გაგზავნა</button></form></>}</div></div> : null}
+
+      {dialog ? (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-[hsl(var(--secondary)/.45)] p-4 backdrop-blur-sm md:items-center">
+          <div
+            className="enter w-full max-w-md rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--shadow-xl)]"
+            role="dialog"
+            aria-modal="true"
+          >
+            {sent ? (
+              <div className="py-7 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent)/.18)]">
+                  <Check size={25} />
+                </div>
+                <h2 className="font-display mt-4 text-2xl font-semibold">
+                  შეტყობინება გაიგზავნა
+                </h2>
+                <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+                  გამყიდველი მალე დაგიბრუნდება პასუხით.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setDialog(null)}
+                  className="btn-ink mt-6 rounded-xl px-5 py-3 text-sm font-bold"
+                  data-testid="button-close-sent"
+                >
+                  დახურვა
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">
+                      ახალი შეტყობინება
+                    </p>
+                    <h2 className="font-display mt-1 text-2xl font-semibold">
+                      მიწერე {item.seller.name}-ს
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDialog(null)}
+                    className="rounded-lg p-2 hover:bg-[hsl(var(--muted))]"
+                    aria-label="დახურვა"
+                    data-testid="button-close-dialog"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <form onSubmit={submitDialog} className="mt-6 space-y-4">
+                  <label className="block text-sm font-medium">
+                    შეტყობინება
+                    <textarea
+                      required
+                      rows={4}
+                      className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                      placeholder="დაწერე აქ..."
+                      data-testid="input-message"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
+                    data-testid="button-send-dialog"
+                  >
+                    <Send size={16} /> გაგზავნა
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
