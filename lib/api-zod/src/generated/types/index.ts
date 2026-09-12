@@ -7,6 +7,7 @@
  */
 
 export * from './category';
+export * from './conversation';
 export * from './favoriteState';
 export * from './healthStatus';
 export * from './itemAnalysis';
@@ -15,7 +16,8 @@ export * from './itemInput';
 export * from './itemUpdate';
 export * from './listItemsParams';
 export * from './marketplaceItem';
-export * from './messageThread';
+export * from './message';
+export * from './messageInput';
 export * from './profileSummary';
 export * from './profileUpdate';
 export * from './seller';

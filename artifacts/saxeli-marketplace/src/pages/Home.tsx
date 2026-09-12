@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, Heart, MapPin, Search, SlidersHorizontal } from 'lucide-react';
+import { Check, ChevronDown, Heart, MapPin, MessageCircle, Search, SlidersHorizontal } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { getListItemsQueryKey, useListItems, useToggleItemFavorite } from '@workspace/api-client-react';
 import type { ListItemsParams, MarketplaceItem } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, ItemVisual, Notice } from '@/components/MarketplaceChrome';
+import { ChatModal } from '@/components/ChatModal';
 import { useFilters, cities } from '@/hooks/use-filters';
 import { useCategoryTree } from '@/hooks/use-categories';
 import { useUser } from '@clerk/react';
@@ -21,7 +22,7 @@ function timeAgo(date: string) {
   return `${Math.floor(hours / 24)} დღის წინ`;
 }
 
-function ItemCard({ item, favorite, onFavorite }: { item: MarketplaceItem; favorite: boolean; onFavorite: (item: MarketplaceItem) => void }) {
+function ItemCard({ item, favorite, onFavorite, onMessage }: { item: MarketplaceItem; favorite: boolean; onFavorite: (item: MarketplaceItem) => void; onMessage?: (item: MarketplaceItem) => void }) {
   return (
     <article className="group lift overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]" data-testid={`card-item-${item.id}`}>
       <div className="relative aspect-[1.08]">
@@ -49,6 +50,11 @@ function ItemCard({ item, favorite, onFavorite }: { item: MarketplaceItem; favor
           <span className="truncate text-xs font-medium">{item.seller.name}</span>
           <span className="ml-auto font-mono-ui text-[10px] text-[hsl(var(--muted-foreground))]">★ {item.seller.rating.toFixed(1)}</span>
         </div>
+        {onMessage ? (
+          <button type="button" onClick={() => onMessage(item)} className="btn-ink mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-xs font-bold" data-testid={`button-message-${item.id}`}>
+            <MessageCircle size={15} /> მიწერე გამყიდველს
+          </button>
+        ) : null}
       </div>
     </article>
   );
@@ -63,8 +69,9 @@ export default function Home() {
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<'date' | 'priceAsc' | 'priceDesc'>('date');
   const queryClient = useQueryClient();
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const [location, setLocation] = useLocation();
+  const [activeChat, setActiveChat] = useState<MarketplaceItem | null>(null);
   const { tree, flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
 
   const params = useMemo<ListItemsParams>(() => ({
@@ -102,6 +109,17 @@ export default function Home() {
       },
       onError: () => setFavoriteOverrides((current) => ({ ...current, [item.id]: !next })),
     });
+  };
+
+  const handleMessage = (item: MarketplaceItem) => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      const currentSearch = typeof window !== 'undefined' ? window.location.search : '';
+      const returnTo = encodeURIComponent(location + currentSearch);
+      setLocation(`/login?returnTo=${returnTo}`);
+      return;
+    }
+    setActiveChat(item);
   };
 
   const categoryName = categorySlug ? flatMap.get(categorySlug)?.name || categorySlug : '';
@@ -238,7 +256,7 @@ export default function Home() {
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedItems.map((item, index) => (
               <div key={item.id} className={`enter enter-delay-${Math.min(index + 1, 3)}`}>
-                <ItemCard item={item} favorite={favoriteOverrides[item.id] ?? item.isFavorite ?? false} onFavorite={handleFavorite} />
+                <ItemCard item={item} favorite={favoriteOverrides[item.id] ?? item.isFavorite ?? false} onFavorite={handleFavorite} onMessage={isLoaded && (!user || user.id !== item.seller.id) ? handleMessage : undefined} />
               </div>
             ))}
           </div>
@@ -254,6 +272,7 @@ export default function Home() {
           </div>
         </section>
       </div>
+      {activeChat ? <ChatModal item={activeChat} currentUser={user} onClose={() => setActiveChat(null)} /> : null}
     </div>
   );
 }

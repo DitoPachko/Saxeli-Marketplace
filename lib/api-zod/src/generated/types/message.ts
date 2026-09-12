@@ -6,12 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface MessageThread {
+export interface Message {
   id: string;
-  name: string;
-  itemTitle: string;
-  preview: string;
-  time: string;
-  unread: number;
-  initials: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  createdAt: Date;
 }

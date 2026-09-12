@@ -11,6 +11,10 @@ import {
 } from "drizzle-orm/pg-core";
 export * from "./categories";
 import { categories } from "./categories";
+import { conversations } from "./conversations";
+import { messages } from "./messages";
+export { conversations, conversationsRelations, type Conversation } from "./conversations";
+export { messages, messagesRelations, type Message } from "./messages";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -69,6 +73,9 @@ export const favorites = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
   listings: many(listings),
   favorites: many(favorites),
+  buyerConversations: many(conversations, { relationName: "buyerConversations" }),
+  sellerConversations: many(conversations, { relationName: "sellerConversations" }),
+  sentMessages: many(messages),
 }));
 
 export const listingsRelations = relations(listings, ({ one, many }) => ({
@@ -81,6 +88,7 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
     references: [categories.id],
   }),
   favorites: many(favorites),
+  conversations: many(conversations),
 }));
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({

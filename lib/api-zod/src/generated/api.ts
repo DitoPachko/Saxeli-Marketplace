@@ -414,18 +414,108 @@ export const GetProfileSummaryResponse = zod.object({
 
 
 /**
- * @summary List message threads
+ * @summary List conversations for the current user
  */
 export const ListMessagesResponseItem = zod.object({
   "id": zod.string(),
-  "name": zod.string(),
-  "itemTitle": zod.string(),
-  "preview": zod.string(),
-  "time": zod.string(),
-  "unread": zod.number(),
-  "initials": zod.string()
+  "listingId": zod.string(),
+  "buyerId": zod.string(),
+  "sellerId": zod.string(),
+  "listingTitle": zod.string().nullish(),
+  "listingImage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
 })
 export const ListMessagesResponse = zod.array(ListMessagesResponseItem)
+
+
+/**
+ * @summary Get the current user's conversation for a listing
+ */
+export const GetListingConversationParams = zod.object({
+  "listingId": zod.coerce.string()
+})
+
+export const GetListingConversationResponse = zod.object({
+  "id": zod.string(),
+  "listingId": zod.string(),
+  "buyerId": zod.string(),
+  "sellerId": zod.string(),
+  "listingTitle": zod.string().nullish(),
+  "listingImage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create or get the buyer conversation for a listing
+ */
+export const CreateListingConversationParams = zod.object({
+  "listingId": zod.coerce.string()
+})
+
+export const CreateListingConversationResponse = zod.object({
+  "id": zod.string(),
+  "listingId": zod.string(),
+  "buyerId": zod.string(),
+  "sellerId": zod.string(),
+  "listingTitle": zod.string().nullish(),
+  "listingImage": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Load conversation message history
+ */
+export const ListConversationMessagesParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const ListConversationMessagesResponseItem = zod.object({
+  "id": zod.string(),
+  "conversationId": zod.string(),
+  "senderId": zod.string(),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListConversationMessagesResponse = zod.array(ListConversationMessagesResponseItem)
+
+
+/**
+ * @summary Send a message in a conversation
+ */
+export const SendConversationMessageParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const sendConversationMessageBodyTextMax = 2000;
+
+
+
+export const SendConversationMessageBody = zod.object({
+  "text": zod.string().min(1).max(sendConversationMessageBodyTextMax)
+})
+
+export const SendConversationMessageResponse = zod.object({
+  "id": zod.string(),
+  "conversationId": zod.string(),
+  "senderId": zod.string(),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Subscribe to new conversation messages with Server-Sent Events
+ */
+export const ConversationEventsParams = zod.object({
+  "conversationId": zod.coerce.string()
+})
+
+export const ConversationEventsResponse = zod.unknown()
 
 
 /**

@@ -5,3 +5,4 @@
 - [Lazy marketplace authentication](lazy-marketplace-auth.md) — browsing stays public; account actions gate through login and preserve the intended return destination
 - [Category identity](category-identity.md) — category slugs are stable IDs; Georgian names are display labels and parent filters include descendants
 - [Marketplace scope exclusions](marketplace-scope-exclusions.md) — cars, transport rentals, and real estate must not be reintroduced into Saxeli
+- [Chat realtime delivery](chat-realtime-delivery.md) — chat uses durable PostgreSQL history plus process-local SSE with reconnect recovery

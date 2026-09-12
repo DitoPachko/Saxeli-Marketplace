@@ -1,11 +1,9 @@
-import type { FormEvent } from "react";
 import { useState } from "react";
 import { useUser } from "@clerk/react";
 import {
   ArrowLeft,
   BadgeCheck,
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
   Handshake,
@@ -13,11 +11,9 @@ import {
   MapPin,
   MessageCircle,
   Phone,
-  Send,
   ShieldCheck,
   Star,
   Truck,
-  X,
 } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import {
@@ -26,6 +22,7 @@ import {
   useToggleItemFavorite,
 } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice } from "@/components/MarketplaceChrome";
+import { ChatModal } from "@/components/ChatModal";
 
 function formatPrice(price: number) {
   return `${price.toLocaleString("ka-GE")} ₾`;
@@ -35,7 +32,7 @@ export default function ItemDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id ?? "";
   const [, setLocation] = useLocation();
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const { data: item, isLoading, isError, refetch } = useGetItem(id, {
     query: { queryKey: getGetItemQueryKey(id), enabled: Boolean(id) },
   });
@@ -43,8 +40,7 @@ export default function ItemDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
   const [phoneVisible, setPhoneVisible] = useState(false);
-  const [dialog, setDialog] = useState<"message" | "offer" | null>(null);
-  const [sent, setSent] = useState(false);
+  const [activeChat, setActiveChat] = useState(false);
 
   if (isLoading) {
     return (
@@ -96,18 +92,13 @@ export default function ItemDetail() {
   const backLabel = "უკან დაბრუნება";
 
   const openMessageDialog = () => {
+    if (!isLoaded) return;
     if (!isSignedIn) {
       const returnTo = encodeURIComponent(`/listing/${item.id}`);
       setLocation(`/login?returnTo=${returnTo}`);
       return;
     }
-    setDialog("message");
-    setSent(false);
-  };
-
-  const submitDialog = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSent(true);
+    setActiveChat(true);
   };
 
   return (
@@ -354,14 +345,14 @@ export default function ItemDetail() {
                   გამყიდველი მხოლოდ ჩატში პასუხობს
                 </div>
               ) : null}
-              <button
+              {(isLoaded && (!user || user.id !== item.seller.id)) ? <button
                 type="button"
                 onClick={openMessageDialog}
                 className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
                 data-testid="button-contact-seller"
               >
                 <MessageCircle size={17} /> ჩატში მიწერა
-              </button>
+              </button> : null}
             </div>
           </div>
 
@@ -396,78 +387,7 @@ export default function ItemDetail() {
         </section>
       </div>
 
-      {dialog ? (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-[hsl(var(--secondary)/.45)] p-4 backdrop-blur-sm md:items-center">
-          <div
-            className="enter w-full max-w-md rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-[var(--shadow-xl)]"
-            role="dialog"
-            aria-modal="true"
-          >
-            {sent ? (
-              <div className="py-7 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[hsl(var(--accent)/.18)]">
-                  <Check size={25} />
-                </div>
-                <h2 className="font-display mt-4 text-2xl font-semibold">
-                  შეტყობინება გაიგზავნა
-                </h2>
-                <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-                  გამყიდველი მალე დაგიბრუნდება პასუხით.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setDialog(null)}
-                  className="btn-ink mt-6 rounded-xl px-5 py-3 text-sm font-bold"
-                  data-testid="button-close-sent"
-                >
-                  დახურვა
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">
-                      ახალი შეტყობინება
-                    </p>
-                    <h2 className="font-display mt-1 text-2xl font-semibold">
-                      მიწერე {item.seller.name}-ს
-                    </h2>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDialog(null)}
-                    className="rounded-lg p-2 hover:bg-[hsl(var(--muted))]"
-                    aria-label="დახურვა"
-                    data-testid="button-close-dialog"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-                <form onSubmit={submitDialog} className="mt-6 space-y-4">
-                  <label className="block text-sm font-medium">
-                    შეტყობინება
-                    <textarea
-                      required
-                      rows={4}
-                      className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3 text-sm outline-none focus:border-[hsl(var(--primary))]"
-                      placeholder="დაწერე აქ..."
-                      data-testid="input-message"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
-                    data-testid="button-send-dialog"
-                  >
-                    <Send size={16} /> გაგზავნა
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </div>
-      ) : null}
+      {activeChat ? <ChatModal item={item} currentUser={user} onClose={() => setActiveChat(false)} /> : null}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import {
   GetProfileSummaryResponse,
   GetSellerProfileParams,
   GetSellerProfileResponse,
-  ListMessagesResponse,
   UpdateCurrentProfileBody,
   UpdateCurrentProfileResponse,
 } from "@workspace/api-zod";
@@ -88,11 +87,6 @@ router.get("/profile/summary", async (req, res) => {
       unreadMessages: 0,
     }),
   );
-});
-
-router.get("/messages", async (_req, res) => {
-  // Messages are not yet modeled, so return the truthful empty inbox rather than fixtures.
-  res.json(ListMessagesResponse.parse([]));
 });
 
 export default router;

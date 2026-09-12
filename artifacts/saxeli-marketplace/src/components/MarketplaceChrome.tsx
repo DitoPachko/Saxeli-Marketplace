@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/react';
-import { Facebook, Heart, Instagram, LogOut, Moon, Plus, Search, Sun, UserRound } from 'lucide-react';
+import { Facebook, Heart, Instagram, LogOut, MessageCircle, Moon, Plus, Search, Sun, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useFilters } from '@/hooks/use-filters';
 import { useTheme } from '@/hooks/use-theme';
@@ -63,6 +63,11 @@ function Navbar() {
           <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
             <Heart size={20} />
           </Link>
+          {isSignedIn ? (
+            <Link href="/messages" aria-label="შეტყობინებები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
+              <MessageCircle size={20} />
+            </Link>
+          ) : null}
           
           {isSignedIn ? (
             <details className="group relative">
@@ -73,6 +78,7 @@ function Navbar() {
               <div className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-lg)]">
                 <Link href="/profile" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">ჩემი პროფილი</Link>
                 <Link href="/saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შენახული ნივთები</Link>
+                <Link href="/messages" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შეტყობინებები</Link>
                 <button type="button" onClick={() => signOut({ redirectUrl: '/' })} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[hsl(var(--muted))]"><LogOut size={15} /> გასვლა</button>
               </div>
             </details>

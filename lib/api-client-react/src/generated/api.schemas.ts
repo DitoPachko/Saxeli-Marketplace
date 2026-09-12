@@ -149,14 +149,33 @@ export interface ProfileSummary {
   unreadMessages: number;
 }
 
-export interface MessageThread {
+export interface Conversation {
   id: string;
-  name: string;
-  itemTitle: string;
-  preview: string;
-  time: string;
-  unread: number;
-  initials: string;
+  listingId: string;
+  buyerId: string;
+  sellerId: string;
+  /** @nullable */
+  listingTitle?: string | null;
+  /** @nullable */
+  listingImage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface MessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  text: string;
 }
 
 export interface ItemAnalysisInput {
