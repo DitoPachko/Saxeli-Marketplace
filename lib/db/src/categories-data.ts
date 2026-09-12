@@ -16,10 +16,6 @@ export const categoryTree: CategorySeed[] = [
     group("საყოფაცხოვრებო მომსახურება", "home-services", [["დალაგება", "cleaning"], ["გადაზიდვა", "moving"]]),
     group("ციფრული მომსახურება", "digital-services", [["დიზაინი", "design"], ["პროგრამირება", "programming"]]),
   ]},
-  { name: "სახლი და ბაღი", slug: "home-garden", icon: "House", children: [
-    group("ავეჯი", "furniture", [["მისაღები ოთახი", "living-room"], ["საძინებელი", "bedroom"]]),
-    group("ბაღი", "garden", [["ბაღის ავეჯი", "garden-furniture"], ["მცენარეები", "plants"]]),
-  ]},
   { name: "საოჯახო ტექნიკა", slug: "home-appliances", icon: "WashingMachine", children: [
     group("სამზარეულო", "kitchen-appliances", [["მაცივრები", "refrigerators"], ["ქურები", "cookers"]]),
     group("სახლის მოვლა", "home-care-appliances", [["სარეცხი მანქანები", "washing-machines"], ["მტვერსასრუტები", "vacuum-cleaners"]]),

@@ -7,6 +7,7 @@ export function ensureCategoryCatalog() {
   if (!seedPromise) {
     seedPromise = (async () => {
       await db.delete(categories).where(eq(categories.id, "rentals"));
+      await db.delete(categories).where(eq(categories.id, "home-garden"));
       for (const category of flattenCategoryTree()) {
         await db
           .insert(categories)
