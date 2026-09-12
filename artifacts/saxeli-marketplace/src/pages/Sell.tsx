@@ -26,6 +26,7 @@ import { CategoryPicker } from "@/components/CategoryPicker";
 import { useCategoryTree } from "@/hooks/use-categories";
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
+const maxPhotos = 5;
 const cities = ["თბილისი", "ბათუმი", "ქუთაისი", "რუსთავი", "გორი", "ზუგდიდი"];
 const districtsByCity: Record<string, string[]> = {
   თბილისი: ["ვაკე", "საბურთალო", "ვერა", "დიდუბე", "ჩუღურეთი", "ისანი", "სამგორი", "გლდანი", "ნაძალადევი", "მთაწმინდა"],
@@ -96,14 +97,22 @@ const emptyForm: ListingForm = {
 };
 
 type Stage = "photo" | "choice" | "details";
+type ListingPhoto = {
+  id: string;
+  file: File;
+  preview: string;
+  isCover: boolean;
+};
 
 export default function Sell() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { categories } = useCategoryTree();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photosRef = useRef<ListingPhoto[]>([]);
   const [stage, setStage] = useState<Stage>("photo");
   const [form, setForm] = useState<ListingForm>(emptyForm);
+  const [photos, setPhotos] = useState<ListingPhoto[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiFilled, setAiFilled] = useState(false);
@@ -114,6 +123,14 @@ export default function Sell() {
 
   const update = <K extends keyof ListingForm>(key: K, value: ListingForm[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+
+  photosRef.current = photos;
+
+  useEffect(() => {
+    return () => {
+      photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.preview));
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -130,26 +147,90 @@ export default function Sell() {
     }
   }, []);
 
-  const readPhoto = (file?: File) => {
-    if (!file || !file.type.startsWith("image/")) {
-      setError("გთხოვ, ატვირთე ფოტო JPG, PNG ან WEBP ფორმატში.");
-      return;
-    }
-
+  const readCoverImage = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
       const image = typeof reader.result === "string" ? reader.result : "";
       if (!image) {
-        setError("ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
+        setError("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
         return;
       }
       update("image", image);
-      setAiFilled(false);
       setError("");
-      setStage("choice");
     };
-    reader.onerror = () => setError("ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
+    reader.onerror = () => setError("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
     reader.readAsDataURL(file);
+  };
+
+  const readPhoto = (files: File[]) => {
+    const availableSlots = maxPhotos - photos.length;
+    if (!files.length) return;
+    if (availableSlots <= 0) {
+      setError("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია.");
+      return;
+    }
+
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (!imageFiles.length) {
+      setError("გთხოვ, ატვირთე ფოტო JPG, PNG ან WEBP ფორმატში.");
+      return;
+    }
+
+    const filesToAdd = imageFiles.slice(0, availableSlots);
+    if (imageFiles.length > availableSlots) {
+      setError("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია. ზედმეტი ფოტოები არ დაემატა.");
+    } else {
+      setError("");
+    }
+
+    const firstPhoto = photos.length === 0;
+    const newPhotos = filesToAdd.map((file, index) => ({
+      id: `${file.name}-${file.lastModified}-${Date.now()}-${index}`,
+      file,
+      preview: URL.createObjectURL(file),
+      isCover: firstPhoto && index === 0,
+    }));
+
+    setPhotos((current) => [...current, ...newPhotos].slice(0, maxPhotos));
+    setAiFilled(false);
+    if (firstPhoto && newPhotos[0]) {
+      readCoverImage(newPhotos[0].file);
+    }
+  };
+
+  const setCoverPhoto = (id: string) => {
+    const selected = photos.find((photo) => photo.id === id);
+    if (!selected) return;
+    setPhotos((current) =>
+      current.map((photo) => ({ ...photo, isCover: photo.id === id })),
+    );
+    readCoverImage(selected.file);
+  };
+
+  const removePhoto = (id: string) => {
+    const removed = photos.find((photo) => photo.id === id);
+    if (!removed) return;
+    const remaining = photos.filter((photo) => photo.id !== id);
+    URL.revokeObjectURL(removed.preview);
+
+    if (removed.isCover && remaining[0]) {
+      remaining[0].isCover = true;
+      readCoverImage(remaining[0].file);
+    }
+    setPhotos(remaining);
+    if (!remaining.length) {
+      update("image", "");
+    }
+    setError("");
+  };
+
+  const continueToChoice = () => {
+    if (!photos.length) {
+      setError("გთხოვ, ატვირთე მინიმუმ ერთი ფოტო.");
+      return;
+    }
+    setError("");
+    setStage("choice");
   };
 
   const chooseAi = async () => {
@@ -329,6 +410,17 @@ export default function Sell() {
                   </p>
                 </div>
 
+                <div className="flex items-center justify-between gap-3">
+                  <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-semibold">
+                    ფოტოები: {photos.length} / {maxPhotos}
+                  </span>
+                  {photos.length ? (
+                    <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                      მთავარია: ფოტო {photos.findIndex((photo) => photo.isCover) + 1}
+                    </span>
+                  ) : null}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -340,32 +432,90 @@ export default function Sell() {
                   onDrop={(event) => {
                     event.preventDefault();
                     setIsDragging(false);
-                    readPhoto(event.dataTransfer.files[0]);
+                    readPhoto(Array.from(event.dataTransfer.files));
                   }}
-                  className={`flex min-h-[310px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-8 text-center transition ${
+                  className={`flex min-h-[230px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-8 text-center transition ${
                     isDragging
                       ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.1)]"
                       : "border-[hsl(var(--border))] bg-[hsl(var(--muted)/.35)] hover:border-[hsl(var(--primary)/.7)] hover:bg-[hsl(var(--primary)/.06)]"
                   }`}
                   data-testid="dropzone-sell-photo"
                 >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.14)] text-[hsl(var(--primary))]">
-                    <UploadCloud size={28} />
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.14)] text-[hsl(var(--primary))]">
+                    <UploadCloud size={26} />
                   </span>
-                  <span className="mt-5 text-lg font-semibold">ატვირთე ნივთის ფოტო</span>
+                  <span className="mt-4 text-lg font-semibold">
+                    {photos.length ? "დაამატე კიდევ ფოტო" : "ატვირთე ნივთის ფოტო"}
+                  </span>
                   <span className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
                     ჩააგდე აქ ან აირჩიე მოწყობილობიდან
                   </span>
-                  <span className="mt-4 font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">
-                    JPG · PNG · WEBP
+                  <span className="mt-3 font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">
+                    JPG · PNG · WEBP · მაქს. 5 ფოტო
                   </span>
                 </button>
+
+                {photos.length ? (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {photos.map((photo, index) => (
+                      <div
+                        key={photo.id}
+                        className={`group relative overflow-hidden rounded-2xl border-2 transition ${
+                          photo.isCover
+                            ? "border-[hsl(var(--primary))] shadow-[0_0_0_2px_hsl(var(--primary)/.15)]"
+                            : "border-transparent"
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setCoverPhoto(photo.id)}
+                          className="relative block aspect-square w-full overflow-hidden bg-[hsl(var(--muted))] text-left"
+                          aria-label={`${index + 1}-ე ფოტოს მთავარ ფოტოდ არჩევა`}
+                        >
+                          <img
+                            src={photo.preview}
+                            alt={`ნივთის ფოტო ${index + 1}`}
+                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                          />
+                          {photo.isCover ? (
+                            <span className="absolute bottom-2 left-2 rounded-full bg-[hsl(var(--primary))] px-2.5 py-1 text-[10px] font-bold text-[hsl(var(--primary-foreground))]">
+                              მთავარი ფოტო
+                            </span>
+                          ) : null}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(photo.id)}
+                          aria-label={`${index + 1}-ე ფოტოს წაშლა`}
+                          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-white opacity-0 transition hover:bg-black/80 group-hover:opacity-100 focus:opacity-100"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {photos.length ? (
+                  <button
+                    type="button"
+                    onClick={continueToChoice}
+                    className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
+                    data-testid="button-continue-photos"
+                  >
+                    ფოტოების დადასტურება <Check size={16} />
+                  </button>
+                ) : null}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
+                  multiple
                   className="hidden"
-                  onChange={(event) => readPhoto(event.target.files?.[0])}
+                  onChange={(event) => {
+                    readPhoto(Array.from(event.target.files ?? []));
+                    event.target.value = "";
+                  }}
                   data-testid="input-sell-photo"
                 />
               </div>
