@@ -3,7 +3,7 @@ name: Marketplace scope exclusions
 description: Product categories that Saxeli intentionally excludes from its catalog and navigation.
 ---
 
-Do not add cars, transport rentals, vehicle-related rental categories, real-estate listings, property-rental categories, or the home-and-garden category to Saxeli.
+Do not add cars, transport rentals, vehicle-related rental categories, real-estate listings, property-rental categories, the home-and-garden category, agriculture, or employment categories to Saxeli.
 
 **Why:** The user explicitly removed everything associated with cars and real estate from the marketplace.
 

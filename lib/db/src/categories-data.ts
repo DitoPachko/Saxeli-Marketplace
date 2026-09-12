@@ -45,10 +45,6 @@ export const categoryTree: CategorySeed[] = [
     group("სამშენებლო მასალები", "building-materials", [["ხე და მეტალი", "wood-metal"], ["საღებავები", "paint"]]),
     group("ხელსაწყოები", "tools", [["ელექტრო ხელსაწყოები", "power-tools"], ["ხელის ხელსაწყოები", "hand-tools"]]),
   ]},
-  { name: "სოფლის მეურნეობა", slug: "agriculture", icon: "Tractor", children: [
-    group("აგროტექნიკა", "agricultural-machinery", [["ტრაქტორები", "tractors"], ["მისაბმელები", "trailers"]]),
-    group("მეურნეობა", "farming", [["თესლი", "seeds"], ["სასუქი", "fertilizer"]]),
-  ]},
   { name: "ცხოველები", slug: "pets-animals", icon: "PawPrint", children: [
     group("შინაური ცხოველები", "pets", [["ძაღლები", "dogs"], ["კატები", "cats"]]),
     group("აქსესუარები", "pet-supplies", [["საკვები", "pet-food"], ["მოვლის ნივთები", "pet-care"]]),
@@ -68,10 +64,6 @@ export const categoryTree: CategorySeed[] = [
   { name: "ხელოვნება და საკოლექციო", slug: "art-collectibles", icon: "Palette", children: [
     group("ხელოვნება", "art", [["ფერწერა", "paintings"], ["ხელნაკეთი ნივთები", "handmade"]]),
     group("საკოლექციო", "collectibles", [["მონეტები", "coins"], ["ანტიკვარიატი", "antiques"]]),
-  ]},
-  { name: "დასაქმება", slug: "jobs", icon: "UserSearch", children: [
-    group("ვაკანსიები", "vacancies", [["გაყიდვები", "sales-jobs"], ["ტექნოლოგიები", "technology-jobs"]]),
-    group("სამუშაოს ძიება", "job-seekers", [["რეზიუმეები", "resumes"], ["სტაჟირება", "internships"]]),
   ]},
 ];
 
