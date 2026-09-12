@@ -65,14 +65,14 @@ function ItemSkeleton() {
 }
 
 export default function Home() {
-  const { search, setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity } = useFilters();
+  const { setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<'date' | 'priceAsc' | 'priceDesc'>('date');
   const queryClient = useQueryClient();
   const { isLoaded, isSignedIn, user } = useUser();
   const [location, setLocation] = useLocation();
   const [activeChat, setActiveChat] = useState<MarketplaceItem | null>(null);
-  const { tree, flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
+  const { flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
 
   const params = useMemo<ListItemsParams>(() => ({
     search: submittedSearch || undefined,
@@ -141,69 +141,7 @@ export default function Home() {
           <span className="absolute bottom-6 right-8 hidden font-display text-7xl text-[hsl(var(--secondary-foreground)/.08)] md:block">ს.</span>
         </section>
 
-        <section className="enter enter-delay-1 mt-8 space-y-4" aria-label="ძიება და კატეგორიები">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSubmittedSearch(search.trim());
-            }}
-            className="flex w-full items-center overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] transition focus-within:border-[hsl(var(--primary))] focus-within:shadow-[var(--shadow-sm)]"
-          >
-            <Search size={19} className="ml-4 shrink-0 text-[hsl(var(--muted-foreground))]" />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                const value = event.target.value;
-                setSearch(value);
-                setSubmittedSearch(value.trim());
-              }}
-              placeholder="ძებნა..."
-              aria-label="ძებნა"
-              className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-base outline-none placeholder:text-[hsl(var(--muted-foreground))] md:text-sm"
-              data-testid="input-feed-search"
-            />
-            <button
-              type="submit"
-              className="mr-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-2 text-xs font-bold text-[hsl(var(--primary-foreground))] transition hover:opacity-90"
-              data-testid="button-feed-search"
-            >
-              ძებნა
-            </button>
-          </form>
-
-          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="კატეგორიები">
-            <button
-              type="button"
-              onClick={() => setCategorySlug('')}
-              className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                !categorySlug
-                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
-                  : 'border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:border-[hsl(var(--primary)/.6)]'
-              }`}
-              data-testid="button-category-all"
-            >
-              ყველა
-            </button>
-            {tree.map((category) => (
-              <button
-                key={category.slug}
-                type="button"
-                onClick={() => setCategorySlug(categorySlug === category.slug ? '' : category.slug)}
-                className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                  categorySlug === category.slug
-                    ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
-                    : 'border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:border-[hsl(var(--primary)/.6)]'
-                }`}
-                data-testid={`button-category-${category.slug}`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="enter enter-delay-1 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
+        <section className="enter enter-delay-1 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
           <div className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> ლოკაცია</div>
           <div className="grid w-full gap-2 sm:flex sm:w-auto">
             <label className="relative block w-full sm:w-64">
