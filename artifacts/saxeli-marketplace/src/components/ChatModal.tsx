@@ -123,20 +123,20 @@ export function ChatModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[hsl(var(--secondary)/.48)] p-3 backdrop-blur-sm sm:items-center sm:p-6">
-      <section className="flex max-h-[min(720px,calc(100vh-1.5rem))] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--shadow-xl)]" role="dialog" aria-modal="true" aria-label="გამყიდველთან ჩატი">
-        <header className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[hsl(var(--secondary)/.48)] backdrop-blur-sm sm:items-center sm:p-6">
+      <section className="flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-[hsl(var(--card))] sm:h-[min(720px,calc(100vh-3rem))] sm:max-h-[720px] sm:max-w-lg sm:rounded-3xl sm:border sm:border-[hsl(var(--border))] sm:shadow-[var(--shadow-xl)]" role="dialog" aria-modal="true" aria-label="გამყიდველთან ჩატი">
+        <header className="flex items-center gap-3 border-b border-[hsl(var(--border))] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:p-4">
           <Avatar initials={item.seller.initials} src={item.seller.avatarUrl ?? undefined} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">{currentUser?.id === item.seller.id ? "მყიდველთან საუბარი" : `მიწერე ${item.seller.name}-ს`}</p>
             <p className="truncate text-xs text-[hsl(var(--muted-foreground))]">{item.title}</p>
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-[hsl(var(--muted))]" aria-label="დახურვა">
+          <button type="button" onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-xl hover:bg-[hsl(var(--muted))]" aria-label="დახურვა">
             <X size={18} />
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[hsl(var(--muted)/.32)] p-4">
+        <div className="min-h-0 flex-1 overscroll-contain overflow-y-auto bg-[hsl(var(--muted)/.32)] px-3 py-4 sm:p-4">
           {setupError ? <p className="rounded-xl bg-red-500/10 p-3 text-sm text-red-700">{setupError}</p> : null}
           {!setupError && (history.isLoading || !conversationId) ? (
             <div className="flex items-center justify-center py-12 text-sm text-[hsl(var(--muted-foreground))]"><LoaderCircle className="mr-2 animate-spin" size={17} /> იტვირთება...</div>
@@ -149,7 +149,7 @@ export function ChatModal({
               const mine = message.senderId === currentUser?.id;
               return (
                 <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm ${mine ? "rounded-br-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]" : "rounded-bl-md bg-[hsl(var(--card))] text-[hsl(var(--foreground))]"}`}>
+                  <div className={`max-w-[88%] rounded-2xl px-3 py-2.5 text-sm sm:max-w-[82%] sm:px-3.5 ${mine ? "rounded-br-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]" : "rounded-bl-md bg-[hsl(var(--card))] text-[hsl(var(--foreground))]"}`}>
                     <p className="whitespace-pre-wrap break-words">{message.text}</p>
                     <time className="mt-1 block text-[10px] opacity-60">{message.createdAt.toLocaleTimeString("ka-GE", { hour: "2-digit", minute: "2-digit" })}</time>
                   </div>
@@ -160,11 +160,11 @@ export function ChatModal({
           <div ref={endRef} />
         </div>
 
-        <form onSubmit={submit} className="border-t border-[hsl(var(--border))] p-3">
+        <form onSubmit={submit} className="border-t border-[hsl(var(--border))] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           {sendError ? <p className="mb-2 text-xs text-red-700">{sendError}</p> : null}
           <div className="flex items-end gap-2">
-            <textarea value={text} onChange={(event) => setText(event.target.value)} rows={2} maxLength={2000} disabled={!conversationId || send.isPending} placeholder="დაწერე შეტყობინება..." className="min-h-11 flex-1 resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-2.5 text-sm outline-none focus:border-[hsl(var(--primary))] disabled:opacity-60" />
-            <button type="submit" disabled={!conversationId || !text.trim() || send.isPending} className="btn-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl disabled:opacity-50" aria-label="გაგზავნა">
+            <textarea value={text} onChange={(event) => setText(event.target.value)} rows={2} maxLength={2000} disabled={!conversationId || send.isPending} placeholder="დაწერე შეტყობინება..." className="min-h-12 flex-1 resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-2.5 text-base outline-none focus:border-[hsl(var(--primary))] disabled:opacity-60" />
+            <button type="submit" disabled={!conversationId || !text.trim() || send.isPending} className="btn-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-xl disabled:opacity-50" aria-label="გაგზავნა">
               {send.isPending ? <LoaderCircle className="animate-spin" size={17} /> : <Send size={17} />}
             </button>
           </div>

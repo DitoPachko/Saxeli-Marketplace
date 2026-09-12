@@ -427,6 +427,7 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
+  html, body, #root { max-width: 100%; overflow-x: hidden; }
   body { min-width: 320px; }
   button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
   ::selection { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }

@@ -33,10 +33,10 @@ export function CategoryMenuDesktop() {
     setIsOpen(false);
   };
 
-  if (isLoading) return <div className="skeleton h-10 w-32 rounded-full hidden md:block" />;
+  if (isLoading) return <div className="skeleton hidden h-10 w-32 rounded-full lg:block" />;
 
   return (
-    <div className="hidden md:block" ref={menuRef}>
+    <div className="hidden lg:block" ref={menuRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 rounded-full px-4 py-2 font-medium transition ${isOpen ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--muted)/.5)] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]'}`}
@@ -143,7 +143,7 @@ export function CategoryMenuMobile() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed inset-0 z-50 flex flex-col bg-[hsl(var(--background))] animate-in slide-in-from-bottom-full md:hidden">
+        <Dialog.Content className="fixed inset-0 z-50 flex flex-col bg-[hsl(var(--background))] animate-in slide-in-from-bottom-full lg:hidden">
           <div className="flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--card))] px-5">
             {currentParent ? (
               <button onClick={() => setHistory(h => h.slice(0, -1))} className="flex items-center gap-1.5 text-sm font-bold text-[hsl(var(--foreground))]">

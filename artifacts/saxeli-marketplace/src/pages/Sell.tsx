@@ -367,7 +367,7 @@ export default function Sell() {
         </Link>
       </PageHeader>
 
-      <div className="mx-auto max-w-[920px] px-5 py-8 md:px-10 md:py-12">
+      <div className="mx-auto max-w-[920px] px-3 py-6 sm:px-5 sm:py-8 md:px-10 md:py-12">
         <div className="mb-9 flex items-center gap-3">
           {[
             ["ფოტო", stage !== "photo"],
@@ -403,7 +403,7 @@ export default function Sell() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
-          <section className="relative rounded-3xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 md:p-8">
+          <section className="relative rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:rounded-3xl sm:p-5 md:p-8">
             {error ? <Notice tone="error">{error}</Notice> : null}
 
             {stage === "photo" ? (
@@ -444,7 +444,7 @@ export default function Sell() {
                     setIsDragging(false);
                     readPhoto(Array.from(event.dataTransfer.files));
                   }}
-                  className={`flex min-h-[230px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-8 text-center transition ${
+                   className={`flex min-h-[200px] w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-6 text-center transition sm:min-h-[230px] sm:px-8 ${
                     isDragging
                       ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary)/.1)]"
                       : "border-[hsl(var(--border))] bg-[hsl(var(--muted)/.35)] hover:border-[hsl(var(--primary)/.7)] hover:bg-[hsl(var(--primary)/.06)]"
@@ -497,7 +497,7 @@ export default function Sell() {
                           type="button"
                           onClick={() => removePhoto(photo.id)}
                           aria-label={`${index + 1}-ე ფოტოს წაშლა`}
-                          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-white opacity-0 transition hover:bg-black/80 group-hover:opacity-100 focus:opacity-100"
+                          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full bg-black/65 text-white transition hover:bg-black/80 sm:h-9 sm:w-9 sm:opacity-0 sm:group-hover:opacity-100 sm:focus:opacity-100"
                         >
                           <X size={14} />
                         </button>
@@ -510,7 +510,7 @@ export default function Sell() {
                   <button
                     type="button"
                     onClick={continueToChoice}
-                    className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
+                    className="btn-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
                     data-testid="button-continue-photos"
                   >
                     ფოტოების დადასტურება <Check size={16} />
@@ -546,7 +546,7 @@ export default function Sell() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-xs font-semibold text-[hsl(var(--primary))] hover:underline"
+                      className="min-h-12 rounded-lg px-3 text-xs font-semibold text-[hsl(var(--primary))] hover:bg-[hsl(var(--muted))] hover:underline"
                     >
                       სხვა ფოტოს არჩევა
                     </button>
@@ -640,7 +640,7 @@ export default function Sell() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-2 left-2 rounded-lg bg-[hsl(var(--card)/.9)] px-2 py-1.5 text-[10px] font-semibold shadow-sm backdrop-blur"
+                         className="absolute bottom-2 left-2 min-h-12 rounded-lg bg-[hsl(var(--card)/.9)] px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur"
                     >
                       ფოტოს შეცვლა
                     </button>
@@ -651,7 +651,7 @@ export default function Sell() {
                       <input
                         value={form.title}
                         onChange={(event) => update("title", event.target.value)}
-                        className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm outline-none transition focus:border-[hsl(var(--primary))]"
+                         className="mt-2 min-h-12 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-base outline-none transition focus:border-[hsl(var(--primary))] md:text-sm"
                        placeholder="მაგ. iPhone 13 Pro 128GB"
                         data-testid="input-sell-title"
                       />
@@ -668,7 +668,7 @@ export default function Sell() {
                         <select
                           value={form.condition}
                           onChange={(event) => update("condition", event.target.value)}
-                          className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                           className="mt-2 min-h-12 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-3 py-3.5 text-base outline-none focus:border-[hsl(var(--primary))] md:text-sm"
                           data-testid="select-sell-condition"
                         >
                           {conditions.map((condition) => (

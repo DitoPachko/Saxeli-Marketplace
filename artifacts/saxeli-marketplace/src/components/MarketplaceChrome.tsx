@@ -25,17 +25,17 @@ function Navbar() {
   const savedReturnTo = encodeURIComponent('/saved');
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.85)] backdrop-blur-lg">
-      <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-5 py-3 md:px-10">
+    <nav className="sticky top-0 z-50 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background)/.9)] backdrop-blur-lg">
+      <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-2 px-3 py-2.5 sm:px-5 lg:gap-4 lg:px-10 lg:py-3">
         
-        <div className="flex items-center gap-5 lg:gap-8">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-5 lg:gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="saxeli-wordmark text-[1.85rem] leading-none text-[hsl(var(--foreground))]">saxeli</span>
+            <span className="saxeli-wordmark text-[1.6rem] leading-none text-[hsl(var(--foreground))] sm:text-[1.85rem]">saxeli</span>
           </Link>
           <CategoryMenuDesktop />
         </div>
         
-        <div className="hidden flex-1 max-w-2xl items-center md:flex px-4">
+        <div className="hidden max-w-2xl flex-1 items-center px-4 lg:flex">
           <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.4)] transition-all focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))] focus-within:shadow-[var(--shadow-sm)]">
             <input 
               type="search"
@@ -50,29 +50,29 @@ function Navbar() {
           </form>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 md:gap-4">
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-4">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'ღია რეჟიმის ჩართვა' : 'მუქი რეჟიმის ჩართვა'}
             aria-pressed={isDark}
-            className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]"
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
+          <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="hidden h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] sm:flex">
             <Heart size={20} />
           </Link>
           {isSignedIn ? (
-            <Link href="/messages" aria-label="შეტყობინებები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
+            <Link href="/messages" aria-label="შეტყობინებები" className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]">
               <MessageCircle size={20} />
             </Link>
           ) : null}
           
           {isSignedIn ? (
             <details className="group relative">
-              <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full p-1 pr-2 hover:bg-[hsl(var(--accent)/.1)]">
-                {user?.imageUrl ? <img src={user.imageUrl} alt="" className="h-8 w-8 rounded-full object-cover" /> : <UserRound size={20} />}
+              <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full px-1.5 hover:bg-[hsl(var(--accent)/.1)]">
+                {user?.imageUrl ? <img src={user.imageUrl} alt="" className="h-9 w-9 rounded-full object-cover" /> : <UserRound size={20} />}
                 <span className="hidden max-w-28 truncate text-sm font-semibold lg:block">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</span>
               </summary>
               <div className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-lg)]">
@@ -84,32 +84,32 @@ function Navbar() {
             </details>
           ) : (
             <>
-            <Link href={`/login?returnTo=${returnTo}`} aria-label="შესვლა ან რეგისტრაცია" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] md:hidden"><UserRound size={20} /></Link>
-            <div className="hidden items-center gap-3 md:flex">
+            <Link href={`/login?returnTo=${returnTo}`} aria-label="შესვლა ან რეგისტრაცია" className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] md:hidden"><UserRound size={20} /></Link>
+            <div className="hidden items-center gap-3 lg:flex">
               <Link href={`/login?returnTo=${returnTo}`} className="text-sm font-semibold hover:text-[hsl(var(--primary))]">შესვლა</Link>
               <Link href={`/register?returnTo=${returnTo}`} className="text-sm font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">რეგისტრაცია</Link>
             </div>
             </>
           )}
 
-          <Link href="/sell" className="btn-primary flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-bold shadow-sm">
+          <Link href="/sell" aria-label="განცხადების დამატება" className="btn-primary flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold shadow-sm sm:px-4">
             <Plus size={18} />
-            <span className="hidden md:inline">გაყიდე</span>
+            <span className="hidden lg:inline">გაყიდე</span>
           </Link>
         </div>
       </div>
 
       {/* Mobile Search & Categories Row */}
-      <div className="border-t border-[hsl(var(--border))] px-5 py-3 md:hidden flex flex-col gap-3">
+      <div className="flex flex-col gap-3 border-t border-[hsl(var(--border))] px-3 py-2.5 sm:px-5 lg:hidden">
         <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
           <input 
             type="search"
             placeholder="რას ეძებ?" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent px-4 py-2.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+            className="min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-[hsl(var(--muted-foreground))]"
           />
-          <button type="submit" className="flex h-full items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
+          <button type="submit" className="flex min-h-12 min-w-12 items-center justify-center px-4 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))]">
             <Search size={18} />
           </button>
         </form>
@@ -180,9 +180,9 @@ export function MarketplaceChrome({ children }: MarketplaceChromeProps) {
   if (isAuth) return <div className="page-shell noise">{children}</div>;
 
   return (
-    <div className="page-shell noise flex flex-col min-h-[100dvh]">
+    <div className="page-shell noise flex min-h-[100dvh] max-w-full flex-col overflow-x-hidden">
       <Navbar />
-      <main className="flex-1 w-full">{children}</main>
+      <main className="w-full min-w-0 flex-1 overflow-x-hidden">{children}</main>
       <Footer />
     </div>
   );
