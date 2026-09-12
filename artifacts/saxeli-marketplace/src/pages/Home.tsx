@@ -61,10 +61,11 @@ function ItemSkeleton() {
 export default function Home() {
   const { search, setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
+  const [sort, setSort] = useState<'date' | 'priceAsc' | 'priceDesc'>('date');
   const queryClient = useQueryClient();
   const { isSignedIn } = useUser();
   const [location, setLocation] = useLocation();
-  const { flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
+  const { tree, flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
 
   const params = useMemo<ListItemsParams>(() => ({
     search: submittedSearch || undefined,
@@ -76,6 +77,12 @@ export default function Home() {
   const { data: items, isLoading: isItemsLoading, isError, refetch } = useListItems(params, { query: { queryKey: getListItemsQueryKey(params) } });
   const toggleFavorite = useToggleItemFavorite();
   const listingItems = items ?? [];
+  const sortedItems = useMemo(() => {
+    if (sort === 'date') return listingItems;
+    return [...listingItems].sort((a, b) =>
+      sort === 'priceAsc' ? a.price - b.price : b.price - a.price,
+    );
+  }, [listingItems, sort]);
   const isLoading = isItemsLoading || isCategoriesLoading;
 
   const handleFavorite = (item: MarketplaceItem) => {
@@ -116,13 +123,89 @@ export default function Home() {
           <span className="absolute bottom-6 right-8 hidden font-display text-7xl text-[hsl(var(--secondary-foreground)/.08)] md:block">ს.</span>
         </section>
 
-        <section className="enter enter-delay-1 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
+        <section className="enter enter-delay-1 mt-8 space-y-4" aria-label="ძიება და კატეგორიები">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              setSubmittedSearch(search.trim());
+            }}
+            className="flex w-full items-center overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] transition focus-within:border-[hsl(var(--primary))] focus-within:shadow-[var(--shadow-sm)]"
+          >
+            <Search size={19} className="ml-4 shrink-0 text-[hsl(var(--muted-foreground))]" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => {
+                const value = event.target.value;
+                setSearch(value);
+                setSubmittedSearch(value.trim());
+              }}
+              placeholder="ძებნა..."
+              aria-label="ძებნა"
+              className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-sm outline-none placeholder:text-[hsl(var(--muted-foreground))]"
+              data-testid="input-feed-search"
+            />
+            <button
+              type="submit"
+              className="mr-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-2 text-xs font-bold text-[hsl(var(--primary-foreground))] transition hover:opacity-90"
+              data-testid="button-feed-search"
+            >
+              ძებნა
+            </button>
+          </form>
+
+          <div className="flex gap-2 overflow-x-auto pb-1" aria-label="კატეგორიები">
+            <button
+              type="button"
+              onClick={() => setCategorySlug('')}
+              className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                !categorySlug
+                  ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                  : 'border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:border-[hsl(var(--primary)/.6)]'
+              }`}
+              data-testid="button-category-all"
+            >
+              ყველა
+            </button>
+            {tree.map((category) => (
+              <button
+                key={category.slug}
+                type="button"
+                onClick={() => setCategorySlug(categorySlug === category.slug ? '' : category.slug)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                  categorySlug === category.slug
+                    ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]'
+                    : 'border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:border-[hsl(var(--primary)/.6)]'
+                }`}
+                data-testid={`button-category-${category.slug}`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="enter enter-delay-1 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
           <div className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> ლოკაცია</div>
           <div className="grid w-full gap-2 sm:flex sm:w-auto">
             <label className="relative block w-full sm:w-64">
               <span className="sr-only">ქალაქი</span>
               <select value={city} onChange={(event) => setCity(event.target.value)} className="w-full cursor-pointer appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-2.5 pl-4 pr-10 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="select-city">
                 {cities.map((option) => <option key={option}>{option}</option>)}
+              </select>
+              <ChevronDown size={15} className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" />
+            </label>
+            <label className="relative block w-full sm:w-64">
+              <span className="sr-only">დალაგება</span>
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value as 'date' | 'priceAsc' | 'priceDesc')}
+                className="w-full cursor-pointer appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-2.5 pl-4 pr-10 text-sm outline-none focus:border-[hsl(var(--primary))]"
+                data-testid="select-feed-sort"
+              >
+                <option value="date">თარიღით</option>
+                <option value="priceAsc">ფასი: დაბლიდან მაღლა</option>
+                <option value="priceDesc">ფასი: მაღლიდან დაბლა</option>
               </select>
               <ChevronDown size={15} className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" />
             </label>
@@ -140,7 +223,7 @@ export default function Home() {
         
         {isError ? <div className="mt-6"><Notice tone="error">ნივთების ჩატვირთვა ვერ მოხერხდა. <button type="button" className="ml-1 font-semibold underline" onClick={() => refetch()} data-testid="button-retry-items">თავიდან ცდა</button></Notice></div> : null}
         
-        {isLoading ? <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((id) => <ItemSkeleton key={id} />)}</div> : null}
+        {isLoading ? <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((id) => <ItemSkeleton key={id} />)}</div> : null}
         
         {!isLoading && !isError && listingItems.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card)/.5)] px-6 py-16 text-center">
@@ -151,9 +234,9 @@ export default function Home() {
           </div>
         ) : null}
         
-        {!isLoading && !isError && listingItems.length > 0 ? (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {listingItems.map((item, index) => (
+        {!isLoading && !isError && sortedItems.length > 0 ? (
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {sortedItems.map((item, index) => (
               <div key={item.id} className={`enter enter-delay-${Math.min(index + 1, 3)}`}>
                 <ItemCard item={item} favorite={favoriteOverrides[item.id] ?? item.isFavorite ?? false} onFavorite={handleFavorite} />
               </div>
