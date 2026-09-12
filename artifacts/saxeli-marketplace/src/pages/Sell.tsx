@@ -506,18 +506,6 @@ export default function Sell() {
                     ფოტოების დადასტურება <Check size={16} />
                   </button>
                 ) : null}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => {
-                    readPhoto(Array.from(event.target.files ?? []));
-                    event.target.value = "";
-                  }}
-                  data-testid="input-sell-photo"
-                />
               </div>
             ) : null}
 
@@ -933,8 +921,13 @@ export default function Sell() {
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        multiple
         className="hidden"
-        onChange={(event) => readPhoto(event.target.files?.[0])}
+        onChange={(event) => {
+          readPhoto(Array.from(event.target.files ?? []));
+          event.target.value = "";
+        }}
+        data-testid="input-sell-photo"
       />
     </div>
   );
