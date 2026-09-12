@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { useClerk, useUser } from '@clerk/react';
-import { Facebook, Heart, Instagram, LogOut, Plus, Search, UserRound } from 'lucide-react';
+import { Facebook, Heart, Instagram, LogOut, Moon, Plus, Search, Sun, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useFilters } from '@/hooks/use-filters';
+import { useTheme } from '@/hooks/use-theme';
 import { CategoryMenuDesktop, CategoryMenuMobile } from '@/components/CategoryMenu';
 
 type MarketplaceChromeProps = { children: ReactNode };
@@ -12,6 +13,7 @@ function Navbar() {
   const { signOut } = useClerk();
   const { isSignedIn, user } = useUser();
   const { search, setSearch, setSubmittedSearch } = useFilters();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +51,15 @@ function Navbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-3 md:gap-4">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? 'ღია რეჟიმის ჩართვა' : 'მუქი რეჟიმის ჩართვა'}
+            aria-pressed={isDark}
+            className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]"
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
           <Link href={isSignedIn ? "/profile#saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="flex items-center justify-center rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] transition-colors">
             <Heart size={20} />
           </Link>

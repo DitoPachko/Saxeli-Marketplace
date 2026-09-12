@@ -16,6 +16,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MarketplaceChrome } from "@/components/MarketplaceChrome";
 import { FilterProvider } from "@/hooks/use-filters";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { kaGE } from "@/lib/georgian-localization";
 import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
 import ItemDetail from "@/pages/ItemDetail";
@@ -206,20 +208,7 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
-      localization={{
-        signIn: {
-          start: {
-            title: "კეთილი დაბრუნება",
-            subtitle: "შედი Saxeli-ის ანგარიშში",
-          },
-        },
-        signUp: {
-          start: {
-            title: "შექმენი ანგარიში",
-            subtitle: "დაიწყე ყიდვა და გაყიდვა უსაფრთხოდ",
-          },
-        },
-      }}
+      localization={kaGE}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
@@ -241,7 +230,9 @@ function ClerkProviderWithRoutes() {
 export default function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      <ThemeProvider>
+        <ClerkProviderWithRoutes />
+      </ThemeProvider>
     </WouterRouter>
   );
 }
