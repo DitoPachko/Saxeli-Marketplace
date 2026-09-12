@@ -172,7 +172,7 @@ export default function Home() {
             </button>
           </form>
 
-          <div className="flex gap-2 overflow-x-auto pb-1" aria-label="კატეგორიები">
+          <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label="კატეგორიები">
             <button
               type="button"
               onClick={() => setCategorySlug('')}
