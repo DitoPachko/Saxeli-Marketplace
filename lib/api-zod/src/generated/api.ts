@@ -62,7 +62,9 @@ export const ListItemsResponseItem = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 export const ListItemsResponse = zod.array(ListItemsResponseItem)
 
@@ -124,7 +126,9 @@ export const CreateItemResponse = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 
 
@@ -180,7 +184,9 @@ export const GetItemResponse = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 
 
@@ -258,7 +264,9 @@ export const UpdateItemResponse = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 
 
@@ -270,6 +278,61 @@ export const DeleteItemParams = zod.object({
 })
 
 export const DeleteItemResponse = zod.void()
+
+
+/**
+ * @summary Complete a test VIP promotion for an owned listing
+ */
+export const PurchaseTestVipParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PurchaseTestVipBody = zod.object({
+  "tier": zod.enum(['vip', 'super_vip'])
+})
+
+export const PurchaseTestVipResponse = zod.object({
+  "paymentId": zod.string(),
+  "tier": zod.enum(['vip', 'super_vip']),
+  "amount": zod.number(),
+  "status": zod.enum(['completed']),
+  "provider": zod.enum(['test']),
+  "vipExpiresAt": zod.coerce.date(),
+  "item": zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "price": zod.number(),
+  "category": zod.string(),
+  "categorySlug": zod.string(),
+  "condition": zod.string(),
+  "city": zod.string(),
+  "district": zod.string(),
+  "postedAt": zod.string(),
+  "image": zod.string(),
+  "images": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "seller": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "initials": zod.string(),
+  "rating": zod.number(),
+  "listings": zod.number(),
+  "responseTime": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "phoneNumber": zod.string().nullish()
+}),
+  "isFavorite": zod.boolean().optional(),
+  "delivery": zod.array(zod.string()).optional(),
+  "negotiable": zod.boolean(),
+  "tradeAvailable": zod.boolean(),
+  "deliveryAvailable": zod.boolean(),
+  "phone": zod.string().nullish(),
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
+})
+})
 
 
 /**
@@ -305,7 +368,9 @@ export const ListFavoriteItemsResponseItem = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 export const ListFavoriteItemsResponse = zod.array(ListFavoriteItemsResponseItem)
 
@@ -379,7 +444,9 @@ export const ListMyItemsResponseItem = zod.object({
   "tradeAvailable": zod.boolean(),
   "deliveryAvailable": zod.boolean(),
   "phone": zod.string().nullish(),
-  "chatOnly": zod.boolean()
+  "chatOnly": zod.boolean(),
+  "promotionStatus": zod.enum(['standard', 'vip', 'super_vip']),
+  "vipExpiresAt": zod.coerce.date().nullable()
 })
 export const ListMyItemsResponse = zod.array(ListMyItemsResponseItem)
 

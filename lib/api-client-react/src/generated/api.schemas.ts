@@ -24,6 +24,15 @@ export interface Seller {
   phoneNumber?: string | null;
 }
 
+export type MarketplaceItemPromotionStatus = typeof MarketplaceItemPromotionStatus[keyof typeof MarketplaceItemPromotionStatus];
+
+
+export const MarketplaceItemPromotionStatus = {
+  standard: 'standard',
+  vip: 'vip',
+  super_vip: 'super_vip',
+} as const;
+
 export interface MarketplaceItem {
   id: string;
   title: string;
@@ -46,6 +55,53 @@ export interface MarketplaceItem {
   /** @nullable */
   phone?: string | null;
   chatOnly: boolean;
+  promotionStatus: MarketplaceItemPromotionStatus;
+  /** @nullable */
+  vipExpiresAt: string | null;
+}
+
+export type VipPurchaseInputTier = typeof VipPurchaseInputTier[keyof typeof VipPurchaseInputTier];
+
+
+export const VipPurchaseInputTier = {
+  vip: 'vip',
+  super_vip: 'super_vip',
+} as const;
+
+export interface VipPurchaseInput {
+  tier: VipPurchaseInputTier;
+}
+
+export type VipPaymentResultTier = typeof VipPaymentResultTier[keyof typeof VipPaymentResultTier];
+
+
+export const VipPaymentResultTier = {
+  vip: 'vip',
+  super_vip: 'super_vip',
+} as const;
+
+export type VipPaymentResultStatus = typeof VipPaymentResultStatus[keyof typeof VipPaymentResultStatus];
+
+
+export const VipPaymentResultStatus = {
+  completed: 'completed',
+} as const;
+
+export type VipPaymentResultProvider = typeof VipPaymentResultProvider[keyof typeof VipPaymentResultProvider];
+
+
+export const VipPaymentResultProvider = {
+  test: 'test',
+} as const;
+
+export interface VipPaymentResult {
+  paymentId: string;
+  tier: VipPaymentResultTier;
+  amount: number;
+  status: VipPaymentResultStatus;
+  provider: VipPaymentResultProvider;
+  vipExpiresAt: string;
+  item: MarketplaceItem;
 }
 
 export interface ItemInput {

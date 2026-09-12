@@ -14,6 +14,9 @@ import {
   ShieldCheck,
   Star,
   Truck,
+  Zap,
+  Crown,
+  ArrowUpRight
 } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import {
@@ -21,8 +24,10 @@ import {
   useGetItem,
   useToggleItemFavorite,
 } from "@workspace/api-client-react";
+import type { MarketplaceItem } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice } from "@/components/MarketplaceChrome";
 import { ChatModal } from "@/components/ChatModal";
+import { VipModal } from "@/components/VipModal";
 
 function formatPrice(price: number) {
   return `${price.toLocaleString("ka-GE")} ₾`;
@@ -41,6 +46,7 @@ export default function ItemDetail() {
   const [favorite, setFavorite] = useState(false);
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [activeChat, setActiveChat] = useState(false);
+  const [showVipModal, setShowVipModal] = useState(false);
 
   if (isLoading) {
     return (
@@ -101,6 +107,10 @@ export default function ItemDetail() {
     setActiveChat(true);
   };
 
+  const isOwner = isLoaded && user?.id === item.seller.id;
+  const isSuperVip = item.promotionStatus === 'super_vip';
+  const isVip = item.promotionStatus === 'vip';
+
   return (
     <div className="mx-auto max-w-[1280px] px-5 py-7 md:px-10 md:py-10">
       <Link
@@ -113,12 +123,28 @@ export default function ItemDetail() {
 
       <div className="mt-7 grid gap-9 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,.92fr)] lg:gap-14">
         <section className="min-w-0">
-          <div className="relative aspect-[1.06] overflow-hidden rounded-[2rem] bg-[hsl(var(--muted))]">
+          <div className={`relative aspect-[1.06] overflow-hidden rounded-[2rem] bg-[hsl(var(--muted))] border-2 ${
+            isSuperVip ? "border-[hsl(var(--primary))] shadow-[0_0_30px_-5px_hsl(var(--primary)/.3)]" :
+            isVip ? "border-[hsl(var(--accent))] shadow-[0_0_30px_-5px_hsl(var(--accent)/.3)]" :
+            "border-transparent"
+          }`}>
             <ItemVisual
               src={activeImage}
               title={item.title}
               className="h-full w-full"
             />
+            <div className="absolute left-4 top-4 z-20 flex flex-col gap-2">
+              {isSuperVip && (
+                <div className="flex w-fit items-center gap-1.5 rounded-full bg-[hsl(var(--primary))] px-3 py-1.5 font-mono-ui text-[10px] font-bold uppercase tracking-[.05em] text-[hsl(var(--primary-foreground))] shadow-md">
+                  <Crown size={14} /> Super VIP
+                </div>
+              )}
+              {isVip && (
+                <div className="flex w-fit items-center gap-1.5 rounded-full bg-[hsl(var(--accent))] px-3 py-1.5 font-mono-ui text-[10px] font-bold uppercase tracking-[.05em] text-[hsl(var(--accent-foreground))] shadow-md">
+                  <Zap size={14} /> VIP
+                </div>
+              )}
+            </div>
             {gallery.length > 1 ? (
               <>
                 <button
@@ -235,6 +261,26 @@ export default function ItemDetail() {
             {formatPrice(item.price)}
           </p>
 
+          {(isVip || isSuperVip) && item.vipExpiresAt && (
+            <div className={`mt-5 flex items-center gap-3 rounded-2xl border p-4 ${
+              isSuperVip ? 'border-[hsl(var(--primary)/.3)] bg-[hsl(var(--primary)/.05)]' : 'border-[hsl(var(--accent)/.3)] bg-[hsl(var(--accent)/.05)]'
+            }`}>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                isSuperVip ? 'bg-[hsl(var(--primary)/.2)] text-[hsl(var(--primary))]' : 'bg-[hsl(var(--accent)/.2)] text-[hsl(var(--accent))]'
+              }`}>
+                {isSuperVip ? <Crown size={20} /> : <Zap size={20} />}
+              </div>
+              <div>
+                <p className={`text-sm font-bold ${isSuperVip ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--accent))]'}`}>
+                  {isSuperVip ? 'Super VIP' : 'VIP'} აქტიურია
+                </p>
+                <p className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
+                  პრომოცია სრულდება: {new Date(item.vipExpiresAt).toLocaleDateString('ka-GE', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
             <span className="flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">
               <MapPin size={13} />
@@ -318,41 +364,59 @@ export default function ItemDetail() {
             </div>
 
             <div className="mt-5 grid gap-2">
-              {!item.chatOnly ? (
-                phoneVisible && sellerPhone ? (
-                  <a
-                    href={`tel:${sellerPhone}`}
-                    className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
-                    data-testid="link-seller-phone"
-                  >
-                    <Phone size={17} /> {sellerPhone}
-                  </a>
-                ) : (
+              {isOwner ? (
+                <div className="grid gap-2">
                   <button
                     type="button"
-                    onClick={() => setPhoneVisible(true)}
-                    disabled={!sellerPhone}
-                    className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
-                    data-testid="button-reveal-phone"
+                    onClick={() => setShowVipModal(true)}
+                    className="btn-primary flex items-center justify-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-3.5 text-sm font-bold text-white hover:bg-[hsl(var(--primary)/.9)]"
+                    data-testid="button-promote-listing"
                   >
-                    <Phone size={17} />{" "}
-                    {sellerPhone ? "დარეკვა" : "ტელეფონი არ არის მითითებული"}
+                    <ArrowUpRight size={17} /> {item.promotionStatus === 'standard' ? 'განცხადების რეკლამირება' : 'VIP-ის განახლება'}
                   </button>
-                )
-              ) : null}
-              {item.chatOnly ? (
-                <div className="rounded-xl bg-[hsl(var(--muted))] px-4 py-3 text-center text-xs font-semibold text-[hsl(var(--muted-foreground))]">
-                  გამყიდველი მხოლოდ ჩატში პასუხობს
+                  <Link href={`/edit/${item.id}`} className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold">
+                    განცხადების რედაქტირება
+                  </Link>
                 </div>
-              ) : null}
-              {(isLoaded && (!user || user.id !== item.seller.id)) ? <button
-                type="button"
-                onClick={openMessageDialog}
-                className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
-                data-testid="button-contact-seller"
-              >
-                <MessageCircle size={17} /> ჩატში მიწერა
-              </button> : null}
+              ) : (
+                <>
+                  {!item.chatOnly ? (
+                    phoneVisible && sellerPhone ? (
+                      <a
+                        href={`tel:${sellerPhone}`}
+                        className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
+                        data-testid="link-seller-phone"
+                      >
+                        <Phone size={17} /> {sellerPhone}
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setPhoneVisible(true)}
+                        disabled={!sellerPhone}
+                        className="btn-primary flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                        data-testid="button-reveal-phone"
+                      >
+                        <Phone size={17} />{" "}
+                        {sellerPhone ? "დარეკვა" : "ტელეფონი არ არის მითითებული"}
+                      </button>
+                    )
+                  ) : null}
+                  {item.chatOnly ? (
+                    <div className="rounded-xl bg-[hsl(var(--muted))] px-4 py-3 text-center text-xs font-semibold text-[hsl(var(--muted-foreground))]">
+                      გამყიდველი მხოლოდ ჩატში პასუხობს
+                    </div>
+                  ) : null}
+                  {(isLoaded && (!user || user.id !== item.seller.id)) ? <button
+                    type="button"
+                    onClick={openMessageDialog}
+                    className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
+                    data-testid="button-contact-seller"
+                  >
+                    <MessageCircle size={17} /> ჩატში მიწერა
+                  </button> : null}
+                </>
+              )}
             </div>
           </div>
 
@@ -388,6 +452,7 @@ export default function ItemDetail() {
       </div>
 
       {activeChat ? <ChatModal item={item} currentUser={user} onClose={() => setActiveChat(false)} /> : null}
+      {isOwner && <VipModal item={item} isOpen={showVipModal} onClose={() => setShowVipModal(false)} />}
     </div>
   );
 }

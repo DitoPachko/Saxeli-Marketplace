@@ -3,6 +3,7 @@ import {
   boolean,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
@@ -50,8 +51,24 @@ export const listings = pgTable("listings", {
   deliveryAvailable: boolean("delivery_available").notNull().default(false),
   phone: text("phone"),
   chatOnly: boolean("chat_only").notNull().default(false),
+  status: text("status").notNull().default("standard"),
+  vipExpiresAt: timestamp("vip_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const payments = pgTable("payments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .references(() => users.id, { onDelete: "set null" }),
+  listingId: uuid("listing_id")
+    .references(() => listings.id, { onDelete: "set null" }),
+  tier: text("tier").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending"),
+  provider: text("provider").notNull().default("test"),
+  transactionId: text("transaction_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export const favorites = pgTable(
@@ -76,6 +93,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   buyerConversations: many(conversations, { relationName: "buyerConversations" }),
   sellerConversations: many(conversations, { relationName: "sellerConversations" }),
   sentMessages: many(messages),
+  payments: many(payments),
 }));
 
 export const listingsRelations = relations(listings, ({ one, many }) => ({
@@ -89,6 +107,18 @@ export const listingsRelations = relations(listings, ({ one, many }) => ({
   }),
   favorites: many(favorites),
   conversations: many(conversations),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+  listing: one(listings, {
+    fields: [payments.listingId],
+    references: [listings.id],
+  }),
 }));
 
 export const favoritesRelations = relations(favorites, ({ one }) => ({
@@ -105,3 +135,4 @@ export const favoritesRelations = relations(favorites, ({ one }) => ({
 export type User = typeof users.$inferSelect;
 export type Listing = typeof listings.$inferSelect;
 export type Favorite = typeof favorites.$inferSelect;
+export type Payment = typeof payments.$inferSelect;

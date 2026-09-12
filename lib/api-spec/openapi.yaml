@@ -167,6 +167,28 @@ paths:
         "204": { description: Listing deleted }
         "403": { description: Listing is not owned by the current user }
         "404": { description: Item not found }
+  /items/{id}/vip:
+    post:
+      operationId: purchaseTestVip
+      tags: [marketplace]
+      summary: Complete a test VIP promotion for an owned listing
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VipPurchaseInput"
+      responses:
+        "200":
+          description: Test payment completed and listing promoted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VipPaymentResult"
+        "403": { description: Listing is not owned by the current user }
+        "404": { description: Item not found }
   /favorites:
     get:
       operationId: listFavoriteItems
@@ -430,6 +452,8 @@ components:
         - tradeAvailable
         - deliveryAvailable
         - chatOnly
+        - promotionStatus
+        - vipExpiresAt
       properties:
         id: { type: string }
         title: { type: string }
@@ -456,6 +480,35 @@ components:
         deliveryAvailable: { type: boolean }
         phone: { type: [string, "null"] }
         chatOnly: { type: boolean }
+        promotionStatus:
+          type: string
+          enum: [standard, vip, super_vip]
+        vipExpiresAt: { type: [string, "null"], format: date-time }
+    VipPurchaseInput:
+      type: object
+      required: [tier]
+      properties:
+        tier:
+          type: string
+          enum: [vip, super_vip]
+    VipPaymentResult:
+      type: object
+      required: [paymentId, tier, amount, status, provider, vipExpiresAt, item]
+      properties:
+        paymentId: { type: string }
+        tier:
+          type: string
+          enum: [vip, super_vip]
+        amount: { type: number }
+        status:
+          type: string
+          enum: [completed]
+        provider:
+          type: string
+          enum: [test]
+        vipExpiresAt: { type: string, format: date-time }
+        item:
+          $ref: "#/components/schemas/MarketplaceItem"
     ItemInput:
       type: object
       required: [title, price, category, condition, city, district, image, description, negotiable, tradeAvailable, deliveryAvailable, chatOnly]

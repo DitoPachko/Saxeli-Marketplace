@@ -35,7 +35,9 @@ import type {
   ProfileSummary,
   ProfileUpdate,
   SellerProfile,
-  UserProfile
+  UserProfile,
+  VipPaymentResult,
+  VipPurchaseInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -664,6 +666,78 @@ export const useDeleteItem = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteItemMutationOptions(options));
+    }
+
+export const getPurchaseTestVipUrl = (id: string,) => {
+
+
+
+
+  return `/api/items/${id}/vip`
+}
+
+/**
+ * @summary Complete a test VIP promotion for an owned listing
+ */
+export const purchaseTestVip = async (id: string,
+    vipPurchaseInput: VipPurchaseInput, options?: Parameters<typeof customFetch>[1]): Promise<VipPaymentResult> => {
+
+  return customFetch<VipPaymentResult>(getPurchaseTestVipUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(vipPurchaseInput)
+  }
+);}
+
+
+
+
+
+export const getPurchaseTestVipMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseTestVip>>, TError,{id: string;data: BodyType<VipPurchaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purchaseTestVip>>, TError,{id: string;data: BodyType<VipPurchaseInput>}, TContext> => {
+
+const mutationKey = ['purchaseTestVip'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purchaseTestVip>>, {id: string;data: BodyType<VipPurchaseInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  purchaseTestVip(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurchaseTestVipMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseTestVip>>>
+    export type PurchaseTestVipMutationBody = BodyType<VipPurchaseInput>
+    export type PurchaseTestVipMutationError = ErrorType<void>
+
+    /**
+ * @summary Complete a test VIP promotion for an owned listing
+ */
+export const usePurchaseTestVip = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseTestVip>>, TError,{id: string;data: BodyType<VipPurchaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purchaseTestVip>>,
+        TError,
+        {id: string;data: BodyType<VipPurchaseInput>},
+        TContext
+      > => {
+      return useMutation(getPurchaseTestVipMutationOptions(options));
     }
 
 export const getListFavoriteItemsUrl = () => {

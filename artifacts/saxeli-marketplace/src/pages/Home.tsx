@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, Heart, MapPin, MessageCircle, Search, SlidersHorizontal } from 'lucide-react';
+import { Check, ChevronDown, Heart, MapPin, MessageCircle, Search, SlidersHorizontal, Zap, Crown } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { getListItemsQueryKey, useListItems, useToggleItemFavorite } from '@workspace/api-client-react';
 import type { ListItemsParams, MarketplaceItem } from '@workspace/api-client-react';
@@ -23,14 +23,38 @@ function timeAgo(date: string) {
 }
 
 function ItemCard({ item, favorite, onFavorite, onMessage }: { item: MarketplaceItem; favorite: boolean; onFavorite: (item: MarketplaceItem) => void; onMessage?: (item: MarketplaceItem) => void }) {
+  const isVip = item.promotionStatus === 'vip';
+  const isSuperVip = item.promotionStatus === 'super_vip';
+
+  let cardClass = "group lift overflow-hidden rounded-2xl border bg-[hsl(var(--card))] transition-all ";
+  if (isSuperVip) {
+    cardClass += "border-[hsl(var(--primary)/.5)] shadow-[0_4px_24px_-8px_hsl(var(--primary)/.25)]";
+  } else if (isVip) {
+    cardClass += "border-[hsl(var(--accent)/.4)] shadow-[0_4px_24px_-8px_hsl(var(--accent)/.2)]";
+  } else {
+    cardClass += "border-[hsl(var(--border))]";
+  }
+
   return (
-    <article className="group lift overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]" data-testid={`card-item-${item.id}`}>
+    <article className={cardClass} data-testid={`card-item-${item.id}`}>
       <div className="relative h-48 sm:h-44 lg:h-48">
         <Link href={`/listing/${item.id}`} className="absolute inset-0 z-0" data-testid={`link-item-${item.id}`}>
           <ItemVisual src={item.image} title={item.title} className="h-full w-full" />
         </Link>
-        <div className="absolute left-3 top-3 z-10 rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">{item.condition}</div>
-        <button type="button" onClick={() => onFavorite(item)} className={`absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition sm:right-3 sm:top-3 ${favorite ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--card)/.88)] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--primary))]'}`} aria-label={favorite ? 'შენახულებიდან წაშლა' : 'შენახვა'} data-testid={`button-favorite-${item.id}`}>
+        <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
+          {isSuperVip && (
+            <div className="flex items-center gap-1 rounded-full bg-[hsl(var(--primary))] px-2.5 py-1 font-mono-ui text-[9px] font-bold uppercase tracking-[.05em] text-[hsl(var(--primary-foreground))] shadow-sm">
+              <Crown size={12} /> Super VIP
+            </div>
+          )}
+          {isVip && (
+            <div className="flex items-center gap-1 rounded-full bg-[hsl(var(--accent))] px-2.5 py-1 font-mono-ui text-[9px] font-bold uppercase tracking-[.05em] text-[hsl(var(--accent-foreground))] shadow-sm">
+              <Zap size={12} /> VIP
+            </div>
+          )}
+          <div className="inline-block w-fit rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">{item.condition}</div>
+        </div>
+        <button type="button" onClick={() => onFavorite(item)} className={`absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition sm:right-3 sm:top-3 ${favorite ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--card)/.88)] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--primary))] hover:text-white'}`} aria-label={favorite ? 'შენახულებიდან წაშლა' : 'შენახვა'} data-testid={`button-favorite-${item.id}`}>
           <Heart size={17} fill={favorite ? 'currentColor' : 'none'} strokeWidth={1.8} />
         </button>
       </div>
@@ -86,9 +110,12 @@ export default function Home() {
   const listingItems = items ?? [];
   const sortedItems = useMemo(() => {
     if (sort === 'date') return listingItems;
-    return [...listingItems].sort((a, b) =>
-      sort === 'priceAsc' ? a.price - b.price : b.price - a.price,
-    );
+    const rank = { standard: 0, vip: 1, super_vip: 2 } as const;
+    return [...listingItems].sort((a, b) => {
+      const promotionDifference = rank[b.promotionStatus] - rank[a.promotionStatus];
+      if (promotionDifference !== 0) return promotionDifference;
+      return sort === 'priceAsc' ? a.price - b.price : b.price - a.price;
+    });
   }, [listingItems, sort]);
   const isLoading = isItemsLoading || isCategoriesLoading;
 

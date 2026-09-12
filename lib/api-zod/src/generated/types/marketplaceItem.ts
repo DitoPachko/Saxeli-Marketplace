@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MarketplaceItemPromotionStatus } from './marketplaceItemPromotionStatus';
 import type { Seller } from './seller';
 
 export interface MarketplaceItem {
@@ -29,4 +30,7 @@ export interface MarketplaceItem {
   /** @nullable */
   phone?: string | null;
   chatOnly: boolean;
+  promotionStatus: MarketplaceItemPromotionStatus;
+  /** @nullable */
+  vipExpiresAt: Date | null;
 }

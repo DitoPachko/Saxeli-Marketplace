@@ -11,13 +11,16 @@ import {
   ListItemsResponse,
   ListCategoriesResponse,
   ListMyItemsResponse,
+  PurchaseTestVipBody,
+  PurchaseTestVipParams,
+  PurchaseTestVipResponse,
   ToggleItemFavoriteParams,
   ToggleItemFavoriteResponse,
   UpdateItemBody,
   UpdateItemParams,
   UpdateItemResponse,
 } from "@workspace/api-zod";
-import { db, favorites, listings, users, type Listing, type User } from "@workspace/db";
+import { db, favorites, listings, payments, users, type Listing, type User } from "@workspace/db";
 import { getCurrentUser } from "../lib/currentUser";
 import { categoryAndDescendantIds, getCategoryCatalog, resolveCategory } from "../lib/categoryCatalog";
 
@@ -41,6 +44,12 @@ function postedAt(createdAt: Date) {
 }
 
 function item(listing: Listing, user: User, listingCount: number, isFavorite = false) {
+  const hasActivePromotion = Boolean(listing.vipExpiresAt && listing.vipExpiresAt.getTime() > Date.now());
+  const promotionStatus =
+    hasActivePromotion && (listing.status === "vip" || listing.status === "super_vip")
+      ? listing.status
+      : "standard";
+
   return {
     id: listing.id,
     title: listing.title,
@@ -71,6 +80,8 @@ function item(listing: Listing, user: User, listingCount: number, isFavorite = f
     deliveryAvailable: listing.deliveryAvailable,
     phone: listing.phone,
     chatOnly: listing.chatOnly,
+    promotionStatus,
+    vipExpiresAt: promotionStatus === "standard" ? null : listing.vipExpiresAt?.toISOString() ?? null,
   };
 }
 
@@ -126,7 +137,14 @@ router.get("/items", async (req, res) => {
     .from(listings)
     .innerJoin(users, eq(listings.userId, users.id))
     .where(filters.length ? and(...filters) : undefined)
-    .orderBy(desc(listings.createdAt))
+    .orderBy(
+      sql`case
+        when ${listings.status} = 'super_vip' and ${listings.vipExpiresAt} > now() then 2
+        when ${listings.status} = 'vip' and ${listings.vipExpiresAt} > now() then 1
+        else 0
+      end desc`,
+      desc(listings.createdAt),
+    )
     .limit(limit);
   const favoriteIds = await favoriteListingIds(getAuth(req).userId, rows.map((row) => row.listing.id));
   const counts = await Promise.all(rows.map((row) => listingCount(row.user.id)));
@@ -158,6 +176,77 @@ router.get("/items/:id", async (req, res) => {
   if (!row) return void res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
   const favoriteIds = await favoriteListingIds(getAuth(req).userId, [row.listing.id]);
   res.json(GetItemResponse.parse(item(row.listing, row.user, await listingCount(row.user.id), favoriteIds.has(row.listing.id))));
+});
+
+router.post("/items/:id/vip", async (req, res): Promise<void> => {
+  const params = PurchaseTestVipParams.safeParse(req.params);
+  const body = PurchaseTestVipBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "VIP პაკეტის მონაცემები არასწორია" });
+    return;
+  }
+
+  const user = await getCurrentUser(req);
+  const tier = body.data.tier;
+  const amount = tier === "super_vip" ? 7 : 3;
+
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`select ${listings.id} from ${listings} where ${listings.id} = ${params.data.id} for update`);
+    const [lockedListing] = await tx
+      .select()
+      .from(listings)
+      .where(eq(listings.id, params.data.id));
+    if (!lockedListing) return { error: "not_found" as const };
+    if (lockedListing.userId !== user.id) return { error: "forbidden" as const };
+
+    const now = new Date();
+    const baseTime = lockedListing.vipExpiresAt && lockedListing.vipExpiresAt.getTime() > now.getTime()
+      ? lockedListing.vipExpiresAt
+      : now;
+    const vipExpiresAt = new Date(baseTime.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const [payment] = await tx
+      .insert(payments)
+      .values({
+        userId: user.id,
+        listingId: lockedListing.id,
+        tier,
+        amount: amount.toFixed(2),
+        status: "pending",
+        provider: "test",
+      })
+      .returning();
+    const transactionId = `test_${payment.id}`;
+    await tx
+      .update(payments)
+      .set({ status: "completed", transactionId })
+      .where(eq(payments.id, payment.id));
+    const [promotedListing] = await tx
+      .update(listings)
+      .set({ status: tier, vipExpiresAt, updatedAt: new Date() })
+      .where(and(eq(listings.id, lockedListing.id), eq(listings.userId, user.id)))
+      .returning();
+    return { payment, promotedListing, vipExpiresAt };
+  });
+
+  if ("error" in result) {
+    if (result.error === "not_found") {
+      res.status(404).json({ error: "ნივთი ვერ მოიძებნა" });
+      return;
+    }
+    res.status(403).json({ error: "მხოლოდ განცხადების მფლობელს შეუძლია მისი VIP-ად ქცევა" });
+    return;
+  }
+
+  res.json(PurchaseTestVipResponse.parse({
+    paymentId: result.payment.id,
+    tier,
+    amount,
+    status: "completed",
+    provider: "test",
+    vipExpiresAt: result.vipExpiresAt.toISOString(),
+    item: item(result.promotedListing, user, await listingCount(user.id)),
+  }));
 });
 
 router.get("/favorites", async (req, res) => {

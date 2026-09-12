@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useUser } from "@clerk/react";
-import { Camera, ListPlus, Settings, Save, MapPin, Package, Edit, Trash2 } from "lucide-react";
+import { Camera, ListPlus, Settings, Save, MapPin, Package, Edit, Trash2, Zap, Crown, ArrowUpRight } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetCurrentProfileQueryKey,
@@ -14,6 +14,7 @@ import {
 import type { MarketplaceItem } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice, PageHeader } from "@/components/MarketplaceChrome";
 import { useToast } from "@/hooks/use-toast";
+import { VipModal } from "@/components/VipModal";
 
 function price(value: number) {
   return `${value.toLocaleString("ka-GE")} ₾`;
@@ -37,6 +38,7 @@ export default function Profile() {
   });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [promotionItem, setPromotionItem] = useState<MarketplaceItem | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -268,53 +270,90 @@ export default function Profile() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-              {items.map((item) => (
+              {items.map((item) => {
+                const isSuperVip = item.promotionStatus === 'super_vip';
+                const isVip = item.promotionStatus === 'vip';
+                return (
                 <article
                   key={item.id}
-                  className="group overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]"
+                  className={`group overflow-hidden rounded-2xl border bg-[hsl(var(--card))] ${
+                    isSuperVip ? "border-[hsl(var(--primary)/.5)] shadow-[0_4px_24px_-8px_hsl(var(--primary)/.25)]" :
+                    isVip ? "border-[hsl(var(--accent)/.4)] shadow-[0_4px_24px_-8px_hsl(var(--accent)/.2)]" :
+                    "border-[hsl(var(--border))]"
+                  }`}
                 >
                   <Link href={`/listing/${item.id}`} className="block aspect-[1.3] relative">
                     <ItemVisual src={item.image} title={item.title} className="h-full w-full" />
-                    <div className="absolute left-3 top-3 rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">
-                      {item.condition}
+                    <div className="absolute left-3 top-3 flex flex-col gap-2">
+                      {isSuperVip && (
+                        <div className="flex items-center gap-1 rounded-full bg-[hsl(var(--primary))] px-2.5 py-1 font-mono-ui text-[9px] font-bold uppercase tracking-[.05em] text-[hsl(var(--primary-foreground))] shadow-sm">
+                          <Crown size={12} /> Super VIP
+                        </div>
+                      )}
+                      {isVip && (
+                        <div className="flex items-center gap-1 rounded-full bg-[hsl(var(--accent))] px-2.5 py-1 font-mono-ui text-[9px] font-bold uppercase tracking-[.05em] text-[hsl(var(--accent-foreground))] shadow-sm">
+                          <Zap size={12} /> VIP
+                        </div>
+                      )}
+                      <div className="inline-block w-fit rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">
+                        {item.condition}
+                      </div>
                     </div>
                   </Link>
                   <div className="p-4">
                     <Link href={`/listing/${item.id}`} className="block truncate text-sm font-semibold mb-1">
                       {item.title}
                     </Link>
-                    <p className="font-mono-ui text-sm font-bold text-[hsl(var(--primary))]">
-                      {price(item.price)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono-ui text-sm font-bold text-[hsl(var(--primary))]">
+                        {price(item.price)}
+                      </p>
+                    </div>
+
+                    {(isVip || isSuperVip) && item.vipExpiresAt && (
+                      <div className="mt-3 rounded-lg bg-[hsl(var(--muted)/.5)] p-2 text-[10px] font-medium text-[hsl(var(--muted-foreground))]">
+                        აქტიურია: {new Date(item.vipExpiresAt).toLocaleDateString('ka-GE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
                     
-                    <div className="mt-4 flex gap-2 border-t border-[hsl(var(--border))] pt-4">
-                      <Link 
-                        href={`/edit/${item.id}`}
-                        className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--border))] py-2 text-xs font-semibold hover:bg-[hsl(var(--muted))]"
-                      >
-                        <Edit size={14} /> შეცვლა
-                      </Link>
+                    <div className="mt-4 flex flex-col gap-2 border-t border-[hsl(var(--border))] pt-4">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (confirm("ნამდვილად გსურთ წაშლა?")) {
-                            deleteItemMutation.mutate({ id: item.id });
-                          }
-                        }}
-                        disabled={deleteItemMutation.isPending}
-                        className="flex items-center justify-center rounded-lg border border-[hsl(var(--destructive)/.3)] text-[hsl(var(--destructive))] px-3 py-2 hover:bg-[hsl(var(--destructive)/.1)]"
-                        title="წაშლა"
+                        onClick={() => setPromotionItem(item)}
+                        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--primary)/.1)] py-2 text-xs font-bold text-[hsl(var(--primary))] transition-colors hover:bg-[hsl(var(--primary)/.2)]"
                       >
-                        <Trash2 size={16} />
+                        <ArrowUpRight size={14} /> {item.promotionStatus === 'standard' ? 'რეკლამირება' : 'VIP-ის განახლება'}
                       </button>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/edit/${item.id}`}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--border))] py-2 text-xs font-semibold hover:bg-[hsl(var(--muted))]"
+                        >
+                          <Edit size={14} /> შეცვლა
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm("ნამდვილად გსურთ წაშლა?")) {
+                              deleteItemMutation.mutate({ id: item.id });
+                            }
+                          }}
+                          disabled={deleteItemMutation.isPending}
+                          className="flex items-center justify-center rounded-lg border border-[hsl(var(--destructive)/.3)] text-[hsl(var(--destructive))] px-3 py-2 hover:bg-[hsl(var(--destructive)/.1)]"
+                          title="წაშლა"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </article>
-              ))}
+              )})}
             </div>
           )}
         </main>
       </div>
+      <VipModal item={promotionItem} isOpen={!!promotionItem} onClose={() => setPromotionItem(null)} />
     </div>
   );
 }
