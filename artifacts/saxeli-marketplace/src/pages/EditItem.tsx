@@ -18,6 +18,7 @@ import {
 } from "@workspace/api-client-react";
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
 import { CategoryPicker } from "@/components/CategoryPicker";
+import { useLanguage } from "@/hooks/use-language";
 
 const conditions = ["ახალი", "მეორადი (იდეალური)", "მეორადი", "დაზიანებული"];
 const cities = ["თბილისი", "ბათუმი", "ქუთაისი", "რუსთავი", "სხვა"];
@@ -52,6 +53,7 @@ export default function EditItem() {
   const { data: itemData, isLoading: isItemLoading, isError: isItemError } = useGetItem(id, {
     query: { enabled: !!id, queryKey: getGetItemQueryKey(id) }
   });
+  const { t, language, cityName } = useLanguage();
 
   const [stage, setStage] = useState<Stage>("details");
   const [form, setForm] = useState<ItemInput>(emptyForm);
@@ -84,7 +86,7 @@ export default function EditItem() {
     return <div className="py-20 text-center"><LoaderCircle className="animate-spin mx-auto" /></div>;
   }
   if (isItemError || !itemData) {
-    return <div className="py-20 text-center"><Notice tone="error">ნივთი ვერ მოიძებნა</Notice></div>;
+    return <div className="py-20 text-center"><Notice tone="error">{t("ნივთი ვერ მოიძებნა", "Item could not be found")}</Notice></div>;
   }
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +94,7 @@ export default function EditItem() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("გთხოვთ ატვირთოთ მხოლოდ სურათი (JPEG, PNG, WebP)");
+      setError(t("გთხოვთ ატვირთოთ მხოლოდ სურათი (JPEG, PNG, WebP)", "Please upload only images (JPEG, PNG, WebP)"));
       return;
     }
 
@@ -107,7 +109,7 @@ export default function EditItem() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.price || !form.category || !form.condition || !form.city || !form.image) {
-      setError("გთხოვთ შეავსოთ ყველა სავალდებულო ველი");
+      setError(t("გთხოვთ შეავსოთ ყველა სავალდებულო ველი", "Please fill out all required fields"));
       return;
     }
 
@@ -132,7 +134,7 @@ export default function EditItem() {
            setLocation(`/listing/${item.id}`);
         },
         onError: () => {
-          setError("განცხადების განახლება ვერ მოხერხდა. გთხოვ, თავიდან სცადო.");
+          setError(t("განცხადების განახლება ვერ მოხერხდა. გთხოვ, თავიდან სცადო.", "Failed to update the listing. Please try again."));
           setStage("details");
         }
       },
@@ -141,12 +143,12 @@ export default function EditItem() {
 
   return (
     <div>
-      <PageHeader title="განცხადების რედაქტირება" eyebrow="Saxeli / ჩემი განცხადებები">
+      <PageHeader title={t("განცხადების რედაქტირება", "Edit listing")} eyebrow={t("Saxeli / ჩემი განცხადებები", "Saxeli / My listings")}>
         <Link
           href="/profile"
           className="btn-ink flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"
         >
-          <ArrowLeft size={16} /> უკან
+          <ArrowLeft size={16} /> {t("უკან", "Back")}
         </Link>
       </PageHeader>
 
@@ -162,7 +164,7 @@ export default function EditItem() {
                   : "border-b-2 border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
               }`}
             >
-              1. ფოტო
+              1. {t("ფოტო", "Photo")}
             </button>
             <button
               onClick={() => setStage("details")}
@@ -172,7 +174,7 @@ export default function EditItem() {
                   : "border-b-2 border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
               }`}
             >
-              2. დეტალები
+              2. {t("დეტალები", "Details")}
             </button>
           </div>
 
@@ -187,10 +189,10 @@ export default function EditItem() {
               <div className="animate-in fade-in zoom-in-95 duration-300">
                 <div className="text-center mb-8">
                   <h2 className="font-display text-2xl font-semibold">
-                    შეცვალე მთავარი ფოტო
+                    {t("შეცვალე მთავარი ფოტო", "Change main photo")}
                   </h2>
                   <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-                    კარგი ფოტო უფრო მეტ მყიდველს იზიდავს
+                    {t("კარგი ფოტო უფრო მეტ მყიდველს იზიდავს", "A good photo attracts more buyers")}
                   </p>
                 </div>
 
@@ -224,10 +226,10 @@ export default function EditItem() {
                       <ImagePlus size={32} className="text-[hsl(var(--primary))]" />
                     </div>
                     <p className="mt-6 text-base font-semibold">
-                      ატვირთე ან ჩააგდე ფოტო
+                      {t("ატვირთე ან ჩააგდე ფოტო", "Upload or drag a photo")}
                     </p>
                     <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
-                      JPEG, PNG • მაქს. 5MB
+                      JPEG, PNG • {t("მაქს.", "Max.")} 5MB
                     </p>
                     <input
                       ref={fileInputRef}
@@ -252,7 +254,7 @@ export default function EditItem() {
                         }}
                         className="flex items-center gap-2 rounded-xl bg-[hsl(var(--background))] px-4 py-2.5 text-sm font-bold shadow-[var(--shadow-lg)] transition hover:scale-105"
                       >
-                        <X size={16} /> წაშლა
+                        <X size={16} /> {t("წაშლა", "Remove")}
                       </button>
                     </div>
                   </div>
@@ -264,7 +266,7 @@ export default function EditItem() {
                     onClick={() => setStage("details")}
                     className="btn-primary flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 font-bold md:w-auto"
                   >
-                    გაგრძელება <ArrowLeft size={16} className="rotate-180" />
+                    {t("გაგრძელება", "Continue")} <ArrowLeft size={16} className="rotate-180" />
                   </button>
                 </div>
               </div>
@@ -275,21 +277,21 @@ export default function EditItem() {
                 <div className="space-y-6">
                   <div>
                     <label className="mb-2 block text-sm font-semibold">
-                      რას ყიდი? <span className="text-[hsl(var(--destructive))]">*</span>
+                      {t("რას ყიდი?", "What are you selling?")} <span className="text-[hsl(var(--destructive))]">*</span>
                     </label>
                     <input
                       required
                       type="text"
                       value={form.title}
                       onChange={(e) => setForm({ ...form, title: e.target.value })}
-                      placeholder="მაგ: iPhone 13 Pro 256GB"
+                      placeholder={t("მაგ: iPhone 13 Pro 256GB", "e.g. iPhone 13 Pro 256GB")}
                       className="w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 outline-none transition focus:border-[hsl(var(--primary))]"
                     />
                   </div>
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold">
-                      ფასი (₾) <span className="text-[hsl(var(--destructive))]">*</span>
+                      {t("ფასი (₾)", "Price (₾)")} <span className="text-[hsl(var(--destructive))]">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono-ui font-bold text-[hsl(var(--muted-foreground))]">
@@ -310,13 +312,13 @@ export default function EditItem() {
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-semibold">
-                        კატეგორია <span className="text-[hsl(var(--destructive))]">*</span>
+                        {t("კატეგორია", "Category")} <span className="text-[hsl(var(--destructive))]">*</span>
                       </label>
                       <CategoryPicker value={form.category} onChange={(slug) => setForm({ ...form, category: slug })} />
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-semibold">
-                        მდგომარეობა <span className="text-[hsl(var(--destructive))]">*</span>
+                        {t("მდგომარეობა", "Condition")} <span className="text-[hsl(var(--destructive))]">*</span>
                       </label>
                       <select
                         required
@@ -324,9 +326,9 @@ export default function EditItem() {
                         onChange={(e) => setForm({ ...form, condition: e.target.value })}
                         className="w-full appearance-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 outline-none transition focus:border-[hsl(var(--primary))]"
                       >
-                        <option value="" disabled>აირჩიე</option>
+                        <option value="" disabled>{t("აირჩიე", "Select")}</option>
                         {conditions.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>{language === 'en' ? ({ 'ახალი': 'New', 'მეორადი (იდეალური)': 'Like new', 'მეორადი': 'Used', 'დაზიანებული': 'Damaged' } as Record<string, string>)[c] ?? c : c}</option>
                         ))}
                       </select>
                     </div>
@@ -334,7 +336,7 @@ export default function EditItem() {
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold">
-                      ქალაქი <span className="text-[hsl(var(--destructive))]">*</span>
+                      {t("ქალაქი", "City")} <span className="text-[hsl(var(--destructive))]">*</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {cities.map((city) => (
@@ -348,7 +350,7 @@ export default function EditItem() {
                               : "border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] hover:border-[hsl(var(--primary)/.5)]"
                           }`}
                         >
-                          {city}
+                          {cityName(city)}
                         </button>
                       ))}
                     </div>
@@ -356,7 +358,7 @@ export default function EditItem() {
 
                   <div>
                     <label className="mb-2 block text-sm font-semibold">
-                      მიტანის ვარიანტები
+                      {t("მიტანის ვარიანტები", "Delivery options")}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {deliveries.map((delivery) => (
@@ -387,7 +389,7 @@ export default function EditItem() {
                               <Check size={12} className="text-[hsl(var(--background))]" strokeWidth={3} />
                             )}
                           </div>
-                          {delivery}
+                          {language === 'en' ? ({ 'მიტანა სახლში': 'Home delivery', 'ფოსტით გაგზავნა': 'Post delivery', 'ადგილზე შეხვედრა': 'Meet in person' } as Record<string, string>)[delivery] ?? delivery : delivery}
                         </button>
                       ))}
                     </div>
@@ -395,16 +397,16 @@ export default function EditItem() {
 
                   <div>
                     <label className="mb-2 flex items-center justify-between text-sm font-semibold">
-                      <span>აღწერა</span>
+                      <span>{t("აღწერა", "Description")}</span>
                       <span className="text-xs font-normal text-[hsl(var(--muted-foreground))]">
-                        არაა სავალდებულო
+                        {t("არაა სავალდებულო", "Optional")}
                       </span>
                     </label>
                     <textarea
                       rows={5}
                       value={form.description}
                       onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      placeholder="დამატებითი დეტალები ნივთის შესახებ..."
+                      placeholder={t("დამატებითი დეტალები ნივთის შესახებ...", "Additional details about the item...")}
                       className="w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm outline-none transition focus:border-[hsl(var(--primary))]"
                     />
                   </div>
@@ -416,13 +418,13 @@ export default function EditItem() {
                     onClick={() => setStage("photo")}
                     className="btn-ink rounded-xl px-5 py-3.5 font-bold"
                   >
-                    უკან
+                    {t("უკან", "Back")}
                   </button>
                   <button
                     type="submit"
                     className="btn-primary flex items-center justify-center gap-2 rounded-xl px-8 py-3.5 font-bold shadow-[var(--shadow-md)]"
                   >
-                    შენახვა
+                    {t("შენახვა", "Save")}
                   </button>
                 </div>
               </form>
@@ -432,10 +434,10 @@ export default function EditItem() {
               <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95">
                 <LoaderCircle size={40} className="animate-spin text-[hsl(var(--primary))]" />
                 <h2 className="font-display mt-6 text-2xl font-semibold">
-                  ინახება...
+                  {t("ინახება...", "Saving...")}
                 </h2>
                 <p className="mt-2 text-[hsl(var(--muted-foreground))]">
-                  გთხოვთ დაელოდოთ
+                  {t("გთხოვთ დაელოდოთ", "Please wait")}
                 </p>
               </div>
             )}

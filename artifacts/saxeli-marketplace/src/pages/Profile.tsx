@@ -15,6 +15,7 @@ import type { MarketplaceItem } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice, PageHeader } from "@/components/MarketplaceChrome";
 import { useToast } from "@/hooks/use-toast";
 import { VipModal } from "@/components/VipModal";
+import { useLanguage } from "@/hooks/use-language";
 
 function price(value: number) {
   return `${value.toLocaleString("ka-GE")} ₾`;
@@ -30,6 +31,7 @@ function ProfileLoading() {
 }
 
 export default function Profile() {
+  const { t, language, cityName } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -57,10 +59,10 @@ export default function Profile() {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetCurrentProfileQueryKey() });
         setIsEditing(false);
-        toast({ title: "პროფილი განახლდა", description: "მონაცემები წარმატებით შეინახა." });
+        toast({ title: t("პროფილი განახლდა", "Profile updated"), description: t("მონაცემები წარმატებით შეინახა.", "Data saved successfully.") });
       },
       onError: () => {
-        toast({ title: "შეცდომა", description: "პროფილის განახლება ვერ მოხერხდა.", variant: "destructive" });
+        toast({ title: t("შეცდომა", "Error"), description: t("პროფილის განახლება ვერ მოხერხდა.", "Failed to update profile."), variant: "destructive" });
       },
     },
   });
@@ -69,10 +71,10 @@ export default function Profile() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListMyItemsQueryKey() });
-        toast({ title: "განცხადება წაიშალა" });
+        toast({ title: t("განცხადება წაიშალა", "Listing deleted") });
       },
       onError: () => {
-        toast({ title: "შეცდომა", description: "წაშლა ვერ მოხერხდა.", variant: "destructive" });
+        toast({ title: t("შეცდომა", "Error"), description: t("წაშლა ვერ მოხერხდა.", "Failed to delete."), variant: "destructive" });
       },
     },
   });
@@ -97,11 +99,11 @@ export default function Profile() {
     event.target.value = "";
     if (!file || !user) return;
     if (!file.type.startsWith("image/")) {
-      toast({ title: "არასწორი ფაილი", description: "აირჩიე სურათი.", variant: "destructive" });
+      toast({ title: t("არასწორი ფაილი", "Invalid file"), description: t("აირჩიე სურათი.", "Choose an image."), variant: "destructive" });
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "ფაილი ძალიან დიდია", description: "სურათი 5MB-ზე პატარა უნდა იყოს.", variant: "destructive" });
+      toast({ title: t("ფაილი ძალიან დიდია", "File too large"), description: t("სურათი 5MB-ზე პატარა უნდა იყოს.", "Image must be under 5MB."), variant: "destructive" });
       return;
     }
     setIsUploadingAvatar(true);
@@ -109,9 +111,9 @@ export default function Profile() {
       await user.setProfileImage({ file });
       await user.reload();
       await queryClient.invalidateQueries({ queryKey: getGetCurrentProfileQueryKey() });
-      toast({ title: "პროფილის ფოტო განახლდა" });
+      toast({ title: t("პროფილის ფოტო განახლდა", "Profile photo updated") });
     } catch {
-      toast({ title: "შეცდომა", description: "პროფილის ფოტოს შეცვლა ვერ მოხერხდა.", variant: "destructive" });
+      toast({ title: t("შეცდომა", "Error"), description: t("პროფილის ფოტოს შეცვლა ვერ მოხერხდა.", "Failed to update profile photo."), variant: "destructive" });
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -123,7 +125,7 @@ export default function Profile() {
   if (isError) {
     return (
       <div className="mx-auto max-w-[760px] px-5 py-16 md:px-10">
-        <Notice tone="error">პროფილის ჩატვირთვა ვერ მოხერხდა.</Notice>
+        <Notice tone="error">{t("პროფილის ჩატვირთვა ვერ მოხერხდა.", "Failed to load profile.")}</Notice>
       </div>
     );
   }
@@ -137,12 +139,12 @@ export default function Profile() {
 
   return (
     <div>
-      <PageHeader title="ჩემი Saxeli" eyebrow="პირადი სივრცე">
+      <PageHeader title={t("ჩემი Saxeli", "My Saxeli")} eyebrow={t("პირადი სივრცე", "Personal space")}>
         <Link
           href="/sell"
           className="btn-primary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"
         >
-          <ListPlus size={16} /> ახალი განცხადება
+          <ListPlus size={16} /> {t("ახალი განცხადება", "New listing")}
         </Link>
       </PageHeader>
       
@@ -156,7 +158,7 @@ export default function Profile() {
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={isUploadingAvatar}
-                  aria-label="პროფილის ფოტოს შეცვლა"
+                  aria-label={t("პროფილის ფოტოს შეცვლა", "Change profile photo")}
                   className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-[hsl(var(--card))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] transition hover:scale-105 disabled:cursor-wait disabled:opacity-60"
                 >
                   <Camera size={14} />
@@ -165,7 +167,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-                  მოგესალმები
+                  {t("მოგესალმები", "Welcome")}
                 </p>
                 <h2 className="font-display mt-1 text-xl font-semibold tracking-[-.02em]">
                   {profile?.fullName}
@@ -177,7 +179,7 @@ export default function Profile() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-1.5">
-                    სახელი და გვარი
+                    {t("სახელი და გვარი", "Full name")}
                   </label>
                   <input
                     required
@@ -189,7 +191,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-1.5">
-                    ტელეფონი
+                    {t("ტელეფონი", "Phone")}
                   </label>
                   <input
                     type="tel"
@@ -200,7 +202,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-[hsl(var(--muted-foreground))] mb-1.5">
-                    ქალაქი
+                    {t("ქალაქი", "City")}
                   </label>
                   <input
                     type="text"
@@ -215,14 +217,14 @@ export default function Profile() {
                     disabled={updateProfileMutation.isPending}
                     className="btn-primary flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold"
                   >
-                    {updateProfileMutation.isPending ? "ინახება..." : <><Save size={15} /> შენახვა</>}
+                    {updateProfileMutation.isPending ? t("ინახება...", "Saving...") : <><Save size={15} /> {t("შენახვა", "Save")}</>}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
                     className="btn-ink px-4 rounded-xl text-sm font-bold"
                   >
-                    გაუქმება
+                    {t("გაუქმება", "Cancel")}
                   </button>
                 </div>
               </form>
@@ -230,11 +232,11 @@ export default function Profile() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin size={16} className="text-[hsl(var(--muted-foreground))]" />
-                  <span>{profile?.city || "არ არის მითითებული"}</span>
+                  <span>{profile?.city ? cityName(profile.city) : t("არ არის მითითებული", "Not provided")}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span className="text-[hsl(var(--muted-foreground))] font-mono-ui font-semibold">📞</span>
-                  <span>{profile?.phoneNumber || "არ არის მითითებული"}</span>
+                  <span>{profile?.phoneNumber || t("არ არის მითითებული", "Not provided")}</span>
                 </div>
                 
                 <button
@@ -242,7 +244,7 @@ export default function Profile() {
                   onClick={() => setIsEditing(true)}
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] py-2.5 text-sm font-semibold transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/.05)]"
                 >
-                  <Settings size={15} /> პროფილის რედაქტირება
+                  <Settings size={15} /> {t("პროფილის რედაქტირება", "Edit profile")}
                 </button>
               </div>
             )}
@@ -251,7 +253,7 @@ export default function Profile() {
 
         <main>
           <div className="flex items-center gap-2 mb-6">
-            <h3 className="font-display text-2xl font-semibold">ჩემი განცხადებები</h3>
+            <h3 className="font-display text-2xl font-semibold">{t("ჩემი განცხადებები", "My listings")}</h3>
             <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[hsl(var(--accent)/.16)] px-2 font-mono-ui text-[11px] font-bold">
               {items.length}
             </span>
@@ -260,12 +262,12 @@ export default function Profile() {
           {items.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card))] px-6 py-16 text-center">
               <Package size={32} className="mx-auto text-[hsl(var(--muted-foreground))]" />
-              <h4 className="font-display mt-4 text-xl font-semibold">ჯერ არც ერთი განცხადება არ გაქვს.</h4>
+              <h4 className="font-display mt-4 text-xl font-semibold">{t("ჯერ არც ერთი განცხადება არ გაქვს.", "You have no listings yet.")}</h4>
               <Link
                 href="/sell"
                 className="btn-primary mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
               >
-                დაამატე პირველი განცხადება
+                {t("დაამატე პირველი განცხადება", "Add your first listing")}
               </Link>
             </div>
           ) : (
@@ -296,7 +298,7 @@ export default function Profile() {
                         </div>
                       )}
                       <div className="inline-block w-fit rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">
-                        {item.condition}
+                        {language === 'en' ? ({ ახალი: 'New', ახალივით: 'Like new', კარგი: 'Good', მეორადი: 'Used' } as Record<string, string>)[item.condition] ?? item.condition : item.condition}
                       </div>
                     </div>
                   </Link>
@@ -312,7 +314,7 @@ export default function Profile() {
 
                     {(isVip || isSuperVip) && item.vipExpiresAt && (
                       <div className="mt-3 rounded-lg bg-[hsl(var(--muted)/.5)] p-2 text-[10px] font-medium text-[hsl(var(--muted-foreground))]">
-                        აქტიურია: {new Date(item.vipExpiresAt).toLocaleDateString('ka-GE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {t("აქტიურია:", "Active:")} {new Date(item.vipExpiresAt).toLocaleDateString(language === 'ka' ? 'ka-GE' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
                     )}
                     
@@ -322,25 +324,25 @@ export default function Profile() {
                         onClick={() => setPromotionItem(item)}
                         className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-[hsl(var(--primary)/.1)] py-2 text-xs font-bold text-[hsl(var(--primary))] transition-colors hover:bg-[hsl(var(--primary)/.2)]"
                       >
-                        <ArrowUpRight size={14} /> {item.promotionStatus === 'standard' ? 'რეკლამირება' : 'VIP-ის განახლება'}
+                        <ArrowUpRight size={14} /> {item.promotionStatus === 'standard' ? t("რეკლამირება", "Promote") : t("VIP-ის განახლება", "Renew VIP")}
                       </button>
                       <div className="flex gap-2">
                         <Link
                           href={`/edit/${item.id}`}
                           className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-[hsl(var(--border))] py-2 text-xs font-semibold hover:bg-[hsl(var(--muted))]"
                         >
-                          <Edit size={14} /> შეცვლა
+                          <Edit size={14} /> {t("შეცვლა", "Edit")}
                         </Link>
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm("ნამდვილად გსურთ წაშლა?")) {
+                            if (confirm(t("ნამდვილად გსურთ წაშლა?", "Are you sure you want to delete?"))) {
                               deleteItemMutation.mutate({ id: item.id });
                             }
                           }}
                           disabled={deleteItemMutation.isPending}
                           className="flex items-center justify-center rounded-lg border border-[hsl(var(--destructive)/.3)] text-[hsl(var(--destructive))] px-3 py-2 hover:bg-[hsl(var(--destructive)/.1)]"
-                          title="წაშლა"
+                          title={t("წაშლა", "Delete")}
                         >
                           <Trash2 size={16} />
                         </button>

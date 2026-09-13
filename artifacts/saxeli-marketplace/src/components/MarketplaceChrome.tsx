@@ -5,6 +5,7 @@ import { Link, useLocation } from 'wouter';
 import { useFilters } from '@/hooks/use-filters';
 import { useTheme } from '@/hooks/use-theme';
 import { CategoryMenuDesktop, CategoryMenuMobile } from '@/components/CategoryMenu';
+import { useLanguage } from '@/hooks/use-language';
 
 type MarketplaceChromeProps = { children: ReactNode };
 
@@ -14,6 +15,7 @@ function Navbar() {
   const { isSignedIn, user } = useUser();
   const { search, setSearch, setSubmittedSearch } = useFilters();
   const { isDark, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,7 @@ function Navbar() {
           <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.4)] transition-all focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))] focus-within:shadow-[var(--shadow-sm)]">
             <input 
               type="search"
-              placeholder="რას ეძებ?" 
+              placeholder={t('რას ეძებ?', 'What are you looking for?')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="min-w-0 flex-1 bg-transparent px-5 py-2.5 text-[15px] font-medium outline-none placeholder:text-[hsl(var(--muted-foreground))] placeholder:font-normal"
@@ -53,6 +55,15 @@ function Navbar() {
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-4">
           <button
             type="button"
+            onClick={toggleLanguage}
+            className="flex h-10 min-w-10 items-center justify-center rounded-full border border-[hsl(var(--border))] px-2.5 font-mono-ui text-[11px] font-bold tracking-wide transition hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/.08)]"
+            aria-label={language === 'ka' ? 'Switch language to English' : 'ენის ქართულად შეცვლა'}
+            data-testid="button-language-toggle"
+          >
+            {language === 'ka' ? 'EN' : 'KA'}
+          </button>
+          <button
+            type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'ღია რეჟიმის ჩართვა' : 'მუქი რეჟიმის ჩართვა'}
             aria-pressed={isDark}
@@ -60,11 +71,11 @@ function Navbar() {
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label="შენახული ნივთები" className="hidden h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] sm:flex">
+          <Link href={isSignedIn ? "/saved" : `/login?returnTo=${savedReturnTo}`} aria-label={t('შენახული ნივთები', 'Saved items')} className="hidden h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))] sm:flex">
             <Heart size={20} />
           </Link>
           {isSignedIn ? (
-            <Link href="/messages" aria-label="შეტყობინებები" className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]">
+            <Link href="/messages" aria-label={t('შეტყობინებები', 'Messages')} className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--accent)/.1)] hover:text-[hsl(var(--foreground))]">
               <MessageCircle size={20} />
             </Link>
           ) : null}
@@ -76,25 +87,25 @@ function Navbar() {
                 <span className="hidden max-w-28 truncate text-sm font-semibold lg:block">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</span>
               </summary>
               <div className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-lg)]">
-                <Link href="/profile" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">ჩემი პროფილი</Link>
-                <Link href="/saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შენახული ნივთები</Link>
-                <Link href="/messages" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">შეტყობინებები</Link>
-                <button type="button" onClick={() => signOut({ redirectUrl: '/' })} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[hsl(var(--muted))]"><LogOut size={15} /> გასვლა</button>
+                <Link href="/profile" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">{t('ჩემი პროფილი', 'My profile')}</Link>
+                <Link href="/saved" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">{t('შენახული ნივთები', 'Saved items')}</Link>
+                <Link href="/messages" className="block rounded-xl px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--muted))]">{t('შეტყობინებები', 'Messages')}</Link>
+                <button type="button" onClick={() => signOut({ redirectUrl: '/' })} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-[hsl(var(--muted))]"><LogOut size={15} /> {t('გასვლა', 'Sign out')}</button>
               </div>
             </details>
           ) : (
             <>
             <Link href={`/login?returnTo=${returnTo}`} aria-label="შესვლა ან რეგისტრაცია" className="flex h-11 w-11 items-center justify-center rounded-full text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--accent)/.1)] md:hidden"><UserRound size={20} /></Link>
             <div className="hidden items-center gap-3 lg:flex">
-              <Link href={`/login?returnTo=${returnTo}`} className="text-sm font-semibold hover:text-[hsl(var(--primary))]">შესვლა</Link>
-              <Link href={`/register?returnTo=${returnTo}`} className="text-sm font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">რეგისტრაცია</Link>
+              <Link href={`/login?returnTo=${returnTo}`} className="text-sm font-semibold hover:text-[hsl(var(--primary))]">{t('შესვლა', 'Sign in')}</Link>
+              <Link href={`/register?returnTo=${returnTo}`} className="text-sm font-semibold text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">{t('რეგისტრაცია', 'Register')}</Link>
             </div>
             </>
           )}
 
-          <Link href="/sell" aria-label="განცხადების დამატება" className="btn-primary flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold shadow-sm sm:px-4">
+          <Link href="/sell" aria-label={t('განცხადების დამატება', 'Add listing')} className="btn-primary flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold shadow-sm sm:px-4">
             <Plus size={18} />
-            <span className="hidden lg:inline">გაყიდე</span>
+             <span className="hidden lg:inline">{t('გაყიდე', 'Sell')}</span>
           </Link>
         </div>
       </div>
@@ -104,7 +115,7 @@ function Navbar() {
         <form onSubmit={handleSearchSubmit} className="flex w-full items-center overflow-hidden rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--input)/.3)] transition-colors focus-within:border-[hsl(var(--primary))] focus-within:bg-[hsl(var(--background))]">
           <input 
             type="search"
-            placeholder="რას ეძებ?" 
+            placeholder={t('რას ეძებ?', 'What are you looking for?')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-[hsl(var(--muted-foreground))]"
@@ -121,6 +132,7 @@ function Navbar() {
 
 function Footer() {
   const { setCategorySlug } = useFilters();
+  const { t } = useLanguage();
   const openCategory = (slug: string) => {
     setCategorySlug(slug);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -132,31 +144,31 @@ function Footer() {
           <div>
             <span className="saxeli-wordmark text-3xl leading-none text-[hsl(var(--foreground))]">saxeli</span>
             <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))] max-w-[200px]">
-              შენი ნივთების ადგილი. იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.
+               {t('შენი ნივთების ადგილი. იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.', 'A place for your things. Find what your day was missing, nearby and person to person.')}
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">კატეგორიები</h3>
+             <h3 className="font-semibold mb-4">{t('კატეგორიები', 'Categories')}</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <li><button onClick={() => openCategory('electronics')} className="hover:text-[hsl(var(--foreground))]">ტექნიკა</button></li>
-              <li><button onClick={() => openCategory('beauty-fashion')} className="hover:text-[hsl(var(--foreground))]">სილამაზე და მოდა</button></li>
-              <li><button onClick={() => openCategory('music')} className="hover:text-[hsl(var(--foreground))]">მუსიკა</button></li>
+               <li><button onClick={() => openCategory('electronics')} className="hover:text-[hsl(var(--foreground))]">{t('ტექნიკა', 'Electronics')}</button></li>
+               <li><button onClick={() => openCategory('beauty-fashion')} className="hover:text-[hsl(var(--foreground))]">{t('სილამაზე და მოდა', 'Beauty & fashion')}</button></li>
+               <li><button onClick={() => openCategory('music')} className="hover:text-[hsl(var(--foreground))]">{t('მუსიკა', 'Music')}</button></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">ინფორმაცია</h3>
+             <h3 className="font-semibold mb-4">{t('ინფორმაცია', 'Information')}</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <li><Link href="/about" className="hover:text-[hsl(var(--foreground))]">ჩვენ შესახებ</Link></li>
-              <li><Link href="/terms" className="hover:text-[hsl(var(--foreground))]">წესები და პირობები</Link></li>
-              <li><Link href="/privacy" className="hover:text-[hsl(var(--foreground))]">კონფიდენციალურობა</Link></li>
+               <li><Link href="/about" className="hover:text-[hsl(var(--foreground))]">{t('ჩვენ შესახებ', 'About us')}</Link></li>
+               <li><Link href="/terms" className="hover:text-[hsl(var(--foreground))]">{t('წესები და პირობები', 'Terms and conditions')}</Link></li>
+               <li><Link href="/privacy" className="hover:text-[hsl(var(--foreground))]">{t('კონფიდენციალურობა', 'Privacy')}</Link></li>
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">დახმარება</h3>
+             <h3 className="font-semibold mb-4">{t('დახმარება', 'Support')}</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
               <li><a href="mailto:support@saxeli.ge" className="hover:text-[hsl(var(--foreground))]">support@saxeli.ge</a></li>
               <li><a href="tel:+995555123456" className="hover:text-[hsl(var(--foreground))]">+995 555 12 34 56</a></li>
-              <li><Link href="/help" className="hover:text-[hsl(var(--foreground))]">დახმარების ცენტრი</Link></li>
+               <li><Link href="/help" className="hover:text-[hsl(var(--foreground))]">{t('დახმარების ცენტრი', 'Help center')}</Link></li>
               <li className="flex gap-3 pt-2"><a href="https://instagram.com" aria-label="Instagram" className="hover:text-[hsl(var(--foreground))]"><Instagram size={18} /></a><a href="https://facebook.com" aria-label="Facebook" className="hover:text-[hsl(var(--foreground))]"><Facebook size={18} /></a></li>
             </ul>
           </div>

@@ -10,12 +10,14 @@ import {
 } from "@workspace/api-client-react";
 import type { MarketplaceItem } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice, PageHeader } from "@/components/MarketplaceChrome";
+import { useLanguage } from "@/hooks/use-language";
 
 function price(value: number) {
   return `${value.toLocaleString("ka-GE")} ₾`;
 }
 
 function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item: MarketplaceItem) => void }) {
+  const { t, cityName } = useLanguage();
   return (
     <article className="group overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
       <div className="relative aspect-[1.08]">
@@ -25,7 +27,7 @@ function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item:
         <button
           type="button"
           onClick={() => onRemove(item)}
-          aria-label="შენახულებიდან წაშლა"
+          aria-label={t("შენახულებიდან წაშლა", "Remove from saved")}
           className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm transition hover:scale-105"
         >
           <Heart size={17} fill="currentColor" strokeWidth={1.8} />
@@ -39,7 +41,7 @@ function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item:
           <span className="shrink-0 font-mono-ui text-sm font-bold">{price(item.price)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-          <span className="flex items-center gap-1"><MapPin size={13} />{item.city}</span>
+          <span className="flex items-center gap-1"><MapPin size={13} />{cityName(item.city)}</span>
           <span>{item.postedAt}</span>
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-[hsl(var(--border))] pt-3">
@@ -52,6 +54,7 @@ function SavedCard({ item, onRemove }: { item: MarketplaceItem; onRemove: (item:
 }
 
 export default function Saved() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [removingId, setRemovingId] = useState<string | null>(null);
   const { data: items = [], isLoading, isError, refetch } = useListFavoriteItems({
@@ -76,12 +79,12 @@ export default function Saved() {
 
   return (
     <div>
-      <PageHeader title="შენახულები" eyebrow="შენი არჩევანი" />
+      <PageHeader title={t("შენახულები", "Saved")} eyebrow={t("შენი არჩევანი", "Your choices")} />
       <div className="mx-auto max-w-[1320px] px-5 py-8 md:px-10 md:py-10">
         {isError ? (
           <Notice tone="error">
-            შენახული ნივთების ჩატვირთვა ვერ მოხერხდა.
-            <button type="button" className="ml-2 font-semibold underline" onClick={() => refetch()}>თავიდან ცდა</button>
+            {t("შენახული ნივთების ჩატვირთვა ვერ მოხერხდა.", "Failed to load saved items.")}
+            <button type="button" className="ml-2 font-semibold underline" onClick={() => refetch()}>{t("თავიდან ცდა", "Try again")}</button>
           </Notice>
         ) : null}
 
@@ -94,9 +97,9 @@ export default function Saved() {
         {!isLoading && !isError && items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card))] px-6 py-16 text-center">
             <Heart size={32} className="mx-auto text-[hsl(var(--muted-foreground))]" />
-            <h2 className="font-display mt-4 text-xl font-semibold">ჯერ არაფერი შეგინახავს</h2>
-            <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">დააჭირე გულის ღილაკს ნებისმიერ ნივთზე, რომ აქ შეინახო.</p>
-            <Link href="/" className="btn-primary mt-5 inline-flex rounded-xl px-5 py-3 text-sm font-bold">ნივთების დათვალიერება</Link>
+            <h2 className="font-display mt-4 text-xl font-semibold">{t("ჯერ არაფერი შეგინახავს", "You haven't saved anything yet")}</h2>
+            <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{t("დააჭირე გულის ღილაკს ნებისმიერ ნივთზე, რომ აქ შეინახო.", "Click the heart button on any item to save it here.")}</p>
+            <Link href="/" className="btn-primary mt-5 inline-flex rounded-xl px-5 py-3 text-sm font-bold">{t("ნივთების დათვალიერება", "Browse items")}</Link>
           </div>
         ) : null}
 

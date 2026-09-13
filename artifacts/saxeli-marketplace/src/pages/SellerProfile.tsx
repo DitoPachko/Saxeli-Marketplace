@@ -8,6 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice } from "@/components/MarketplaceChrome";
 import { Link } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
 
 function price(value: number) {
   return `${value.toLocaleString("ka-GE")} ₾`;
@@ -16,6 +17,7 @@ function price(value: number) {
 export default function SellerProfile() {
   const [match, params] = useRoute("/seller/:id");
   const id = params?.id;
+  const { t, language, cityName } = useLanguage();
 
   const { data: profile, isLoading: profileLoading, isError } = useGetSellerProfile(id ?? "", {
     query: { enabled: !!id, queryKey: getGetSellerProfileQueryKey(id ?? "") },
@@ -37,7 +39,7 @@ export default function SellerProfile() {
   if (isError || !profile) {
     return (
       <div className="mx-auto max-w-[760px] px-5 py-16 md:px-10">
-        <Notice tone="error">გამყიდველის პროფილი ვერ მოიძებნა.</Notice>
+        <Notice tone="error">{t("გამყიდველის პროფილი ვერ მოიძებნა.", "Seller profile could not be found.")}</Notice>
       </div>
     );
   }
@@ -59,7 +61,7 @@ export default function SellerProfile() {
         />
         <div className="flex-1">
           <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-            გამყიდველი
+            {t("გამყიდველი", "Seller")}
           </p>
           <h2
             className="font-display mt-1 text-3xl font-semibold tracking-[-.05em]"
@@ -73,29 +75,29 @@ export default function SellerProfile() {
                 size={15}
                 className="fill-[hsl(var(--primary))] text-[hsl(var(--primary))]"
               />
-              5.0 შეფასება
+              5.0 {t("შეფასება", "Rating")}
             </span>
             {profile.city && (
               <span className="flex items-center gap-1.5">
                 <MapPin size={15} />
-                {profile.city}
+                {cityName(profile.city)}
               </span>
             )}
             <span className="flex items-center gap-1.5">
               <Package size={15} />
-              {profile.listings} განცხადება
+              {profile.listings} {t("განცხადება", "listings")}
             </span>
           </div>
         </div>
       </section>
 
       <div className="mt-10">
-        <h3 className="font-display text-xl font-semibold">განცხადებები ({sellerItems.length})</h3>
+        <h3 className="font-display text-xl font-semibold">{t("განცხადებები", "Listings")} ({sellerItems.length})</h3>
         {sellerItems.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-[hsl(var(--border))] px-6 py-16 text-center">
             <Package size={23} className="mx-auto text-[hsl(var(--muted-foreground))]" />
             <h4 className="font-display mt-4 text-xl font-semibold">
-              განცხადებები არ მოიძებნა
+              {t("განცხადებები არ მოიძებნა", "No listings found")}
             </h4>
           </div>
         ) : (
@@ -125,7 +127,7 @@ export default function SellerProfile() {
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
-                    {item.city} · {item.condition}
+                    {cityName(item.city)} · {language === 'en' ? ({ ახალი: 'New', ახალივით: 'Like new', კარგი: 'Good', მეორადი: 'Used' } as Record<string, string>)[item.condition] ?? item.condition : item.condition}
                   </p>
                 </div>
               </article>

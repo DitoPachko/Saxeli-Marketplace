@@ -10,20 +10,22 @@ import { useFilters, cities } from '@/hooks/use-filters';
 import { useCategoryTree } from '@/hooks/use-categories';
 import { useUser } from '@clerk/react';
 import { FilterBar } from '@/components/FilterBar';
+import { useLanguage } from '@/hooks/use-language';
 
 function formatPrice(price: number) {
   return `${price.toLocaleString('ka-GE')} ₾`;
 }
 
-function timeAgo(date: string) {
+function timeAgo(date: string, language: 'ka' | 'en') {
   const difference = Math.max(0, Date.now() - new Date(date).getTime());
   const hours = Math.floor(difference / 3600000);
-  if (hours < 1) return 'ახლახან';
-  if (hours < 24) return `${hours} საათის წინ`;
-  return `${Math.floor(hours / 24)} დღის წინ`;
+  if (hours < 1) return language === 'ka' ? 'ახლახან' : 'Just now';
+  if (hours < 24) return language === 'ka' ? `${hours} საათის წინ` : `${hours}h ago`;
+  return language === 'ka' ? `${Math.floor(hours / 24)} დღის წინ` : `${Math.floor(hours / 24)}d ago`;
 }
 
 function ItemCard({ item, favorite, onFavorite, onMessage }: { item: MarketplaceItem; favorite: boolean; onFavorite: (item: MarketplaceItem) => void; onMessage?: (item: MarketplaceItem) => void }) {
+  const { language, t, cityName } = useLanguage();
   const isVip = item.promotionStatus === 'vip';
   const isSuperVip = item.promotionStatus === 'super_vip';
 
@@ -53,7 +55,7 @@ function ItemCard({ item, favorite, onFavorite, onMessage }: { item: Marketplace
               <Zap size={12} /> VIP
             </div>
           )}
-          <div className="inline-block w-fit rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">{item.condition}</div>
+           <div className="inline-block w-fit rounded-full bg-[hsl(var(--card)/.88)] px-2.5 py-1 font-mono-ui text-[9px] uppercase tracking-[.12em] backdrop-blur-sm">{language === 'en' ? ({ ახალი: 'New', ახალივით: 'Like new', კარგი: 'Good', მეორადი: 'Used' } as Record<string, string>)[item.condition] ?? item.condition : item.condition}</div>
         </div>
         <button type="button" onClick={() => onFavorite(item)} className={`absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition sm:right-3 sm:top-3 ${favorite ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--card)/.88)] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--primary))] hover:text-white'}`} aria-label={favorite ? 'შენახულებიდან წაშლა' : 'შენახვა'} data-testid={`button-favorite-${item.id}`}>
           <Heart size={17} fill={favorite ? 'currentColor' : 'none'} strokeWidth={1.8} />
@@ -67,8 +69,8 @@ function ItemCard({ item, favorite, onFavorite, onMessage }: { item: Marketplace
           <span className="shrink-0 font-mono-ui text-sm font-bold">{formatPrice(item.price)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-          <span className="flex items-center gap-1"><MapPin size={13} />{item.city}</span>
-          <span>{timeAgo(item.postedAt)}</span>
+           <span className="flex items-center gap-1"><MapPin size={13} />{cityName(item.city)}</span>
+           <span>{timeAgo(item.postedAt, language)}</span>
         </div>
         <div className="mt-4 flex items-center gap-2 border-t border-[hsl(var(--border))] pt-3">
           <Avatar initials={item.seller.initials} size="sm" />
@@ -77,7 +79,7 @@ function ItemCard({ item, favorite, onFavorite, onMessage }: { item: Marketplace
         </div>
         {onMessage ? (
           <button type="button" onClick={() => onMessage(item)} className="btn-ink mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold" data-testid={`button-message-${item.id}`}>
-            <MessageCircle size={15} /> მიწერე გამყიდველს
+             <MessageCircle size={15} /> {t('მიწერე გამყიდველს', 'Message seller')}
           </button>
         ) : null}
       </div>
@@ -90,6 +92,7 @@ function ItemSkeleton() {
 }
 
 export default function Home() {
+  const { t, categoryName } = useLanguage();
   const { submittedSearch, categorySlug, city, minPrice, maxPrice, clearFilters } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<'date' | 'priceAsc' | 'priceDesc'>('date');
@@ -153,19 +156,19 @@ export default function Home() {
     setActiveChat(item);
   };
 
-  const categoryName = categorySlug ? flatMap.get(categorySlug)?.name || categorySlug : '';
-  const displayTitle = submittedSearch || categoryName 
-    ? `შედეგები: ${submittedSearch ? `"${submittedSearch}" ` : ''}${categoryName}` 
-    : 'ახლახან დამატებული';
+  const selectedCategoryName = categorySlug ? categoryName(categorySlug, flatMap.get(categorySlug)?.name || categorySlug) : '';
+  const displayTitle = submittedSearch || selectedCategoryName
+    ? `${t('შედეგები:', 'Results:')} ${submittedSearch ? `"${submittedSearch}" ` : ''}${selectedCategoryName}`
+    : t('ახლახან დამატებული', 'Recently added');
 
   return (
     <div>
       <div className="mx-auto max-w-[1320px] px-3 py-5 sm:px-5 sm:py-7 md:px-10 md:py-10">
         <section className="enter relative overflow-hidden rounded-3xl bg-[hsl(var(--secondary))] px-5 py-7 text-[hsl(var(--secondary-foreground))] sm:rounded-[2rem] sm:px-6 sm:py-8 md:px-12 md:py-12">
           <div className="relative z-10 max-w-xl">
-            <p className="font-mono-ui text-[10px] uppercase tracking-[.25em] text-[hsl(var(--primary))]">დღის აღმოჩენა</p>
-            <h2 className="font-display mt-4 max-w-lg text-3xl font-semibold leading-[1.08] tracking-[-.06em] sm:text-4xl md:text-6xl">კარგი ნივთები<br /><span className="text-[hsl(var(--primary))]">ახლოსაა.</span></h2>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-[hsl(var(--secondary-foreground)/.7)] md:text-base">იპოვე ის, რაც უკვე უყვარდა სხვას და ახლა შენს ცხოვრებაში ეძებს ადგილს.</p>
+             <p className="font-mono-ui text-[10px] uppercase tracking-[.25em] text-[hsl(var(--primary))]">{t('დღის აღმოჩენა', 'Daily discovery')}</p>
+             <h2 className="font-display mt-4 max-w-lg text-3xl font-semibold leading-[1.08] tracking-[-.06em] sm:text-4xl md:text-6xl">{t('კარგი ნივთები', 'Good things')}<br /><span className="text-[hsl(var(--primary))]">{t('ახლოსაა.', 'are close by.')}</span></h2>
+             <p className="mt-5 max-w-md text-sm leading-relaxed text-[hsl(var(--secondary-foreground)/.7)] md:text-base">{t('იპოვე ის, რაც უკვე უყვარდა სხვას და ახლა შენს ცხოვრებაში ეძებს ადგილს.', 'Find something someone else loved, ready for a new place in your life.')}</p>
           </div>
           <div className="absolute -right-16 -top-28 h-80 w-80 rounded-full border-[34px] border-[hsl(var(--primary)/.95)] md:h-[30rem] md:w-[30rem]" aria-hidden="true" />
           <div className="absolute -bottom-32 right-20 h-72 w-72 rounded-full border border-[hsl(var(--accent)/.45)] md:h-96 md:w-96" aria-hidden="true" />
@@ -180,7 +183,7 @@ export default function Home() {
               {displayTitle}
             </h2>
           </div>
-          <span className="hidden text-xs text-[hsl(var(--muted-foreground))] sm:block" data-testid="text-results-count">{listingItems.length} განცხადება</span>
+           <span className="hidden text-xs text-[hsl(var(--muted-foreground))] sm:block" data-testid="text-results-count">{listingItems.length} {t('განცხადება', 'listings')}</span>
         </div>
         
         {isError ? <div className="mt-6"><Notice tone="error">ნივთების ჩატვირთვა ვერ მოხერხდა. <button type="button" className="ml-1 font-semibold underline" onClick={() => refetch()} data-testid="button-retry-items">თავიდან ცდა</button></Notice></div> : null}
@@ -190,9 +193,9 @@ export default function Home() {
         {!isLoading && !isError && listingItems.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--card)/.5)] px-6 py-16 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.22)]"><Search size={22} /></div>
-            <h3 className="font-display mt-4 text-xl font-semibold">ამ ძიებამ არაფერი იპოვა</h3>
-            <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">სცადე სხვა სიტყვა ან გააფართოვე ფილტრი.</p>
-            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { clearFilters(); setSort('date'); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
+             <h3 className="font-display mt-4 text-xl font-semibold">{t('ამ ძიებამ არაფერი იპოვა', 'No listings matched your search')}</h3>
+             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">{t('სცადე სხვა სიტყვა ან გააფართოვე ფილტრი.', 'Try another phrase or broaden your filters.')}</p>
+             <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { clearFilters(); setSort('date'); }} data-testid="button-reset-filters">{t('ფილტრების გასუფთავება', 'Clear filters')}</button>
           </div>
         ) : null}
         
@@ -208,11 +211,11 @@ export default function Home() {
         
         <section className="mt-14 grid gap-5 border-t border-[hsl(var(--border))] pt-10 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">Saxeli-ს პრინციპი</p>
-            <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-[-.05em] md:text-4xl">ყიდვა-გაყიდვა, როგორც საუბარი მეზობელთან.</h2>
+             <p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">{t('Saxeli-ს პრინციპი', 'The Saxeli principle')}</p>
+             <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-[-.05em] md:text-4xl">{t('ყიდვა-გაყიდვა, როგორც საუბარი მეზობელთან.', 'Buying and selling should feel like talking to a neighbor.')}</h2>
           </div>
           <div className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(var(--accent)/.2)]"><Check size={17} /></span> ადამიანებისგან, ადამიანებისთვის
+             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(var(--accent)/.2)]"><Check size={17} /></span> {t('ადამიანებისგან, ადამიანებისთვის', 'From people, for people')}
           </div>
         </section>
       </div>

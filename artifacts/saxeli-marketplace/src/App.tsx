@@ -17,6 +17,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MarketplaceChrome } from "@/components/MarketplaceChrome";
 import { FilterProvider } from "@/hooks/use-filters";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { LanguageProvider, useLanguage } from "@/hooks/use-language";
 import { kaGE } from "@/lib/georgian-localization";
 import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
@@ -217,6 +218,7 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  const { language } = useLanguage();
 
   return (
     <ClerkProvider
@@ -225,7 +227,7 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
-      localization={kaGE}
+      localization={language === 'ka' ? kaGE : undefined}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
@@ -248,7 +250,9 @@ export default function App() {
   return (
     <WouterRouter base={basePath}>
       <ThemeProvider>
-        <ClerkProviderWithRoutes />
+        <LanguageProvider>
+          <ClerkProviderWithRoutes />
+        </LanguageProvider>
       </ThemeProvider>
     </WouterRouter>
   );

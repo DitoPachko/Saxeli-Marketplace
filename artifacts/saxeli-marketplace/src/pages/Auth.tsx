@@ -1,6 +1,7 @@
 import { SignIn, SignUp } from "@clerk/react";
 import { ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function Auth({
   mode,
@@ -9,6 +10,7 @@ export default function Auth({
   mode: "login" | "register";
   basePath: string;
 }) {
+  const { t } = useLanguage();
   const isLogin = mode === "login";
   
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
@@ -26,20 +28,19 @@ export default function Auth({
         </Link>
         <div className="relative z-10 max-w-md">
           <p className="font-mono-ui text-[10px] uppercase tracking-[.24em] text-[hsl(var(--primary))]">
-            ნივთებს შორის, ადამიანებს შორის
+            {t("ნივთებს შორის, ადამიანებს შორის", "Between things, between people")}
           </p>
           <h1 className="font-display mt-5 text-6xl font-semibold leading-[1.05] tracking-[-.07em]">
-            შენი ადგილი
+            {t("შენი ადგილი", "Your place")}
             <br />
-            კარგი ნივთებისთვის.
+            {t("კარგი ნივთებისთვის.", "for good things.")}
           </h1>
           <p className="mt-6 max-w-sm text-sm leading-relaxed text-[hsl(var(--secondary-foreground)/.63)]">
-            დაცული ანგარიში გაძლევს გაყიდვის, შეტყობინებებისა და შენახული
-            ნივთების მართვის საშუალებას.
+            {t("დაცული ანგარიში გაძლევს გაყიდვის, შეტყობინებებისა და შენახული ნივთების მართვის საშუალებას.", "A secure account gives you the ability to sell, message, and manage saved items.")}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-[hsl(var(--secondary-foreground)/.5)]">
-          <ShieldCheck size={16} /> უსაფრთხო სივრცე, ნამდვილი ადამიანები
+          <ShieldCheck size={16} /> {t("უსაფრთხო სივრცე, ნამდვილი ადამიანები", "Safe space, real people")}
         </div>
         <div
           className="absolute -bottom-28 -right-24 h-80 w-80 rounded-full border-[28px] border-[hsl(var(--primary)/.9)]"

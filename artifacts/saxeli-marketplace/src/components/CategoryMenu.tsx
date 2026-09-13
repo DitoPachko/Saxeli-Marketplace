@@ -3,6 +3,7 @@ import { useCategoryTree, CategoryIcon, type CategoryNode } from '@/hooks/use-ca
 import { useFilters } from '@/hooks/use-filters';
 import { ChevronRight, Grid2X2, X, ArrowLeft } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { useLanguage } from '@/hooks/use-language';
 
 export function CategoryMenuDesktop() {
   const { tree, isLoading, isError, refetch } = useCategoryTree();
@@ -10,6 +11,7 @@ export function CategoryMenuDesktop() {
   const [activeRoot, setActiveRoot] = useState<CategoryNode | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { setCategorySlug } = useFilters();
+  const { t, categoryName } = useLanguage();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -42,7 +44,7 @@ export function CategoryMenuDesktop() {
         className={`flex items-center gap-2 rounded-full px-4 py-2 font-medium transition ${isOpen ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--muted)/.5)] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]'}`}
       >
         {isOpen ? <X size={18} /> : <Grid2X2 size={18} />}
-        კატეგორიები
+        {t('კატეგორიები', 'Categories')}
       </button>
 
       {isOpen && (
@@ -58,7 +60,7 @@ export function CategoryMenuDesktop() {
                   className={`flex w-full items-center gap-3 border-y px-6 py-3.5 text-left text-sm transition ${activeRoot?.id === root.id ? 'border-[hsl(var(--border))] bg-[hsl(var(--background))] font-semibold text-[hsl(var(--primary))] shadow-sm' : 'border-transparent font-medium text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted)/.5)] hover:text-[hsl(var(--foreground))]'}`}
                 >
                   <CategoryIcon name={root.icon} size={20} className={activeRoot?.id === root.id ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--muted-foreground))]'} />
-                  {root.name}
+                   {categoryName(root.slug, root.name)}
                   <ChevronRight size={16} className="ml-auto opacity-40" />
                 </button>
               ))}
@@ -66,16 +68,16 @@ export function CategoryMenuDesktop() {
             
             {/* Right Content */}
             <div className="flex-1 overflow-y-auto bg-[hsl(var(--background))] p-10">
-              {isError ? <div className="flex h-full items-center justify-center"><button type="button" onClick={() => refetch()} className="btn-ink rounded-xl px-4 py-2 text-sm font-semibold">კატეგორიები ვერ ჩაიტვირთა — სცადე თავიდან</button></div> : null}
+              {isError ? <div className="flex h-full items-center justify-center"><button type="button" onClick={() => refetch()} className="btn-ink rounded-xl px-4 py-2 text-sm font-semibold">{t('კატეგორიები ვერ ჩაიტვირთა — სცადე თავიდან', 'Categories could not be loaded — try again')}</button></div> : null}
               {!isError && (activeRoot ? (
                 <div>
                   <div className="mb-8 flex items-center justify-between border-b border-[hsl(var(--border))] pb-5">
                     <h2 className="font-display flex items-center gap-3 text-3xl font-bold">
                       <CategoryIcon name={activeRoot.icon} size={32} className="text-[hsl(var(--primary))]" />
-                      {activeRoot.name}
+                       {categoryName(activeRoot.slug, activeRoot.name)}
                     </h2>
                     <button onClick={() => handleSelect(activeRoot.slug)} className="text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
-                      ყველას ნახვა →
+                       {t('ყველას ნახვა', 'View all')} →
                     </button>
                   </div>
                   
@@ -84,7 +86,7 @@ export function CategoryMenuDesktop() {
                       {activeRoot.children.map(sub => (
                         <div key={sub.id}>
                           <button onClick={() => handleSelect(sub.slug)} className="group mb-4 flex items-center gap-2 text-base font-bold text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))]">
-                            {sub.name}
+                             {categoryName(sub.slug, sub.name)}
                             <ChevronRight size={16} className="opacity-0 transition-opacity group-hover:opacity-100" />
                           </button>
                           {sub.children.length > 0 && (
@@ -92,21 +94,21 @@ export function CategoryMenuDesktop() {
                               {sub.children.slice(0, 6).map(child => (
                                 <li key={child.id}>
                                   <button onClick={() => handleSelect(child.slug)} className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:underline">
-                                    {child.name}
+                                     {categoryName(child.slug, child.name)}
                                   </button>
                                 </li>
                               ))}
                             </ul>
                           )}
                           <button onClick={() => handleSelect(sub.slug)} className="mt-4 text-sm font-semibold text-[hsl(var(--primary))] hover:underline">
-                            მეტის ნახვა
+                             {t('მეტის ნახვა', 'View more')}
                           </button>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="flex h-40 items-center justify-center text-[hsl(var(--muted-foreground))]">
-                      ქვეკატეგორიები არ მოიძებნა
+                       {t('ქვეკატეგორიები არ მოიძებნა', 'No subcategories found')}
                     </div>
                   )}
                 </div>
@@ -123,6 +125,7 @@ export function CategoryMenuMobile() {
   const { tree, isLoading, isError, refetch } = useCategoryTree();
   const [isOpen, setIsOpen] = useState(false);
   const { setCategorySlug } = useFilters();
+  const { t, categoryName } = useLanguage();
   const [history, setHistory] = useState<CategoryNode[]>([]);
 
   const handleSelect = (slug: string) => {
@@ -138,7 +141,7 @@ export function CategoryMenuMobile() {
       <Dialog.Trigger asChild>
         <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-[hsl(var(--muted)/.5)] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--foreground))] transition hover:bg-[hsl(var(--muted))]">
           {isLoading ? <div className="skeleton h-5 w-5 rounded-full" /> : <Grid2X2 size={18} />}
-          კატეგორიები
+          {t('კატეგორიები', 'Categories')}
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -147,10 +150,10 @@ export function CategoryMenuMobile() {
           <div className="flex h-16 shrink-0 items-center justify-between border-b border-[hsl(var(--border))] bg-[hsl(var(--card))] px-5">
             {currentParent ? (
               <button onClick={() => setHistory(h => h.slice(0, -1))} className="flex items-center gap-1.5 text-sm font-bold text-[hsl(var(--foreground))]">
-                <ArrowLeft size={18} /> უკან
+                 <ArrowLeft size={18} /> {t('უკან', 'Back')}
               </button>
             ) : (
-              <span className="font-display text-xl font-bold">კატეგორიები</span>
+              <span className="font-display text-xl font-bold">{t('კატეგორიები', 'Categories')}</span>
             )}
             <Dialog.Close asChild>
               <button className="rounded-full bg-[hsl(var(--muted)/.5)] p-2 hover:bg-[hsl(var(--muted))]"><X size={20} /></button>
@@ -158,7 +161,7 @@ export function CategoryMenuMobile() {
           </div>
 
           <div className="flex-1 overflow-y-auto bg-[hsl(var(--background))] p-5">
-            {isError ? <button type="button" onClick={() => refetch()} className="btn-ink w-full rounded-xl px-4 py-3 text-sm font-semibold">კატეგორიები ვერ ჩაიტვირთა — სცადე თავიდან</button> : null}
+            {isError ? <button type="button" onClick={() => refetch()} className="btn-ink w-full rounded-xl px-4 py-3 text-sm font-semibold">{t('კატეგორიები ვერ ჩაიტვირთა — სცადე თავიდან', 'Categories could not be loaded — try again')}</button> : null}
             {!isError && (
             <>
             {currentParent && (
@@ -166,7 +169,7 @@ export function CategoryMenuMobile() {
                 onClick={() => handleSelect(currentParent.slug)}
                 className="mb-5 w-full rounded-2xl bg-[hsl(var(--primary)/.1)] px-5 py-4 text-left font-bold text-[hsl(var(--primary))] shadow-sm"
               >
-                ყველა: {currentParent.name}
+                 {t('ყველა', 'All')}: {categoryName(currentParent.slug, currentParent.name)}
               </button>
             )}
             
@@ -185,14 +188,14 @@ export function CategoryMenuMobile() {
                 >
                   <span className="flex items-center gap-4 text-[15px]">
                     {!currentParent && <CategoryIcon name={node.icon} size={22} className="text-[hsl(var(--primary))]" />}
-                    {node.name}
+                     {categoryName(node.slug, node.name)}
                   </span>
                   {node.children.length > 0 && <ChevronRight size={20} className="text-[hsl(var(--muted-foreground))]" />}
                 </button>
               ))}
               {currentList.length === 0 && (
                 <div className="py-10 text-center text-sm text-[hsl(var(--muted-foreground))]">
-                  ქვეკატეგორიები არ არის
+                   {t('ქვეკატეგორიები არ არის', 'No subcategories')}
                 </div>
               )}
             </div>

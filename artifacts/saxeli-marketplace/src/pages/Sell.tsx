@@ -24,6 +24,7 @@ import {
 import { Notice, PageHeader } from "@/components/MarketplaceChrome";
 import { CategoryPicker } from "@/components/CategoryPicker";
 import { useCategoryTree } from "@/hooks/use-categories";
+import { useLanguage } from "@/hooks/use-language";
 
 const conditions = ["ახალი", "თითქმის ახალი", "მეორადი", "ნაწილებად"];
 const maxPhotos = 5;
@@ -109,6 +110,7 @@ type ListingPhoto = {
 };
 
 export default function Sell() {
+  const { t, language, cityName } = useLanguage();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { categories } = useCategoryTree();
@@ -156,13 +158,13 @@ export default function Sell() {
     reader.onload = () => {
       const image = typeof reader.result === "string" ? reader.result : "";
       if (!image) {
-        setError("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
+        setError(t("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.", "Failed to read cover photo. Please try again."));
         return;
       }
       update("image", image);
       setError("");
     };
-    reader.onerror = () => setError("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.");
+    reader.onerror = () => setError(t("მთავარი ფოტოს წაკითხვა ვერ მოხერხდა. სცადე თავიდან.", "Failed to read cover photo. Please try again."));
     reader.readAsDataURL(file);
   };
 
@@ -170,19 +172,19 @@ export default function Sell() {
     const availableSlots = maxPhotos - photos.length;
     if (!files.length) return;
     if (availableSlots <= 0) {
-      setError("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია.");
+      setError(t("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია.", "You can upload a maximum of 5 photos."));
       return;
     }
 
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
     if (!imageFiles.length) {
-      setError("გთხოვ, ატვირთე ფოტო JPG, PNG ან WEBP ფორმატში.");
+      setError(t("გთხოვ, ატვირთე ფოტო JPG, PNG ან WEBP ფორმატში.", "Please upload photos in JPG, PNG, or WEBP format."));
       return;
     }
 
     const filesToAdd = imageFiles.slice(0, availableSlots);
     if (imageFiles.length > availableSlots) {
-      setError("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია. ზედმეტი ფოტოები არ დაემატა.");
+      setError(t("მაქსიმუმ 5 ფოტოს ატვირთვა შეგიძლია. ზედმეტი ფოტოები არ დაემატა.", "Maximum 5 photos. Extra photos were ignored."));
     } else {
       setError("");
     }
@@ -230,7 +232,7 @@ export default function Sell() {
 
   const continueToChoice = () => {
     if (!photos.length) {
-      setError("გთხოვ, ატვირთე მინიმუმ ერთი ფოტო.");
+      setError(t("გთხოვ, ატვირთე მინიმუმ ერთი ფოტო.", "Please upload at least one photo."));
       return;
     }
     setError("");
@@ -259,7 +261,7 @@ export default function Sell() {
       setAiFilled(true);
       setStage("details");
     } catch {
-      setError("AI ანალიზი ვერ შესრულდა. მონაცემები შეგიძლია ხელით შეავსო.");
+      setError(t("AI ანალიზი ვერ შესრულდა. მონაცემები შეგიძლია ხელით შეავსო.", "AI analysis failed. You can fill data manually."));
       setAiFilled(false);
       setStage("details");
     } finally {
@@ -285,13 +287,13 @@ export default function Sell() {
 
   const submit = () => {
     if (!form.image) {
-      setError("განცხადების გამოსაქვეყნებლად ნივთის ფოტო ატვირთე.");
+      setError(t("განცხადების გამოსაქვეყნებლად ნივთის ფოტო ატვირთე.", "Upload a photo to publish the listing."));
       return;
     }
 
     const validation = listingDetailsSchema.safeParse(form);
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message ?? "შეამოწმე შევსებული ველები.");
+      setError(validation.error.issues[0]?.message ?? t("შეამოწმე შევსებული ველები.", "Please check the filled fields."));
       return;
     }
 
@@ -324,7 +326,7 @@ export default function Sell() {
           setLocation(`/listing/${item.id}`);
         },
         onError: () =>
-          setError("განცხადების გამოქვეყნება ვერ მოხერხდა. გთხოვ, თავიდან სცადო."),
+          setError(t("განცხადების გამოქვეყნება ვერ მოხერხდა. გთხოვ, თავიდან სცადო.", "Failed to publish listing. Please try again.")),
       },
     );
   };
@@ -335,7 +337,7 @@ export default function Sell() {
       setDraftSaved(true);
       setError("");
     } catch {
-      setError("პროექტის შენახვა ვერ მოხერხდა. სცადე თავიდან.");
+      setError(t("პროექტის შენახვა ვერ მოხერხდა. სცადე თავიდან.", "Failed to save draft. Please try again."));
     }
   };
 
@@ -357,22 +359,22 @@ export default function Sell() {
 
   return (
     <div>
-      <PageHeader title="განცხადების დამატება" eyebrow="Saxeli / ნივთი">
+      <PageHeader title={t("განცხადების დამატება", "Add listing")} eyebrow={t("Saxeli / ნივთი", "Saxeli / Item")}>
         <Link
           href="/"
           className="hidden items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:flex"
           data-testid="link-cancel-sell"
         >
-          <X size={16} /> გაუქმება
+          <X size={16} /> {t("გაუქმება", "Cancel")}
         </Link>
       </PageHeader>
 
       <div className="mx-auto max-w-[920px] px-3 py-6 sm:px-5 sm:py-8 md:px-10 md:py-12">
         <div className="mb-9 flex items-center gap-3">
           {[
-            ["ფოტო", stage !== "photo"],
-            ["არჩევანი", stage === "details"],
-            ["მონაცემები", stage === "details"],
+            [(language === "ka" ? "ფოტო" : "Photo"), stage !== "photo"],
+            [(language === "ka" ? "არჩევანი" : "Choice"), stage === "details"],
+            [(language === "ka" ? "მონაცემები" : "Details"), stage === "details"],
           ].map(([label, complete], index) => (
             <div key={label as string} className="flex min-w-0 flex-1 items-center gap-2">
               <span
@@ -410,23 +412,23 @@ export default function Sell() {
               <div className="enter space-y-7">
                 <div>
                   <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-                    01 / ნივთის ფოტო
+                    {t("01 / ნივთის ფოტო", "01 / Item photo")}
                   </p>
                   <h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">
-                    ჯერ ფოტო, შემდეგ ყველაფერი დანარჩენი.
+                    {t("ჯერ ფოტო, შემდეგ ყველაფერი დანარჩენი.", "Photo first, everything else after.")}
                   </h2>
                   <p className="mt-3 max-w-lg text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
-                    კარგი ფოტო გვეხმარება განცხადება სწრაფად და ზუსტად მოვამზადოთ.
+                    {t("კარგი ფოტო გვეხმარება განცხადება სწრაფად და ზუსტად მოვამზადოთ.", "A good photo helps us prepare the listing quickly and accurately.")}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
                   <span className="rounded-full bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-semibold">
-                    ფოტოები: {photos.length} / {maxPhotos}
+                    {t("ფოტოები:", "Photos:")} {photos.length} / {maxPhotos}
                   </span>
                   {photos.length ? (
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                      მთავარია: ფოტო {photos.findIndex((photo) => photo.isCover) + 1}
+                      {t("მთავარია: ფოტო", "Cover: photo")} {photos.findIndex((photo) => photo.isCover) + 1}
                     </span>
                   ) : null}
                 </div>
@@ -455,13 +457,13 @@ export default function Sell() {
                     <UploadCloud size={26} />
                   </span>
                   <span className="mt-4 text-lg font-semibold">
-                    {photos.length ? "დაამატე კიდევ ფოტო" : "ატვირთე ნივთის ფოტო"}
+                    {photos.length ? t("დაამატე კიდევ ფოტო", "Add more photos") : t("ატვირთე ნივთის ფოტო", "Upload item photo")}
                   </span>
                   <span className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
-                    ჩააგდე აქ ან აირჩიე მოწყობილობიდან
+                    {t("ჩააგდე აქ ან აირჩიე მოწყობილობიდან", "Drop here or choose from device")}
                   </span>
                   <span className="mt-3 font-mono-ui text-[10px] uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">
-                    JPG · PNG · WEBP · მაქს. 5 ფოტო
+                    {t("JPG · PNG · WEBP · მაქს. 5 ფოტო", "JPG · PNG · WEBP · Max 5 photos")}
                   </span>
                 </button>
 
@@ -489,7 +491,7 @@ export default function Sell() {
                           />
                           {photo.isCover ? (
                             <span className="absolute bottom-2 left-2 rounded-full bg-[hsl(var(--primary))] px-2.5 py-1 text-[10px] font-bold text-[hsl(var(--primary-foreground))]">
-                              მთავარი ფოტო
+                              {t("მთავარი ფოტო", "Cover photo")}
                             </span>
                           ) : null}
                         </button>
@@ -513,7 +515,7 @@ export default function Sell() {
                     className="btn-primary flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold"
                     data-testid="button-continue-photos"
                   >
-                    ფოტოების დადასტურება <Check size={16} />
+                    {t("ფოტოების დადასტურება", "Confirm photos")} <Check size={16} />
                   </button>
                 ) : null}
               </div>
@@ -523,13 +525,13 @@ export default function Sell() {
               <div className="enter space-y-7">
                 <div>
                   <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-                    02 / სწრაფი დახმარება
+                    {t("02 / სწრაფი დახმარება", "02 / Quick help")}
                   </p>
                   <h2 className="font-display mt-2 text-3xl font-semibold tracking-[-.05em]">
-                    როგორ შევავსოთ ნივთი?
+                    {t("როგორ შევავსოთ ნივთი?", "How to fill in the item?")}
                   </h2>
                   <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
-                    ფოტო ატვირთულია. აირჩიე, გინდა თუ არა ხელოვნური ინტელექტის დახმარება.
+                    {t("ფოტო ატვირთულია. აირჩიე, გინდა თუ არა ხელოვნური ინტელექტის დახმარება.", "Photo uploaded. Choose if you want AI assistance.")}
                   </p>
                 </div>
 
@@ -541,14 +543,14 @@ export default function Sell() {
                   />
                   <div className="flex items-center justify-between gap-3 p-4">
                     <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                      ფოტო მზად არის
+                      {t("ფოტო მზად არის", "Photo is ready")}
                     </span>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="min-h-12 rounded-lg px-3 text-xs font-semibold text-[hsl(var(--primary))] hover:bg-[hsl(var(--muted))] hover:underline"
                     >
-                      სხვა ფოტოს არჩევა
+                      {t("სხვა ფოტოს არჩევა", "Choose another photo")}
                     </button>
                   </div>
                 </div>
@@ -562,9 +564,9 @@ export default function Sell() {
                   >
                     <Sparkles size={21} />
                     <span>
-                      <span className="block font-semibold">დაიხმარე ხელოვნური ინტელექტი</span>
+                      <span className="block font-semibold">{t("დაიხმარე ხელოვნური ინტელექტი", "Use Artificial Intelligence")}</span>
                       <span className="mt-1 block text-xs font-normal opacity-75">
-                        ფოტო შეავსებს ძირითად ველებს
+                        {t("ფოტო შეავსებს ძირითად ველებს", "Photo will fill the main fields")}
                       </span>
                     </span>
                   </button>
@@ -576,9 +578,9 @@ export default function Sell() {
                   >
                     <ImagePlus size={21} />
                     <span>
-                      <span className="block font-semibold">ჩაწერე მონაცემები</span>
+                      <span className="block font-semibold">{t("ჩაწერე მონაცემები", "Fill in manually")}</span>
                       <span className="mt-1 block text-xs text-[hsl(var(--muted-foreground))]">
-                        ყველაფერი თავად შეავსე
+                        {t("ყველაფერი თავად შეავსე", "Fill everything yourself")}
                       </span>
                     </span>
                   </button>
@@ -588,9 +590,9 @@ export default function Sell() {
                   <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-[hsl(var(--card)/.92)] p-8 backdrop-blur-sm">
                     <div className="text-center">
                       <LoaderCircle className="mx-auto animate-spin text-[hsl(var(--primary))]" size={30} />
-                      <p className="mt-4 font-semibold">სურათი ანალიზდება...</p>
+                      <p className="mt-4 font-semibold">{t("სურათი ანალიზდება...", "Analyzing image...")}</p>
                       <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
-                        რამდენიმე წამში საწყის მონაცემებს მოგიმზადებთ
+                        {t("რამდენიმე წამში საწყის მონაცემებს მოგიმზადებთ", "We will prepare initial data in a few seconds")}
                       </p>
                     </div>
                   </div>
@@ -603,20 +605,20 @@ export default function Sell() {
                 <div className="flex items-start justify-between gap-4">
                    <div>
                     <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-                      03 / ნივთის მონაცემები
+                      {t("03 / ნივთის მონაცემები", "03 / Item data")}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <h2 className="font-display text-3xl font-semibold tracking-[-.05em]">
-                        შეამოწმე და გამოაქვეყნე.
+                        {t("შეამოწმე და გამოაქვეყნე.", "Check and publish.")}
                       </h2>
                       {aiFilled ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary)/.14)] px-2.5 py-1 text-[11px] font-semibold text-[hsl(var(--primary))]">
-                          <Sparkles size={12} /> AI-ით შევსებული
+                          <Sparkles size={12} /> {t("AI-ით შევსებული", "Filled by AI")}
                         </span>
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-relaxed text-[hsl(var(--muted-foreground))]">
-                      ყველა ველი სრულად რედაქტირებადია — შენ უკეთ იცი შენი ნივთი.
+                      {t("ყველა ველი სრულად რედაქტირებადია — შენ უკეთ იცი შენი ნივთი.", "All fields are fully editable — you know your item better.")}
                     </p>
                   </div>
                   <button
@@ -624,7 +626,7 @@ export default function Sell() {
                     onClick={() => setStage("choice")}
                     className="hidden items-center gap-2 text-xs font-semibold text-[hsl(var(--primary))] sm:flex"
                   >
-                    <ArrowLeft size={14} /> არჩევანის შეცვლა
+                    <ArrowLeft size={14} /> {t("არჩევანის შეცვლა", "Change choice")}
                   </button>
                 </div>
 
@@ -642,29 +644,29 @@ export default function Sell() {
                       onClick={() => fileInputRef.current?.click()}
                          className="absolute bottom-2 left-2 min-h-12 rounded-lg bg-[hsl(var(--card)/.9)] px-3 py-2 text-xs font-semibold shadow-sm backdrop-blur"
                     >
-                      ფოტოს შეცვლა
+                      {t("ფოტოს შეცვლა", "Change photo")}
                     </button>
                   </div>
                   <div className="space-y-5">
                     <label className="block text-sm font-semibold">
-                      სათაური
+                      {t("სათაური", "Title")}
                       <input
                         value={form.title}
                         onChange={(event) => update("title", event.target.value)}
                          className="mt-2 min-h-12 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-base outline-none transition focus:border-[hsl(var(--primary))] md:text-sm"
-                       placeholder="მაგ. iPhone 13 Pro 128GB"
+                       placeholder={t("მაგ. iPhone 13 Pro 128GB", "e.g. iPhone 13 Pro 128GB")}
                         data-testid="input-sell-title"
                       />
                     </label>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block text-sm font-semibold">
-                        კატეგორია <span className="text-[hsl(var(--destructive))]">*</span>
+                        {t("კატეგორია", "Category")} <span className="text-[hsl(var(--destructive))]">*</span>
                         <div className="mt-2">
                           <CategoryPicker value={form.category} onChange={(slug) => update("category", slug)} />
                         </div>
                       </label>
                       <label className="block text-sm font-semibold">
-                        მდგომარეობა
+                        {t("მდგომარეობა", "Condition")}
                         <select
                           value={form.condition}
                           onChange={(event) => update("condition", event.target.value)}
@@ -682,7 +684,7 @@ export default function Sell() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-sm font-semibold">
-                    სავარაუდო ფასი (₾)
+                    {t("სავარაუდო ფასი (₾)", "Estimated price (₾)")}
                     <input
                       required
                       type="number"
@@ -690,16 +692,16 @@ export default function Sell() {
                       value={form.price || ""}
                       onChange={(event) => update("price", Number(event.target.value))}
                       className="mt-2 w-full rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 font-mono-ui text-lg outline-none focus:border-[hsl(var(--primary))]"
-                      placeholder="მაგ. 850"
+                      placeholder={t("მაგ. 850", "e.g. 850")}
                       data-testid="input-sell-price"
                     />
                   </label>
                   <div>
-                    <p className="text-sm font-semibold">ფასისა და გაცვლის პირობები</p>
+                    <p className="text-sm font-semibold">{t("ფასისა და გაცვლის პირობები", "Price and trade conditions")}</p>
                     <div className="mt-2 flex gap-2">
                       {[
-                        ["negotiable", "ფასი შეთანხმებით"],
-                        ["tradeAvailable", "გაცვლა"],
+                        ["negotiable", language === "ka" ? "ფასი შეთანხმებით" : "Negotiable"],
+                        ["tradeAvailable", language === "ka" ? "გაცვლა" : "Trade"],
                       ].map(([key, label]) => {
                         const selected = form[key as "negotiable" | "tradeAvailable"];
                         return (
@@ -731,7 +733,7 @@ export default function Sell() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-sm font-semibold">
-                    ქალაქი
+                    {t("ქალაქი", "City")}
                     <select
                       value={form.city}
                       onChange={(event) => selectCity(event.target.value)}
@@ -739,12 +741,12 @@ export default function Sell() {
                       data-testid="select-sell-city"
                     >
                       {cities.map((city) => (
-                        <option key={city}>{city}</option>
+                        <option key={cityName(city)}>{cityName(city)}</option>
                       ))}
                     </select>
                   </label>
                   <label className="block text-sm font-semibold">
-                    უბანი / რაიონი
+                    {t("უბანი / რაიონი", "District / Region")}
                     <select
                       value={form.district}
                       onChange={(event) => update("district", event.target.value)}
@@ -759,13 +761,13 @@ export default function Sell() {
                 </div>
 
                 <label className="block text-sm font-semibold">
-                  აღწერა
+                  {t("აღწერა", "Description")}
                   <textarea
                     value={form.description}
                     onChange={(event) => update("description", event.target.value)}
                     rows={5}
                     className="mt-2 w-full resize-none rounded-xl border border-[hsl(var(--input))] bg-transparent px-4 py-3.5 text-sm leading-relaxed outline-none focus:border-[hsl(var(--primary))]"
-                     placeholder="აღწერეთ ნივთის მდგომარეობა და დეტალები..."
+                     placeholder={t("აღწერეთ ნივთის მდგომარეობა და დეტალები...", "Describe item condition and details...")}
                     data-testid="textarea-sell-description"
                   />
                 </label>
@@ -791,9 +793,9 @@ export default function Sell() {
                       <Truck size={19} />
                     </span>
                     <span className="flex-1">
-                      <span className="block text-sm font-semibold">მიტანის სერვისი</span>
+                      <span className="block text-sm font-semibold">{t("მიტანის სერვისი", "Delivery service")}</span>
                       <span className="mt-1 block text-xs font-normal leading-relaxed text-[hsl(var(--muted-foreground))]">
-                        გაქვთ თუ არა ნივთის ადგილზე მიტანის ან ფოსტით გაგზავნის სერვისი?
+                        {t("გაქვთ თუ არა ნივთის ადგილზე მიტანის ან ფოსტით გაგზავნის სერვისი?", "Do you offer delivery or shipping service?")}
                       </span>
                     </span>
                     <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${
@@ -808,6 +810,8 @@ export default function Sell() {
                   <div className="mt-3 grid gap-3">
                     {deliveryOptions.map(({ value, detail, icon: Icon }) => {
                       const selected = form.delivery?.includes(value);
+                      const translatedValue = language === "en" ? ({ "ადგილზე გატანა": "Pick up", "საკურიერო მომსახურება": "Courier service", "პირისპირ შეხვედრა": "Meet in person" } as Record<string, string>)[value] ?? value : value;
+                      const translatedDetail = language === "en" ? ({ "მყიდველი ნივთს შენგან იღებს": "Buyer picks up the item", "მყიდველი ირჩევს კურიერს": "Buyer chooses a courier", "შეხვედრა თქვენთვის მოსახერხებელ ადგილას": "Meeting at a convenient place" } as Record<string, string>)[detail] ?? detail : detail;
                       return (
                         <button
                           key={value}
@@ -830,9 +834,9 @@ export default function Sell() {
                             <Icon size={19} />
                           </span>
                           <span className="flex-1">
-                            <span className="block text-sm font-semibold">{value}</span>
+                            <span className="block text-sm font-semibold">{translatedValue}</span>
                             <span className="mt-1 block text-xs text-[hsl(var(--muted-foreground))]">
-                              {detail}
+                              {translatedDetail}
                             </span>
                           </span>
                           <span
@@ -853,7 +857,7 @@ export default function Sell() {
 
                 <div className="space-y-5">
                   <label className="block text-sm font-semibold">
-                    ტელეფონის ნომერი
+                    {t("ტელეფონის ნომერი", "Phone number")}
                     <input
                       type="tel"
                       value={form.phone}
@@ -872,11 +876,11 @@ export default function Sell() {
                       className="h-5 w-5 accent-[hsl(var(--primary))]"
                       data-testid="checkbox-chat-only"
                     />
-                    მხოლოდ ჩატში მოწერა
+                    {t("მხოლოდ ჩატში მოწერა", "Chat only")}
                   </label>
                 </div>
                 {draftSaved ? (
-                  <Notice tone="success">პროექტი შენახულია ამ მოწყობილობაზე.</Notice>
+                  <Notice tone="success">{t("პროექტი შენახულია ამ მოწყობილობაზე.", "Draft saved on this device.")}</Notice>
                 ) : null}
               </div>
             ) : null}
@@ -889,7 +893,7 @@ export default function Sell() {
                   className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold hover:bg-[hsl(var(--muted))]"
                   data-testid="button-sell-back"
                 >
-                  <ArrowLeft size={16} /> უკან
+                  <ArrowLeft size={16} /> {t("უკან", "Back")}
                 </button>
                 <button
                   type="button"
@@ -897,7 +901,7 @@ export default function Sell() {
                   className="rounded-xl border border-[hsl(var(--border))] px-4 py-3 text-sm font-semibold transition hover:border-[hsl(var(--primary)/.6)] hover:bg-[hsl(var(--muted))]"
                   data-testid="button-save-draft"
                 >
-                  პროექტად შენახვა
+                  {t("პროექტად შენახვა", "Save draft")}
                 </button>
                 <button
                   type="button"
@@ -906,7 +910,7 @@ export default function Sell() {
                   className="btn-primary flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold disabled:opacity-60"
                   data-testid="button-publish-item"
                 >
-                  {createItem.isPending ? "იტვირთება..." : "გამოქვეყნება"}{" "}
+                  {createItem.isPending ? t("იტვირთება...", "Publishing...") : t("გამოქვეყნება", "Publish")}{" "}
                   <Check size={16} />
                 </button>
               </div>
@@ -916,13 +920,13 @@ export default function Sell() {
           <aside className="hidden space-y-4 lg:block">
             <div className="rounded-2xl bg-[hsl(var(--primary)/.16)] p-5">
               <Sparkles size={18} />
-              <h3 className="font-display mt-4 text-lg font-semibold">პატარა რჩევა</h3>
+              <h3 className="font-display mt-4 text-lg font-semibold">{t("პატარა რჩევა", "A little tip")}</h3>
               <p className="mt-2 text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">
-                ნათელი ფოტო და გულწრფელი აღწერა ნივთს უფრო სწრაფად იპოვის ახალ მფლობელს.
+                {t("ნათელი ფოტო და გულწრფელი აღწერა ნივთს უფრო სწრაფად იპოვის ახალ მფლობელს.", "A clear photo and honest description will find a new owner faster.")}
               </p>
             </div>
             <p className="px-2 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">
-              AI-ს მიერ მომზადებული მონაცემები ყოველთვის გადაამოწმე გამოქვეყნებამდე.
+              {t("AI-ს მიერ მომზადებული მონაცემები ყოველთვის გადაამოწმე გამოქვეყნებამდე.", "Always verify AI-generated data before publishing.")}
             </p>
           </aside>
         </div>

@@ -28,6 +28,7 @@ import type { MarketplaceItem } from "@workspace/api-client-react";
 import { Avatar, ItemVisual, Notice } from "@/components/MarketplaceChrome";
 import { ChatModal } from "@/components/ChatModal";
 import { VipModal } from "@/components/VipModal";
+import { useLanguage } from "@/hooks/use-language";
 
 function formatPrice(price: number) {
   return `${price.toLocaleString("ka-GE")} ₾`;
@@ -38,6 +39,7 @@ export default function ItemDetail() {
   const id = params.id ?? "";
   const [, setLocation] = useLocation();
   const { isLoaded, isSignedIn, user } = useUser();
+  const { t, language, categoryName, cityName } = useLanguage();
   const { data: item, isLoading, isError, refetch } = useGetItem(id, {
     query: { queryKey: getGetItemQueryKey(id), enabled: Boolean(id) },
   });
@@ -68,14 +70,14 @@ export default function ItemDetail() {
     return (
       <div className="mx-auto max-w-[760px] px-5 py-16 md:px-10">
         <Notice tone="error">
-          ეს ნივთი ვერ მოიძებნა.{" "}
+          {t("ეს ნივთი ვერ მოიძებნა.", "This item could not be found.")}{" "}
           <button
             type="button"
             className="ml-1 font-semibold underline"
             onClick={() => refetch()}
             data-testid="button-retry-item"
           >
-            თავიდან ცდა
+            {t("თავიდან ცდა", "Try again")}
           </button>
         </Notice>
         <Link
@@ -83,7 +85,7 @@ export default function ItemDetail() {
           className="mt-5 inline-flex items-center gap-2 text-sm font-semibold"
           data-testid="link-back-marketplace"
         >
-          <ArrowLeft size={16} /> უკან დაბრუნება
+          <ArrowLeft size={16} /> {t("უკან დაბრუნება", "Go back")}
         </Link>
       </div>
     );
@@ -95,7 +97,7 @@ export default function ItemDetail() {
   const activeImage = gallery[selectedImage] ?? gallery[0] ?? item.image;
   const isFavorite = favorite || item.isFavorite || false;
   const sellerPhone = item.phone || item.seller.phoneNumber;
-  const backLabel = "უკან დაბრუნება";
+  const backLabel = t("უკან დაბრუნება", "Go back");
 
   const openMessageDialog = () => {
     if (!isLoaded) return;
@@ -155,7 +157,7 @@ export default function ItemDetail() {
                     )
                   }
                   className="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[hsl(var(--card)/.9)] shadow-[var(--shadow-sm)] transition hover:bg-[hsl(var(--card))]"
-                  aria-label="წინა ფოტო"
+                  aria-label={t("წინა ფოტო", "Previous photo")}
                   data-testid="button-gallery-previous"
                 >
                   <ChevronLeft size={20} />
@@ -166,7 +168,7 @@ export default function ItemDetail() {
                     setSelectedImage((selectedImage + 1) % gallery.length)
                   }
                   className="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[hsl(var(--card)/.9)] shadow-[var(--shadow-sm)] transition hover:bg-[hsl(var(--card))]"
-                  aria-label="შემდეგი ფოტო"
+                  aria-label={t("შემდეგი ფოტო", "Next photo")}
                   data-testid="button-gallery-next"
                 >
                   <ChevronRight size={20} />
@@ -206,13 +208,13 @@ export default function ItemDetail() {
           <section className="mt-8 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 md:p-6">
             <div className="flex items-center gap-2 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
               <ShieldCheck size={16} className="text-[hsl(var(--accent))]" />
-              აღწერა
+              {t("აღწერა", "Description")}
             </div>
             <p
               className="mt-4 whitespace-pre-line text-[15px] leading-7 text-[hsl(var(--foreground)/.85)]"
               data-testid="text-item-description"
             >
-              {item.description || "აღწერა არ არის მითითებული."}
+              {item.description || t("აღწერა არ არის მითითებული.", "No description provided.")}
             </p>
           </section>
         </section>
@@ -220,7 +222,7 @@ export default function ItemDetail() {
         <section className="enter min-w-0 lg:sticky lg:top-24 lg:self-start">
           <div className="flex items-center justify-between gap-4">
             <span className="rounded-full bg-[hsl(var(--primary)/.16)] px-3 py-1.5 text-xs font-semibold text-[hsl(var(--foreground))]">
-              {item.condition}
+              {language === 'en' ? ({ ახალი: 'New', ახალივით: 'Like new', კარგი: 'Good', მეორადი: 'Used' } as Record<string, string>)[item.condition] ?? item.condition : item.condition}
             </span>
             <button
               type="button"
@@ -237,12 +239,12 @@ export default function ItemDetail() {
               data-testid="button-detail-favorite"
             >
               <Heart size={17} fill={isFavorite ? "currentColor" : "none"} />
-              {isFavorite ? "შენახულია" : "შენახვა"}
+              {isFavorite ? t("შენახულია", "Saved") : t("შენახვა", "Save")}
             </button>
           </div>
 
           <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-[hsl(var(--muted-foreground))]">
-            <span>{item.category}</span>
+            <span>{categoryName(item.categorySlug, item.category)}</span>
             <span className="text-[hsl(var(--border))]">·</span>
             <span className="flex items-center gap-1">
               <CalendarDays size={13} /> {item.postedAt}
@@ -272,10 +274,10 @@ export default function ItemDetail() {
               </div>
               <div>
                 <p className={`text-sm font-bold ${isSuperVip ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--accent))]'}`}>
-                  {isSuperVip ? 'Super VIP' : 'VIP'} აქტიურია
+                  {isSuperVip ? 'Super VIP' : 'VIP'} {t("აქტიურია", "is active")}
                 </p>
                 <p className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
-                  პრომოცია სრულდება: {new Date(item.vipExpiresAt).toLocaleDateString('ka-GE', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {t("პრომოცია სრულდება:", "Promotion ends:")} {new Date(item.vipExpiresAt).toLocaleDateString(language === 'ka' ? 'ka-GE' : 'en-US', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
@@ -284,7 +286,7 @@ export default function ItemDetail() {
           <div className="mt-5 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
             <span className="flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">
               <MapPin size={13} />
-              {item.city}
+              {cityName(item.city)}
               {item.district ? ` · ${item.district}` : ""}
             </span>
             <span className="flex items-center gap-1.5 rounded-lg bg-[hsl(var(--muted))] px-2.5 py-1.5">
@@ -296,17 +298,17 @@ export default function ItemDetail() {
             <div className="mt-5 flex flex-wrap gap-2">
               {item.negotiable ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--primary)/.14)] px-3 py-1.5 text-xs font-semibold">
-                  ფასი შეთანხმებით
+                  {t("ფასი შეთანხმებით", "Price is negotiable")}
                 </span>
               ) : null}
               {item.tradeAvailable ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.14)] px-3 py-1.5 text-xs font-semibold">
-                  <Handshake size={14} /> გაცვლა
+                  <Handshake size={14} /> {t("გაცვლა", "Trade available")}
                 </span>
               ) : null}
               {item.deliveryAvailable ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.14)] px-3 py-1.5 text-xs font-semibold">
-                  <Truck size={14} /> მიტანის სერვისი
+                  <Truck size={14} /> {t("მიტანის სერვისი", "Delivery available")}
                 </span>
               ) : null}
             </div>
@@ -314,7 +316,7 @@ export default function ItemDetail() {
 
           <div className="mt-8 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-[var(--shadow-sm)] md:p-6">
             <p className="font-mono-ui text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">
-              გამყიდველი
+              {t("გამყიდველი", "Seller")}
             </p>
             <div className="mt-4 flex items-start gap-3">
               <Link href={`/seller/${item.seller.id}`}>
@@ -342,11 +344,11 @@ export default function ItemDetail() {
                     {item.seller.rating.toFixed(1)}
                   </span>
                   <span>·</span>
-                  <span>{item.seller.listings} განცხადება</span>
+                  <span>{item.seller.listings} {t("განცხადება", "listings")}</span>
                 </p>
                 {item.seller.city ? (
                   <p className="mt-1 flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    <MapPin size={12} /> {item.seller.city}
+                    <MapPin size={12} /> {cityName(item.seller.city)}
                   </p>
                 ) : null}
               </div>
@@ -354,11 +356,11 @@ export default function ItemDetail() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.13)] px-2.5 py-1.5 text-[11px] font-semibold">
-                <BadgeCheck size={14} /> Saxeli პროფილი
+                <BadgeCheck size={14} /> {t("Saxeli პროფილი", "Saxeli profile")}
               </span>
               {sellerPhone ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--muted))] px-2.5 py-1.5 text-[11px] font-semibold">
-                  <ShieldCheck size={14} /> ტელეფონი მითითებულია
+                  <ShieldCheck size={14} /> {t("ტელეფონი მითითებულია", "Phone verified")}
                 </span>
               ) : null}
             </div>
@@ -372,10 +374,10 @@ export default function ItemDetail() {
                     className="btn-primary flex items-center justify-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 py-3.5 text-sm font-bold text-white hover:bg-[hsl(var(--primary)/.9)]"
                     data-testid="button-promote-listing"
                   >
-                    <ArrowUpRight size={17} /> {item.promotionStatus === 'standard' ? 'განცხადების რეკლამირება' : 'VIP-ის განახლება'}
+                    <ArrowUpRight size={17} /> {item.promotionStatus === 'standard' ? t('განცხადების რეკლამირება', 'Promote listing') : t('VIP-ის განახლება', 'Renew VIP')}
                   </button>
                   <Link href={`/edit/${item.id}`} className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold">
-                    განცხადების რედაქტირება
+                    {t("განცხადების რედაქტირება", "Edit listing")}
                   </Link>
                 </div>
               ) : (
@@ -398,13 +400,13 @@ export default function ItemDetail() {
                         data-testid="button-reveal-phone"
                       >
                         <Phone size={17} />{" "}
-                        {sellerPhone ? "დარეკვა" : "ტელეფონი არ არის მითითებული"}
+                        {sellerPhone ? t("დარეკვა", "Call") : t("ტელეფონი არ არის მითითებული", "No phone provided")}
                       </button>
                     )
                   ) : null}
                   {item.chatOnly ? (
                     <div className="rounded-xl bg-[hsl(var(--muted))] px-4 py-3 text-center text-xs font-semibold text-[hsl(var(--muted-foreground))]">
-                      გამყიდველი მხოლოდ ჩატში პასუხობს
+                      {t("გამყიდველი მხოლოდ ჩატში პასუხობს", "Seller only replies in chat")}
                     </div>
                   ) : null}
                   {(isLoaded && (!user || user.id !== item.seller.id)) ? <button
@@ -413,7 +415,7 @@ export default function ItemDetail() {
                     className="btn-ink flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold"
                     data-testid="button-contact-seller"
                   >
-                    <MessageCircle size={17} /> ჩატში მიწერა
+                    <MessageCircle size={17} /> {t("ჩატში მიწერა", "Message in chat")}
                   </button> : null}
                 </>
               )}
@@ -427,9 +429,9 @@ export default function ItemDetail() {
                 className="shrink-0 text-[hsl(var(--accent))]"
               />
               <div>
-                <p className="text-xs font-semibold">უსაფრთხო შეხვედრა</p>
+                <p className="text-xs font-semibold">{t("უსაფრთხო შეხვედრა", "Safe meetup")}</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">
-                  ნივთი გადაამოწმე ადგილზე, სანამ გადაიხდი.
+                  {t("ნივთი გადაამოწმე ადგილზე, სანამ გადაიხდი.", "Inspect the item on site before paying.")}
                 </p>
               </div>
             </div>
@@ -439,11 +441,11 @@ export default function ItemDetail() {
                 className="shrink-0 text-[hsl(var(--accent))]"
               />
               <div>
-                <p className="text-xs font-semibold">მიტანის არჩევანი</p>
+                <p className="text-xs font-semibold">{t("მიტანის არჩევანი", "Delivery options")}</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--muted-foreground))]">
                   {item.delivery?.length
-                    ? item.delivery.join(" · ")
-                    : "შეთანხმება ადგილზე"}
+                    ? item.delivery.map(opt => language === 'en' ? ({ 'კურიერი': 'Courier', 'ფოსტა': 'Post', 'პირადად შეხვედრა': 'In person' } as Record<string, string>)[opt] ?? opt : opt).join(" · ")
+                    : t("შეთანხმება ადგილზე", "Agree on site")}
                 </p>
               </div>
             </div>
