@@ -10,6 +10,7 @@ export function ensureCategoryCatalog() {
       await db.delete(categories).where(eq(categories.id, "home-garden"));
       await db.delete(categories).where(eq(categories.id, "agriculture"));
       await db.delete(categories).where(eq(categories.id, "jobs"));
+      await db.delete(categories).where(eq(categories.id, "services"));
       for (const category of flattenCategoryTree()) {
         await db
           .insert(categories)

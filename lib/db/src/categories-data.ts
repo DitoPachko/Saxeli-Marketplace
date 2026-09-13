@@ -12,10 +12,6 @@ const group = (name: string, slug: string, items: [string, string][]): CategoryS
 });
 
 export const categoryTree: CategorySeed[] = [
-  { name: "მომსახურება", slug: "services", icon: "BriefcaseBusiness", children: [
-    group("საყოფაცხოვრებო მომსახურება", "home-services", [["დალაგება", "cleaning"], ["გადაზიდვა", "moving"]]),
-    group("ციფრული მომსახურება", "digital-services", [["დიზაინი", "design"], ["პროგრამირება", "programming"]]),
-  ]},
   { name: "საოჯახო ტექნიკა", slug: "home-appliances", icon: "WashingMachine", children: [
     group("სამზარეულო", "kitchen-appliances", [["მაცივრები", "refrigerators"], ["ქურები", "cookers"]]),
     group("სახლის მოვლა", "home-care-appliances", [["სარეცხი მანქანები", "washing-machines"], ["მტვერსასრუტები", "vacuum-cleaners"]]),
