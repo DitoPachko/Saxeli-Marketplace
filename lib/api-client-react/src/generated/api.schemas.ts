@@ -251,9 +251,27 @@ search?: string;
 category?: string;
 city?: string;
 /**
+ * @minimum 0
+ */
+minPrice?: number;
+/**
+ * @minimum 0
+ */
+maxPrice?: number;
+sort?: ListItemsSort;
+/**
  * @minimum 1
  * @maximum 50
  */
 limit?: number;
 };
+
+export type ListItemsSort = typeof ListItemsSort[keyof typeof ListItemsSort];
+
+
+export const ListItemsSort = {
+  newest: 'newest',
+  price_asc: 'price_asc',
+  price_desc: 'price_desc',
+} as const;
 

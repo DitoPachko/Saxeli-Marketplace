@@ -12,6 +12,11 @@ type FilterState = {
   setCategorySlug: (val: string) => void;
   city: string;
   setCity: (val: string) => void;
+  minPrice: string;
+  setMinPrice: (val: string) => void;
+  maxPrice: string;
+  setMaxPrice: (val: string) => void;
+  clearFilters: () => void;
 };
 
 const FilterContext = createContext<FilterState | null>(null);
@@ -30,6 +35,8 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const categorySlug = searchParams.get('category') || '';
   const submittedSearch = searchParams.get('q') || '';
   const city = searchParams.get('city') || cities[0];
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
 
   const [search, setSearch] = useState(submittedSearch);
 
@@ -58,9 +65,15 @@ export function FilterProvider({ children }: { children: ReactNode }) {
   const setSubmittedSearch = (val: string) => updateUrl({ q: val });
   const setCategorySlug = (val: string) => updateUrl({ category: val });
   const setCity = (val: string) => updateUrl({ city: val });
+  const setMinPrice = (val: string) => updateUrl({ minPrice: val });
+  const setMaxPrice = (val: string) => updateUrl({ maxPrice: val });
+  const clearFilters = () => {
+    setSearch('');
+    updateUrl({ q: null, category: null, city: null, minPrice: null, maxPrice: null });
+  };
 
   return (
-    <FilterContext.Provider value={{ search, setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity }}>
+    <FilterContext.Provider value={{ search, setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity, minPrice, setMinPrice, maxPrice, setMaxPrice, clearFilters }}>
       {children}
     </FilterContext.Provider>
   );

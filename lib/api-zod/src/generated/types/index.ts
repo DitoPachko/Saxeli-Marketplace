@@ -15,6 +15,7 @@ export * from './itemAnalysisInput';
 export * from './itemInput';
 export * from './itemUpdate';
 export * from './listItemsParams';
+export * from './listItemsSort';
 export * from './marketplaceItem';
 export * from './marketplaceItemPromotionStatus';
 export * from './message';

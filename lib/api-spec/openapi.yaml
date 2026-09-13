@@ -51,6 +51,25 @@ paths:
           required: false
           schema:
             type: string
+        - name: minPrice
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc]
+            default: newest
         - name: limit
           in: query
           required: false

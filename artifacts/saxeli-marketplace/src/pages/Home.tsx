@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, Heart, MapPin, MessageCircle, Search, SlidersHorizontal, Zap, Crown } from 'lucide-react';
+import { Check, Heart, MapPin, MessageCircle, Search, Zap, Crown } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { getListItemsQueryKey, useListItems, useToggleItemFavorite } from '@workspace/api-client-react';
 import type { ListItemsParams, MarketplaceItem } from '@workspace/api-client-react';
@@ -9,6 +9,7 @@ import { ChatModal } from '@/components/ChatModal';
 import { useFilters, cities } from '@/hooks/use-filters';
 import { useCategoryTree } from '@/hooks/use-categories';
 import { useUser } from '@clerk/react';
+import { FilterBar } from '@/components/FilterBar';
 
 function formatPrice(price: number) {
   return `${price.toLocaleString('ka-GE')} ₾`;
@@ -89,21 +90,24 @@ function ItemSkeleton() {
 }
 
 export default function Home() {
-  const { setSearch, submittedSearch, setSubmittedSearch, categorySlug, setCategorySlug, city, setCity } = useFilters();
+  const { submittedSearch, categorySlug, city, minPrice, maxPrice, clearFilters } = useFilters();
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<'date' | 'priceAsc' | 'priceDesc'>('date');
   const queryClient = useQueryClient();
   const { isLoaded, isSignedIn, user } = useUser();
   const [location, setLocation] = useLocation();
   const [activeChat, setActiveChat] = useState<MarketplaceItem | null>(null);
-  const { flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
+  const { tree: categoryTree, flatMap, isLoading: isCategoriesLoading } = useCategoryTree();
 
   const params = useMemo<ListItemsParams>(() => ({
     search: submittedSearch || undefined,
     category: categorySlug || undefined,
     city: city === cities[0] ? undefined : city,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    sort: sort === 'priceAsc' ? 'price_asc' : sort === 'priceDesc' ? 'price_desc' : 'newest',
     limit: 50,
-  }), [submittedSearch, categorySlug, city]);
+  }), [submittedSearch, categorySlug, city, minPrice, maxPrice, sort]);
   
   const { data: items, isLoading: isItemsLoading, isError, refetch } = useListItems(params, { query: { queryKey: getListItemsQueryKey(params) } });
   const toggleFavorite = useToggleItemFavorite();
@@ -168,32 +172,7 @@ export default function Home() {
           <span className="absolute bottom-6 right-8 hidden font-display text-7xl text-[hsl(var(--secondary-foreground)/.08)] md:block">ს.</span>
         </section>
 
-        <section className="enter enter-delay-1 mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="ფილტრები">
-          <div className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal size={17} /> ლოკაცია</div>
-          <div className="grid w-full gap-2 sm:flex sm:w-auto">
-            <label className="relative block w-full sm:w-64">
-              <span className="sr-only">ქალაქი</span>
-              <select value={city} onChange={(event) => setCity(event.target.value)} className="min-h-12 w-full cursor-pointer appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-2.5 pl-4 pr-10 text-base outline-none focus:border-[hsl(var(--primary))] md:text-sm" data-testid="select-city">
-                {cities.map((option) => <option key={option}>{option}</option>)}
-              </select>
-              <ChevronDown size={15} className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" />
-            </label>
-            <label className="relative block w-full sm:w-64">
-              <span className="sr-only">დალაგება</span>
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value as 'date' | 'priceAsc' | 'priceDesc')}
-                className="min-h-12 w-full cursor-pointer appearance-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] py-2.5 pl-4 pr-10 text-base outline-none focus:border-[hsl(var(--primary))] md:text-sm"
-                data-testid="select-feed-sort"
-              >
-                <option value="date">თარიღით</option>
-                <option value="priceAsc">ფასი: დაბლიდან მაღლა</option>
-                <option value="priceDesc">ფასი: მაღლიდან დაბლა</option>
-              </select>
-              <ChevronDown size={15} className="pointer-events-none absolute right-4 top-3.5 text-[hsl(var(--muted-foreground))]" />
-            </label>
-          </div>
-        </section>
+        <FilterBar categories={categoryTree} sort={sort} onSortChange={setSort} />
 
         <div className="mt-10 flex items-end justify-between border-b border-[hsl(var(--border))] pb-4">
           <div>
@@ -213,7 +192,7 @@ export default function Home() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsl(var(--primary)/.22)]"><Search size={22} /></div>
             <h3 className="font-display mt-4 text-xl font-semibold">ამ ძიებამ არაფერი იპოვა</h3>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">სცადე სხვა სიტყვა ან გააფართოვე ფილტრი.</p>
-            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { setSearch(''); setSubmittedSearch(''); setCategorySlug(''); setCity(cities[0]); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
+            <button type="button" className="btn-ink mt-5 rounded-lg px-4 py-2 text-sm font-medium" onClick={() => { clearFilters(); setSort('date'); }} data-testid="button-reset-filters">ფილტრების გასუფთავება</button>
           </div>
         ) : null}
         

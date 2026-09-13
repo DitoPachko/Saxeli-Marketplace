@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { getAuth } from "@clerk/express";
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import {
   CreateItemBody,
   CreateItemResponse,
@@ -115,7 +115,7 @@ router.get("/items", async (req, res) => {
   const parsed = ListItemsQueryParams.safeParse(req.query);
   if (!parsed.success) return void res.status(400).json({ error: "ფილტრის მონაცემები არასწორია" });
 
-  const { search, category, city, limit } = parsed.data;
+  const { search, category, city, minPrice, maxPrice, sort, limit } = parsed.data;
   const categoryIds = category ? await categoryAndDescendantIds(category) : [];
   const filters = [
     category
@@ -124,6 +124,8 @@ router.get("/items", async (req, res) => {
         : eq(listings.categoryId, "__unknown_category__")
       : undefined,
     city ? eq(listings.city, city) : undefined,
+    minPrice !== undefined ? gte(listings.price, minPrice) : undefined,
+    maxPrice !== undefined ? lte(listings.price, maxPrice) : undefined,
     search
       ? or(
           ilike(listings.title, `%${search.trim()}%`),
@@ -143,6 +145,11 @@ router.get("/items", async (req, res) => {
         when ${listings.status} = 'vip' and ${listings.vipExpiresAt} > now() then 1
         else 0
       end desc`,
+      sort === "price_asc"
+        ? asc(listings.price)
+        : sort === "price_desc"
+          ? desc(listings.price)
+          : desc(listings.createdAt),
       desc(listings.createdAt),
     )
     .limit(limit);

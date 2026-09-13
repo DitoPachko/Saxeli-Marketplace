@@ -20,6 +20,11 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary List marketplace items
  */
+export const listItemsQueryMinPriceMin = 0;
+
+export const listItemsQueryMaxPriceMin = 0;
+
+export const listItemsQuerySortDefault = `newest`;
 export const listItemsQueryLimitDefault = 12;
 export const listItemsQueryLimitMax = 50;
 
@@ -29,6 +34,9 @@ export const ListItemsQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
   "category": zod.coerce.string().optional(),
   "city": zod.coerce.string().optional(),
+  "minPrice": zod.coerce.number().min(listItemsQueryMinPriceMin).optional(),
+  "maxPrice": zod.coerce.number().min(listItemsQueryMaxPriceMin).optional(),
+  "sort": zod.enum(['newest', 'price_asc', 'price_desc']).default(listItemsQuerySortDefault),
   "limit": zod.coerce.number().min(1).max(listItemsQueryLimitMax).default(listItemsQueryLimitDefault)
 })
 

@@ -5,11 +5,21 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListItemsSort } from './listItemsSort';
 
 export type ListItemsParams = {
 search?: string;
 category?: string;
 city?: string;
+/**
+ * @minimum 0
+ */
+minPrice?: number;
+/**
+ * @minimum 0
+ */
+maxPrice?: number;
+sort?: ListItemsSort;
 /**
  * @minimum 1
  * @maximum 50
