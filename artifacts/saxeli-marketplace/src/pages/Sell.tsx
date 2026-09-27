@@ -359,7 +359,7 @@ export default function Sell() {
 
   return (
     <div>
-      <PageHeader title={t("განცხადების დამატება", "Add listing")} eyebrow={t("Saxeli / ნივთი", "Saxeli / Item")}>
+      <PageHeader title={t("განცხადების დამატება", "Add listing")} eyebrow={t("Koneba / ნივთი", "Koneba / Item")}>
         <Link
           href="/"
           className="hidden items-center gap-2 text-sm font-medium text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] sm:flex"

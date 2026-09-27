@@ -32,7 +32,7 @@ function Navbar() {
         
         <div className="flex min-w-0 items-center gap-2 sm:gap-5 lg:gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="saxeli-wordmark text-[1.6rem] leading-none text-[hsl(var(--foreground))] sm:text-[1.85rem]">saxeli</span>
+            <span className="saxeli-wordmark text-[1.6rem] leading-none text-[hsl(var(--foreground))] sm:text-[1.85rem]" aria-label="Koneba — ქონება">Koneba</span>
           </Link>
           <CategoryMenuDesktop />
         </div>
@@ -142,9 +142,9 @@ function Footer() {
       <div className="mx-auto max-w-[1320px] px-5 py-12 md:px-10">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div>
-            <span className="saxeli-wordmark text-3xl leading-none text-[hsl(var(--foreground))]">saxeli</span>
+            <span className="saxeli-wordmark text-3xl leading-none text-[hsl(var(--foreground))]" aria-label="Koneba — ქონება">Koneba</span>
             <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))] max-w-[200px]">
-               {t('შენი ნივთების ადგილი. იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.', 'A place for your things. Find what your day was missing, nearby and person to person.')}
+               {t('Koneba.ge — შენი ნივთების ადგილი. იპოვე ის, რაც შენს დღეს აკლდა — ახლოს, ადამიანთან.', 'Koneba.ge — a place for your things. Find what your day was missing, nearby and person to person.')}
             </p>
           </div>
           <div>
@@ -166,7 +166,7 @@ function Footer() {
           <div>
              <h3 className="font-semibold mb-4">{t('დახმარება', 'Support')}</h3>
             <ul className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <li><a href="mailto:support@saxeli.ge" className="hover:text-[hsl(var(--foreground))]">support@saxeli.ge</a></li>
+              <li><a href="https://koneba.ge" className="hover:text-[hsl(var(--foreground))]">Koneba.ge</a></li>
               <li><a href="tel:+995555123456" className="hover:text-[hsl(var(--foreground))]">+995 555 12 34 56</a></li>
                <li><Link href="/help" className="hover:text-[hsl(var(--foreground))]">{t('დახმარების ცენტრი', 'Help center')}</Link></li>
               <li className="flex gap-3 pt-2"><a href="https://instagram.com" aria-label="Instagram" className="hover:text-[hsl(var(--foreground))]"><Instagram size={18} /></a><a href="https://facebook.com" aria-label="Facebook" className="hover:text-[hsl(var(--foreground))]"><Facebook size={18} /></a></li>
@@ -174,7 +174,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-[hsl(var(--border))] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[hsl(var(--muted-foreground))]">
-          <p>© 2026 Saxeli Marketplace. All rights reserved.</p>
+          <p>© 2026 Koneba.ge (ქონება). {t('ყველა უფლება დაცულია.', 'All rights reserved.')}</p>
         </div>
       </div>
     </footer>

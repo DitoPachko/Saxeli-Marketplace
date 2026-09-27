@@ -139,7 +139,7 @@ export default function Profile() {
 
   return (
     <div>
-      <PageHeader title={t("ჩემი Saxeli", "My Saxeli")} eyebrow={t("პირადი სივრცე", "Personal space")}>
+      <PageHeader title={t("ჩემი ქონება", "My Koneba")} eyebrow={t("პირადი სივრცე", "Personal space")}>
         <Link
           href="/sell"
           className="btn-primary flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"

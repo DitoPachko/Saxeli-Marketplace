@@ -8,7 +8,7 @@ export const kaGE = {
   signIn: {
     start: {
       title: "სისტემაში შესვლა",
-      subtitle: "შედი Saxeli-ის ანგარიშში",
+      subtitle: "შედი Koneba-ს ანგარიშში",
       actionText: "არ გაქვთ ანგარიში?",
       actionLink: "რეგისტრაცია",
     },

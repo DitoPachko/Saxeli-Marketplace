@@ -24,7 +24,7 @@ export default function Auth({
     <div className="grid min-h-[100dvh] lg:grid-cols-[.88fr_1.12fr]">
       <aside className="relative hidden overflow-hidden bg-[hsl(var(--secondary))] p-10 text-[hsl(var(--secondary-foreground))] lg:flex lg:flex-col lg:justify-between">
         <Link href="/" className="saxeli-wordmark text-4xl hover:opacity-90 transition-opacity">
-          saxeli
+          Koneba
         </Link>
         <div className="relative z-10 max-w-md">
           <p className="font-mono-ui text-[10px] uppercase tracking-[.24em] text-[hsl(var(--primary))]">
@@ -51,7 +51,7 @@ export default function Auth({
       <main className="flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--background))] px-5 py-10 relative">
         <div className="absolute top-6 left-6 lg:hidden">
            <Link href="/" className="saxeli-wordmark text-2xl hover:opacity-90 transition-opacity text-[hsl(var(--foreground))]">
-            saxeli
+            Koneba
           </Link>
         </div>
         

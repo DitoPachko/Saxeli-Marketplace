@@ -211,7 +211,7 @@ export default function Home() {
         
         <section className="mt-14 grid gap-5 border-t border-[hsl(var(--border))] pt-10 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-             <p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">{t('Saxeli-ს პრინციპი', 'The Saxeli principle')}</p>
+             <p className="font-mono-ui text-[10px] uppercase tracking-[.2em] text-[hsl(var(--muted-foreground))]">{t('Koneba-ს პრინციპი', 'The Koneba principle')}</p>
              <h2 className="font-display mt-2 max-w-2xl text-3xl font-semibold leading-tight tracking-[-.05em] md:text-4xl">{t('ყიდვა-გაყიდვა, როგორც საუბარი მეზობელთან.', 'Buying and selling should feel like talking to a neighbor.')}</h2>
           </div>
           <div className="flex items-center gap-3 text-sm text-[hsl(var(--muted-foreground))]">

@@ -143,7 +143,7 @@ export default function EditItem() {
 
   return (
     <div>
-      <PageHeader title={t("განცხადების რედაქტირება", "Edit listing")} eyebrow={t("Saxeli / ჩემი განცხადებები", "Saxeli / My listings")}>
+      <PageHeader title={t("განცხადების რედაქტირება", "Edit listing")} eyebrow={t("Koneba / ჩემი განცხადებები", "Koneba / My listings")}>
         <Link
           href="/profile"
           className="btn-ink flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"

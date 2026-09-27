@@ -356,7 +356,7 @@ export default function ItemDetail() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent)/.13)] px-2.5 py-1.5 text-[11px] font-semibold">
-                <BadgeCheck size={14} /> {t("Saxeli პროფილი", "Saxeli profile")}
+                <BadgeCheck size={14} /> {t("Koneba პროფილი", "Koneba profile")}
               </span>
               {sellerPhone ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-[hsl(var(--muted))] px-2.5 py-1.5 text-[11px] font-semibold">
